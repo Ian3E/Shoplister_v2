@@ -1,0 +1,268 @@
+# GroceryList library backup
+# format-version: 2
+# language: english
+#
+# Edit in any plain-text editor. Lines starting with # are comments.
+# Sections: [home_sections], [shopping_sections], then [library].
+# Library item rows are TAB-separated: name, home_section, shopping_section.
+# Section lists are one title per line (order is kept). Images are not exported.
+
+[home_sections]
+Fridge
+Freezer
+Pantry
+Countertop
+Utility / Storage
+Bathroom
+
+[shopping_sections]
+Produce
+Herbs
+Dairy & Eggs
+Meat & Seafood
+Bakery
+Dry Goods / Aisles
+Canned & Jarred
+Frozen
+Snacks
+Breakfast
+Beverages
+Household & Paper
+Cleaning & Laundry
+Personal Care
+
+[library]
+name	home_section	shopping_section	home_order
+Apples	Fridge	Produce	0
+Bananas	Countertop	Produce	0
+Oranges	Countertop	Produce	1
+Lemons	Fridge	Produce	1
+Limes	Fridge	Produce	2
+Strawberries	Fridge	Produce	3
+Blueberries	Fridge	Produce	4
+Grapes	Fridge	Produce	5
+Avocados	Countertop	Produce	2
+Tomatoes	Countertop	Produce	3
+Cherry tomatoes	Fridge	Produce	6
+Cucumbers	Fridge	Produce	7
+Bell peppers	Fridge	Produce	8
+Jalapeños	Fridge	Produce	9
+Lettuce	Fridge	Produce	10
+Spinach	Fridge	Produce	11
+Kale	Fridge	Produce	12
+Broccoli	Fridge	Produce	13
+Cauliflower	Fridge	Produce	14
+Carrots	Fridge	Produce	15
+Celery	Fridge	Produce	16
+Zucchini	Fridge	Produce	17
+Eggplant	Fridge	Produce	18
+Mushrooms	Fridge	Produce	19
+Onions (yellow)	Pantry	Produce	0
+Onions (red)	Pantry	Produce	1
+Garlic	Pantry	Produce	2
+Potatoes (russet)	Pantry	Produce	3
+Potatoes (sweet)	Pantry	Produce	4
+Cilantro	Fridge	Herbs	20
+Parsley	Fridge	Herbs	21
+Basil	Fridge	Herbs	22
+Mint	Fridge	Herbs	23
+Dill	Fridge	Herbs	24
+Green onions	Fridge	Herbs	25
+Rosemary	Fridge	Herbs	26
+Thyme	Fridge	Herbs	27
+Oregano	Fridge	Herbs	28
+Ginger root	Fridge	Herbs	29
+Lemongrass	Fridge	Herbs	30
+Sage	Fridge	Herbs	31
+Milk	Fridge	Dairy & Eggs	32
+Almond milk	Pantry	Dairy & Eggs	5
+Oat milk	Pantry	Dairy & Eggs	6
+Half-and-half	Fridge	Dairy & Eggs	33
+Heavy cream	Fridge	Dairy & Eggs	34
+Butter	Fridge	Dairy & Eggs	35
+Greek yogurt	Fridge	Dairy & Eggs	36
+Yogurt (plain)	Fridge	Dairy & Eggs	37
+Yogurt (vanilla)	Fridge	Dairy & Eggs	38
+Sour cream	Fridge	Dairy & Eggs	39
+Cream cheese	Fridge	Dairy & Eggs	40
+Cottage cheese	Fridge	Dairy & Eggs	41
+Cheddar cheese	Fridge	Dairy & Eggs	42
+Mozzarella cheese	Fridge	Dairy & Eggs	43
+Parmesan cheese	Fridge	Dairy & Eggs	44
+Feta cheese	Fridge	Dairy & Eggs	45
+Eggs	Fridge	Dairy & Eggs	46
+Egg whites	Fridge	Dairy & Eggs	47
+Chicken breast	Freezer	Meat & Seafood	0
+Chicken thighs	Freezer	Meat & Seafood	1
+Ground chicken	Freezer	Meat & Seafood	2
+Ground beef	Freezer	Meat & Seafood	3
+Beef steak	Freezer	Meat & Seafood	4
+Pork chops	Freezer	Meat & Seafood	5
+Bacon	Fridge	Meat & Seafood	48
+Sausage	Freezer	Meat & Seafood	6
+Deli turkey	Fridge	Meat & Seafood	49
+Deli ham	Fridge	Meat & Seafood	50
+Salmon fillets	Freezer	Meat & Seafood	7
+Tuna (fresh)	Freezer	Meat & Seafood	8
+Shrimp	Freezer	Meat & Seafood	9
+White fish fillets	Freezer	Meat & Seafood	10
+Frozen fish sticks	Freezer	Meat & Seafood	11
+Meatballs	Freezer	Meat & Seafood	12
+Chicken nuggets	Freezer	Meat & Seafood	13
+Hot dogs	Fridge	Meat & Seafood	51
+Sandwich bread	Countertop	Bakery	4
+Whole wheat bread	Countertop	Bakery	5
+Bagels	Countertop	Bakery	6
+Tortillas	Pantry	Bakery	7
+Pita bread	Countertop	Bakery	7
+English muffins	Countertop	Bakery	8
+Burger buns	Countertop	Bakery	9
+Hot dog buns	Countertop	Bakery	10
+Croissants	Countertop	Bakery	11
+Muffins	Countertop	Bakery	12
+Cake (store-bought)	Countertop	Bakery	13
+Cookies (bakery)	Countertop	Bakery	14
+Rice	Pantry	Dry Goods / Aisles	8
+Brown rice	Pantry	Dry Goods / Aisles	9
+Basmati rice	Pantry	Dry Goods / Aisles	10
+Pasta	Pantry	Dry Goods / Aisles	11
+Spaghetti	Pantry	Dry Goods / Aisles	12
+Penne	Pantry	Dry Goods / Aisles	13
+Couscous	Pantry	Dry Goods / Aisles	14
+Quinoa	Pantry	Dry Goods / Aisles	15
+Flour	Pantry	Dry Goods / Aisles	16
+Sugar	Pantry	Dry Goods / Aisles	17
+Brown sugar	Pantry	Dry Goods / Aisles	18
+Baking powder	Pantry	Dry Goods / Aisles	19
+Baking soda	Pantry	Dry Goods / Aisles	20
+Yeast	Pantry	Dry Goods / Aisles	21
+Vanilla extract	Pantry	Dry Goods / Aisles	22
+Olive oil	Pantry	Dry Goods / Aisles	23
+Vegetable oil	Pantry	Dry Goods / Aisles	24
+Sesame oil	Pantry	Dry Goods / Aisles	25
+Vinegar (white)	Pantry	Dry Goods / Aisles	26
+Vinegar (apple cider)	Pantry	Dry Goods / Aisles	27
+Balsamic vinegar	Pantry	Dry Goods / Aisles	28
+Soy sauce	Pantry	Dry Goods / Aisles	29
+Fish sauce	Pantry	Dry Goods / Aisles	30
+Hot sauce	Pantry	Dry Goods / Aisles	31
+Mustard	Fridge	Dry Goods / Aisles	52
+Ketchup	Fridge	Dry Goods / Aisles	53
+Mayonnaise	Fridge	Dry Goods / Aisles	54
+Honey	Pantry	Dry Goods / Aisles	32
+Maple syrup	Pantry	Dry Goods / Aisles	33
+Peanut butter	Pantry	Dry Goods / Aisles	34
+Jam	Fridge	Dry Goods / Aisles	55
+Nutella	Pantry	Dry Goods / Aisles	35
+Canned tomatoes	Pantry	Canned & Jarred	36
+Tomato paste	Pantry	Canned & Jarred	37
+Pasta sauce	Pantry	Canned & Jarred	38
+Canned chickpeas	Pantry	Canned & Jarred	39
+Canned black beans	Pantry	Canned & Jarred	40
+Canned kidney beans	Pantry	Canned & Jarred	41
+Canned corn	Pantry	Canned & Jarred	42
+Canned tuna	Pantry	Canned & Jarred	43
+Canned salmon	Pantry	Canned & Jarred	44
+Chicken broth	Pantry	Canned & Jarred	45
+Beef broth	Pantry	Canned & Jarred	46
+Vegetable broth	Pantry	Canned & Jarred	47
+Coconut milk	Pantry	Canned & Jarred	48
+Pickles	Fridge	Canned & Jarred	56
+Olives	Pantry	Canned & Jarred	49
+Capers	Fridge	Canned & Jarred	57
+Salsa	Fridge	Canned & Jarred	58
+Pasta pesto	Fridge	Canned & Jarred	59
+Peanut sauce	Pantry	Canned & Jarred	50
+Curry paste	Pantry	Canned & Jarred	51
+Frozen peas	Freezer	Frozen	14
+Frozen corn	Freezer	Frozen	15
+Frozen broccoli	Freezer	Frozen	16
+Frozen mixed vegetables	Freezer	Frozen	17
+Frozen berries	Freezer	Frozen	18
+Frozen mango	Freezer	Frozen	19
+Frozen pizza	Freezer	Frozen	20
+Frozen fries	Freezer	Frozen	21
+Frozen waffles	Freezer	Frozen	22
+Ice cream	Freezer	Frozen	23
+Frozen dumplings	Freezer	Frozen	24
+Frozen edamame	Freezer	Frozen	25
+Potato chips	Pantry	Snacks	52
+Tortilla chips	Pantry	Snacks	53
+Pretzels	Pantry	Snacks	54
+Popcorn	Pantry	Snacks	55
+Trail mix	Pantry	Snacks	56
+Almonds	Pantry	Snacks	57
+Peanuts	Pantry	Snacks	58
+Cashews	Pantry	Snacks	59
+Granola bars	Pantry	Snacks	60
+Protein bars	Pantry	Snacks	61
+Chocolate	Pantry	Snacks	62
+Gummies	Pantry	Snacks	63
+Crackers	Pantry	Snacks	64
+Hummus	Fridge	Snacks	60
+Salsa dip	Fridge	Snacks	61
+Guacamole	Fridge	Snacks	62
+Oatmeal	Pantry	Breakfast	65
+Cereal	Pantry	Breakfast	66
+Granola	Pantry	Breakfast	67
+Pancake mix	Pantry	Breakfast	68
+Breakfast sausage	Freezer	Breakfast	26
+Bacon (extra)	Fridge	Breakfast	63
+Hash browns	Freezer	Breakfast	27
+Coffee grounds	Pantry	Breakfast	69
+Tea bags	Pantry	Breakfast	70
+Cocoa powder	Pantry	Breakfast	71
+Creamer	Fridge	Breakfast	64
+Fruit preserves	Fridge	Breakfast	65
+Sparkling water	Pantry	Beverages	72
+Still water	Pantry	Beverages	73
+Cola	Pantry	Beverages	74
+Orange juice	Fridge	Beverages	66
+Apple juice	Pantry	Beverages	75
+Cranberry juice	Pantry	Beverages	76
+Lemonade	Pantry	Beverages	77
+Iced tea	Pantry	Beverages	78
+Sports drink	Pantry	Beverages	79
+Energy drink	Pantry	Beverages	80
+Beer	Fridge	Beverages	67
+Wine	Pantry	Beverages	81
+Paper towels	Utility / Storage	Household & Paper	0
+Toilet paper	Utility / Storage	Household & Paper	1
+Tissues	Utility / Storage	Household & Paper	2
+Napkins	Utility / Storage	Household & Paper	3
+Aluminum foil	Pantry	Household & Paper	82
+Parchment paper	Pantry	Household & Paper	83
+Plastic wrap	Pantry	Household & Paper	84
+Zip-top bags (sandwich)	Pantry	Household & Paper	85
+Zip-top bags (freezer)	Pantry	Household & Paper	86
+Trash bags	Utility / Storage	Household & Paper	4
+Food containers	Pantry	Household & Paper	87
+Batteries	Utility / Storage	Household & Paper	5
+Dish soap	Utility / Storage	Cleaning & Laundry	6
+Dishwasher detergent	Utility / Storage	Cleaning & Laundry	7
+Sponges	Utility / Storage	Cleaning & Laundry	8
+All-purpose cleaner	Utility / Storage	Cleaning & Laundry	9
+Glass cleaner	Utility / Storage	Cleaning & Laundry	10
+Disinfecting wipes	Utility / Storage	Cleaning & Laundry	11
+Toilet cleaner	Utility / Storage	Cleaning & Laundry	12
+Laundry detergent	Utility / Storage	Cleaning & Laundry	13
+Fabric softener	Utility / Storage	Cleaning & Laundry	14
+Stain remover	Utility / Storage	Cleaning & Laundry	15
+Bleach	Utility / Storage	Cleaning & Laundry	16
+Air freshener	Utility / Storage	Cleaning & Laundry	17
+Shampoo	Bathroom	Personal Care	0
+Conditioner	Bathroom	Personal Care	1
+Body wash	Bathroom	Personal Care	2
+Bar soap	Bathroom	Personal Care	3
+Deodorant	Bathroom	Personal Care	4
+Toothpaste	Bathroom	Personal Care	5
+Toothbrushes	Bathroom	Personal Care	6
+Floss	Bathroom	Personal Care	7
+Mouthwash	Bathroom	Personal Care	8
+Razors	Bathroom	Personal Care	9
+Shaving cream	Bathroom	Personal Care	10
+Hand soap	Bathroom	Personal Care	11
+Hand sanitizer	Bathroom	Personal Care	12
+Lotion	Bathroom	Personal Care	13
+Sunscreen	Bathroom	Personal Care	14
+

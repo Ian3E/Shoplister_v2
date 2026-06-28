@@ -1,0 +1,128 @@
+import SwiftUI
+import UIKit
+
+/// Orientation preference persisted in `UserDefaults` via `@AppStorage`.
+enum AppOrientationLock {
+    static let lockPortraitStorageKey = "app.lockPortrait"
+}
+
+enum OrientationLock {
+    static func currentMask() -> UIInterfaceOrientationMask {
+        let locked = UserDefaults.standard.object(forKey: AppOrientationLock.lockPortraitStorageKey) as? Bool ?? true
+        if locked { return .portrait }
+        return [.portrait, .landscapeLeft, .landscapeRight]
+    }
+
+    static func applyCurrentSetting() {
+        let mask = currentMask()
+
+        // Best-effort: update the active scene's geometry so rotations behave immediately.
+        if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+            let prefs = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: mask)
+            scene.requestGeometryUpdate(prefs) { _ in }
+        }
+
+        // Tell the visible controller hierarchy to re-query supported orientations.
+        if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+           let root = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController
+        {
+            root.setNeedsUpdateOfSupportedInterfaceOrientations()
+        }
+    }
+}
+
+private final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UserDefaults.standard.register(defaults: [
+            AppShoppingBadgeUnchecked.storageKey: false,
+            AppShoppingConfirmClearWhenAllChecked.storageKey: false,
+            AppContentLanguage.storageKey: AppSystemLocale.firstLaunchCatalogLanguageDefault,
+        ])
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        supportedInterfaceOrientationsFor window: UIWindow?
+    ) -> UIInterfaceOrientationMask {
+        OrientationLock.currentMask()
+    }
+}
+
+@main
+struct GroceryListApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @StateObject private var store = GroceryStore()
+    @StateObject private var fullWindowOverlay = FullWindowOverlayCoordinator()
+    @AppStorage(AppTextSize.storageKey) private var textSizeRaw: String = AppTextSize.defaultSize.rawValue
+    @AppStorage(AppContentLanguage.storageKey) private var catalogLanguageRaw: String = AppSystemLocale.firstLaunchCatalogLanguageDefault
+    @AppStorage(AppAppearance.storageKey) private var appearanceRaw: String = AppAppearance.system.rawValue
+    @AppStorage(AppTheme.storageKey) private var themeRaw: String = AppTheme.blue.rawValue
+    @AppStorage(AppTheme.customColorStorageKey) private var customColorHex: String = AppTheme.defaultCustomColorHex
+    @AppStorage(AppAutoLock.disableAutoLockStorageKey) private var disableAutoLock: Bool = false
+    @AppStorage(AppShoppingBadgeUnchecked.storageKey) private var showUncheckedCountAppBadge: Bool = false
+
+    var body: some Scene {
+        WindowGroup {
+            rootContent
+                .environmentObject(store)
+                .environmentObject(fullWindowOverlay)
+                .environment(\.appContentLanguage, catalogLanguage)
+                .onAppear {
+                    AppAutoLock.applyFromUserDefaults()
+                    AppTextSize.migrateStoredRawValueIfNeeded(&textSizeRaw)
+                    store.mergeShareExtensionShoppingOpsIfNeeded()
+                    syncShoppingIconBadge()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                    store.mergeShareExtensionShoppingOpsIfNeeded()
+                    syncShoppingIconBadge()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .shareExtensionPendingShoppingOpsEnqueued)) { _ in
+                    store.mergeShareExtensionShoppingOpsIfNeeded()
+                    syncShoppingIconBadge()
+                }
+                .onChange(of: disableAutoLock) { _, _ in
+                    AppAutoLock.applyFromUserDefaults()
+                }
+                .onChange(of: catalogLanguageRaw) { _, _ in
+                    store.applyContentLanguageFromUserDefaults()
+                }
+                .onChange(of: showUncheckedCountAppBadge) { _, _ in
+                    syncShoppingIconBadge()
+                }
+                .onChange(of: store.shopping) { _, _ in
+                    syncShoppingIconBadge()
+                }
+                .onChange(of: store.catalog) { _, _ in
+                    syncShoppingIconBadge()
+                }
+        }
+    }
+
+    private func syncShoppingIconBadge() {
+        ShoppingIconBadge.sync(enabled: showUncheckedCountAppBadge, store: store)
+    }
+
+    private var catalogLanguage: AppContentLanguage {
+        AppContentLanguage(rawValue: catalogLanguageRaw) ?? .english
+    }
+
+    @ViewBuilder
+    private var rootContent: some View {
+        let size = AppTextSize.resolved(from: textSizeRaw)
+        let appearance = AppAppearance(rawValue: appearanceRaw) ?? .system
+        let theme = AppThemeSelection(presetRaw: themeRaw, customColorHex: customColorHex)
+        ContentView()
+            .environment(\.appTheme, theme)
+            .environment(\.layoutDirection, AppSystemLocale.interfaceLayoutDirection)
+            // Chrome (toolbars, dialogs, tab bar): fixed medium. Home/Store **item names** opt in via list `dynamicTypeSize`.
+            .dynamicTypeSize(AppTextSize.defaultSize.dynamicTypeSize)
+            .environment(\.shoppingListSpacingScale, size.listSpacingScale)
+            .animation(AppTextSize.layoutCommitAnimation, value: textSizeRaw)
+            .preferredColorScheme(appearance.colorSchemeOverride)
+    }
+}

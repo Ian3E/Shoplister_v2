@@ -1,0 +1,4 @@
+/* Camera and photo library permission prompts. */
+"NSCameraUsageDescription" = "צלמו תמונות כדי לצרף אותן לפריטים בספרייה.";
+"NSPhotoLibraryUsageDescription" = "בחרו תמונות מהגלריה כדי לצרף אותן לפריטים בספרייה.";
+"CFBundleDisplayName" = "Shoplister";

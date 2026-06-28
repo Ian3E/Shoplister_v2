@@ -1,0 +1,875 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 71;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		83840ABB2FE5D790001D1EBA /* LocalizedCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000005B /* LocalizedCopy.swift */; };
+		AA0000010000000000000001 /* GroceryListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000001 /* GroceryListApp.swift */; };
+		AA0000020000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000002 /* ContentView.swift */; };
+		AA0000030000000000000003 /* GroceryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000003 /* GroceryStore.swift */; };
+		AA0000040000000000000004 /* GroceryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000004 /* GroceryItem.swift */; };
+		AA0000050000000000000005 /* InventorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000005 /* InventorySection.swift */; };
+		AA0000060000000000000006 /* ShoppingEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000006 /* ShoppingEntry.swift */; };
+		AA0000070000000000000007 /* ShoppingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000007 /* ShoppingSection.swift */; };
+		AA0000080000000000000008 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000008 /* InventoryView.swift */; };
+		AA0000090000000000000009 /* ItemEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000009 /* ItemEditorView.swift */; };
+		AA00000A000000000000000A /* NewItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000000A /* NewItemView.swift */; };
+		AA00000C000000000000000C /* ShoppingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000000C /* ShoppingView.swift */; };
+		AA00000D000000000000000D /* ShoppingRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000000D /* ShoppingRowView.swift */; };
+		AA00000F000000000000000F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000001 /* Assets.xcassets */; };
+		AA0000100000000000000010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000000F /* SettingsView.swift */; };
+		AA0000110000000000000011 /* Tag.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000010 /* Tag.swift */; };
+		AA0000120000000000000012 /* GroupTagEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000011 /* GroupTagEditorSheet.swift */; };
+		AA0000140000000000000014 /* AppTextSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000013 /* AppTextSize.swift */; };
+		AA0000150000000000000015 /* AppContentLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000014 /* AppContentLanguage.swift */; };
+		AA0000160000000000000016 /* CatalogContentLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000015 /* CatalogContentLocalization.swift */; };
+		AA0000170000000000000017 /* ListRowSeparatorGuides.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000016 /* ListRowSeparatorGuides.swift */; };
+		AA0000180000000000000018 /* BilingualSeedCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000017 /* BilingualSeedCatalog.swift */; };
+		AA0000190000000000000019 /* ItemImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000018 /* ItemImageStore.swift */; };
+		AA00001A000000000000001A /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000019 /* CameraPicker.swift */; };
+		AA00001B000000000000001B /* ItemImageCompactPreviewOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001A /* ItemImageCompactPreviewOverlay.swift */; };
+		AA00001C000000000000001C /* FullWindowOverlayCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001C /* FullWindowOverlayCoordinator.swift */; };
+		AA00001D000000000000001D /* AppHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001D /* AppHaptics.swift */; };
+		AA00001E000000000000001E /* CatalogBackupCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001E /* CatalogBackupCodec.swift */; };
+		AA00001F000000000000001F /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001F /* ActivityView.swift */; };
+		AA0000200000000000000020 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000020 /* AppAppearance.swift */; };
+		AA0000210000000000000021 /* seed-library-backup-en.txt in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000003 /* seed-library-backup-en.txt */; };
+		AA0000220000000000000022 /* seed-library-backup-he.txt in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000004 /* seed-library-backup-he.txt */; };
+		AA0000230000000000000023 /* AppAutoLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000023 /* AppAutoLock.swift */; };
+		AA0000240000000000000024 /* AppShoppingSortChecked.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000024 /* AppShoppingSortChecked.swift */; };
+		AA00002E000000000000002E /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000008 /* ShareExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AA00002F000000000000002F /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000002B /* ShareViewController.swift */; };
+		AA0000360000000000000036 /* ShareExtensionAppGroupSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000035 /* ShareExtensionAppGroupSupport.swift */; };
+		AA0000380000000000000038 /* ShareImportFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000037 /* ShareImportFlow.swift */; };
+		AA0000390000000000000039 /* ListRowSeparatorGuides.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000016 /* ListRowSeparatorGuides.swift */; };
+		AA00003A000000000000003A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000009 /* LaunchScreen.storyboard */; };
+		AA00003D000000000000003D /* ShoppingListShareText.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000003D /* ShoppingListShareText.swift */; };
+		AA0000400000000000000040 /* AppShoppingBadgeUnchecked.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000044 /* AppShoppingBadgeUnchecked.swift */; };
+		AA0000410000000000000041 /* ShoppingIconBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000045 /* ShoppingIconBadge.swift */; };
+		AA0000420000000000000042 /* TextSizeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000046 /* TextSizeSettingsView.swift */; };
+		AA0000430000000000000043 /* CatalogSearchNormalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000047 /* CatalogSearchNormalization.swift */; };
+		AA0000480000000000000048 /* CatalogSearchNormalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000047 /* CatalogSearchNormalization.swift */; };
+		AA0000490000000000000049 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000048 /* AppTheme.swift */; };
+		AA00004A000000000000004A /* ImportTextToShoppingListIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000004A /* ImportTextToShoppingListIntent.swift */; };
+		AA00004C000000000000004C /* ShareTextLineImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000004C /* ShareTextLineImport.swift */; };
+		AA00004E000000000000004E /* StoreTabEllipsisMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000004E /* StoreTabEllipsisMenu.swift */; };
+		AA00004F000000000000004F /* StorePullToAddCatalogSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000004F /* StorePullToAddCatalogSearchView.swift */; };
+		AA0000500000000000000050 /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000050 /* ThemeSettingsView.swift */; };
+		AA0000510000000000000051 /* SettingsStoreListPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000051 /* SettingsStoreListPreview.swift */; };
+		AA0000530000000000000053 /* ShoppingQuantitySwipeColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000053 /* ShoppingQuantitySwipeColumn.swift */; };
+		AA0000540000000000000054 /* QuantityPillMaterialStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000054 /* QuantityPillMaterialStyle.swift */; };
+		AA0000550000000000000055 /* ShoppingRowQuickActionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000055 /* ShoppingRowQuickActionsMenu.swift */; };
+		AA0000560000000000000056 /* HomeCatalogRowContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000056 /* HomeCatalogRowContextMenu.swift */; };
+		AA0000570000000000000057 /* CatalogMoveNewSectionPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000057 /* CatalogMoveNewSectionPrompt.swift */; };
+		AA0000580000000000000058 /* CatalogItemSectionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000058 /* CatalogItemSectionPicker.swift */; };
+		AA0000590000000000000059 /* AppSystemLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000059 /* AppSystemLocale.swift */; };
+		AA00005A000000000000005A /* CatalogLayoutMirroring.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000005A /* CatalogLayoutMirroring.swift */; };
+		AA00005B000000000000005B /* LocalizedCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000005B /* LocalizedCopy.swift */; };
+		AA00005C000000000000005C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000A /* Localizable.xcstrings */; };
+		AA00005D000000000000005D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000A /* Localizable.xcstrings */; };
+		AA00005E000000000000005E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000B /* InfoPlist.strings */; };
+		AA00005F000000000000005F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000C /* InfoPlist.strings */; };
+		AA0000600000000000000060 /* AppSystemLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000059 /* AppSystemLocale.swift */; };
+		AA0000610000000000000061 /* CatalogLayoutMirroring.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000005A /* CatalogLayoutMirroring.swift */; };
+		AA0000620000000000000062 /* AppContentLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000014 /* AppContentLanguage.swift */; };
+		AA0000630000000000000063 /* Recipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000102 /* Recipe.swift */; };
+		AA0000640000000000000064 /* RecipesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000103 /* RecipesListView.swift */; };
+		AA0000650000000000000065 /* RecipeApplySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000104 /* RecipeApplySheet.swift */; };
+		AA0000670000000000000067 /* HomeCatalogListChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000106 /* HomeCatalogListChrome.swift */; };
+		AA0000680000000000000068 /* AppHomeFirstVisitExplainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000107 /* AppHomeFirstVisitExplainer.swift */; };
+		AA0000690000000000000069 /* HomeFirstVisitExplainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000108 /* HomeFirstVisitExplainerView.swift */; };
+		AA00006A000000000000006A /* AppWelcomeExplainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000109 /* AppWelcomeExplainer.swift */; };
+		AA00006B000000000000006B /* WelcomeExplainerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010A /* WelcomeExplainerOverlay.swift */; };
+		AA00006C000000000000006C /* SettingsSectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010B /* SettingsSectionViews.swift */; };
+		AA00006D000000000000006D /* SettingsAppFeaturesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010C /* SettingsAppFeaturesView.swift */; };
+		AA00006E000000000000006E /* AppFeaturesCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010D /* AppFeaturesCatalog.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AA000P000000000000000000 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0010000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA000H000000000000000000;
+			remoteInfo = ShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA000E100000000000000000 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA00002E000000000000002E /* ShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AA0001010000000000000001 /* GroceryListApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryListApp.swift; sourceTree = "<group>"; };
+		AA0001010000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AA0001010000000000000003 /* GroceryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryStore.swift; sourceTree = "<group>"; };
+		AA0001010000000000000004 /* GroceryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryItem.swift; sourceTree = "<group>"; };
+		AA0001010000000000000005 /* InventorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventorySection.swift; sourceTree = "<group>"; };
+		AA0001010000000000000006 /* ShoppingEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingEntry.swift; sourceTree = "<group>"; };
+		AA0001010000000000000007 /* ShoppingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingSection.swift; sourceTree = "<group>"; };
+		AA0001010000000000000008 /* InventoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryView.swift; sourceTree = "<group>"; };
+		AA0001010000000000000009 /* ItemEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemEditorView.swift; sourceTree = "<group>"; };
+		AA000101000000000000000A /* NewItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewItemView.swift; sourceTree = "<group>"; };
+		AA000101000000000000000C /* ShoppingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingView.swift; sourceTree = "<group>"; };
+		AA000101000000000000000D /* ShoppingRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingRowView.swift; sourceTree = "<group>"; };
+		AA000101000000000000000F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA0001010000000000000010 /* Tag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tag.swift; sourceTree = "<group>"; };
+		AA0001010000000000000011 /* GroupTagEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTagEditorSheet.swift; sourceTree = "<group>"; };
+		AA0001010000000000000013 /* AppTextSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTextSize.swift; sourceTree = "<group>"; };
+		AA0001010000000000000014 /* AppContentLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContentLanguage.swift; sourceTree = "<group>"; };
+		AA0001010000000000000015 /* CatalogContentLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogContentLocalization.swift; sourceTree = "<group>"; };
+		AA0001010000000000000016 /* ListRowSeparatorGuides.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListRowSeparatorGuides.swift; sourceTree = "<group>"; };
+		AA0001010000000000000017 /* BilingualSeedCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BilingualSeedCatalog.swift; sourceTree = "<group>"; };
+		AA0001010000000000000018 /* ItemImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemImageStore.swift; sourceTree = "<group>"; };
+		AA0001010000000000000019 /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
+		AA000101000000000000001A /* ItemImageCompactPreviewOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemImageCompactPreviewOverlay.swift; sourceTree = "<group>"; };
+		AA000101000000000000001C /* FullWindowOverlayCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullWindowOverlayCoordinator.swift; sourceTree = "<group>"; };
+		AA000101000000000000001D /* AppHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHaptics.swift; sourceTree = "<group>"; };
+		AA000101000000000000001E /* CatalogBackupCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogBackupCodec.swift; sourceTree = "<group>"; };
+		AA000101000000000000001F /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
+		AA0001010000000000000020 /* AppAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearance.swift; sourceTree = "<group>"; };
+		AA0001010000000000000023 /* AppAutoLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAutoLock.swift; sourceTree = "<group>"; };
+		AA0001010000000000000024 /* AppShoppingSortChecked.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShoppingSortChecked.swift; sourceTree = "<group>"; };
+		AA000101000000000000002B /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		AA0001010000000000000035 /* ShareExtensionAppGroupSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareExtensionAppGroupSupport.swift; sourceTree = "<group>"; };
+		AA0001010000000000000037 /* ShareImportFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareImportFlow.swift; sourceTree = "<group>"; };
+		AA000101000000000000003D /* ShoppingListShareText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListShareText.swift; sourceTree = "<group>"; };
+		AA0001010000000000000044 /* AppShoppingBadgeUnchecked.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShoppingBadgeUnchecked.swift; sourceTree = "<group>"; };
+		AA0001010000000000000045 /* ShoppingIconBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingIconBadge.swift; sourceTree = "<group>"; };
+		AA0001010000000000000046 /* TextSizeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSizeSettingsView.swift; sourceTree = "<group>"; };
+		AA0001010000000000000047 /* CatalogSearchNormalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogSearchNormalization.swift; sourceTree = "<group>"; };
+		AA0001010000000000000048 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		AA000101000000000000004A /* ImportTextToShoppingListIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTextToShoppingListIntent.swift; sourceTree = "<group>"; };
+		AA000101000000000000004C /* ShareTextLineImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTextLineImport.swift; sourceTree = "<group>"; };
+		AA000101000000000000004E /* StoreTabEllipsisMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTabEllipsisMenu.swift; sourceTree = "<group>"; };
+		AA000101000000000000004F /* StorePullToAddCatalogSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorePullToAddCatalogSearchView.swift; sourceTree = "<group>"; };
+		AA0001010000000000000050 /* ThemeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettingsView.swift; sourceTree = "<group>"; };
+		AA0001010000000000000051 /* SettingsStoreListPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreListPreview.swift; sourceTree = "<group>"; };
+		AA0001010000000000000053 /* ShoppingQuantitySwipeColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingQuantitySwipeColumn.swift; sourceTree = "<group>"; };
+		AA0001010000000000000054 /* QuantityPillMaterialStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuantityPillMaterialStyle.swift; sourceTree = "<group>"; };
+		AA0001010000000000000055 /* ShoppingRowQuickActionsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingRowQuickActionsMenu.swift; sourceTree = "<group>"; };
+		AA0001010000000000000056 /* HomeCatalogRowContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCatalogRowContextMenu.swift; sourceTree = "<group>"; };
+		AA0001010000000000000057 /* CatalogMoveNewSectionPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogMoveNewSectionPrompt.swift; sourceTree = "<group>"; };
+		AA0001010000000000000058 /* CatalogItemSectionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemSectionPicker.swift; sourceTree = "<group>"; };
+		AA0001010000000000000059 /* AppSystemLocale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSystemLocale.swift; sourceTree = "<group>"; };
+		AA000101000000000000005A /* CatalogLayoutMirroring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogLayoutMirroring.swift; sourceTree = "<group>"; };
+		AA000101000000000000005B /* LocalizedCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedCopy.swift; sourceTree = "<group>"; };
+		AA0001020000000000000102 /* Recipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe.swift; sourceTree = "<group>"; };
+		AA0001020000000000000103 /* RecipesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipesListView.swift; sourceTree = "<group>"; };
+		AA0001020000000000000104 /* RecipeApplySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeApplySheet.swift; sourceTree = "<group>"; };
+		AA0001020000000000000106 /* HomeCatalogListChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCatalogListChrome.swift; sourceTree = "<group>"; };
+		AA0001020000000000000107 /* AppHomeFirstVisitExplainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHomeFirstVisitExplainer.swift; sourceTree = "<group>"; };
+		AA0001020000000000000108 /* HomeFirstVisitExplainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFirstVisitExplainerView.swift; sourceTree = "<group>"; };
+		AA0001020000000000000109 /* AppWelcomeExplainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWelcomeExplainer.swift; sourceTree = "<group>"; };
+		AA000102000000000000010A /* WelcomeExplainerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeExplainerOverlay.swift; sourceTree = "<group>"; };
+		AA000102000000000000010B /* SettingsSectionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSectionViews.swift; sourceTree = "<group>"; };
+		AA000102000000000000010C /* SettingsAppFeaturesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAppFeaturesView.swift; sourceTree = "<group>"; };
+		AA000102000000000000010D /* AppFeaturesCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeaturesCatalog.swift; sourceTree = "<group>"; };
+		AA0002010000000000000000 /* Shoplister_v2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shoplister_v2.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0002010000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0002010000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0002010000000000000003 /* seed-library-backup-en.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "seed-library-backup-en.txt"; sourceTree = "<group>"; };
+		AA0002010000000000000004 /* seed-library-backup-he.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "seed-library-backup-he.txt"; sourceTree = "<group>"; };
+		AA0002010000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0002010000000000000006 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
+		AA0002010000000000000007 /* GroceryList.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GroceryList.entitlements; sourceTree = "<group>"; };
+		AA0002010000000000000008 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0002010000000000000009 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		AA000201000000000000000A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		AA000201000000000000000B /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
+		AA000201000000000000000C /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA000E000000000000000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000H200000000000000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0005000000000000000000 = {
+			isa = PBXGroup;
+			children = (
+				AA0006000000000000000000 /* GroceryList */,
+				AA0007000000000000000000 /* Source */,
+				AA000S000000000000000000 /* ShareExtension */,
+				AA0002010000000000000003 /* seed-library-backup-en.txt */,
+				AA0002010000000000000004 /* seed-library-backup-he.txt */,
+				AA0008000000000000000000 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0006000000000000000000 /* GroceryList */ = {
+			isa = PBXGroup;
+			children = (
+				AA0002010000000000000001 /* Assets.xcassets */,
+				AA0002010000000000000009 /* LaunchScreen.storyboard */,
+				AA0002010000000000000002 /* Info.plist */,
+				AA0002010000000000000007 /* GroceryList.entitlements */,
+				AA0006610000000000000000 /* en.lproj */,
+				AA0006620000000000000000 /* he.lproj */,
+			);
+			path = GroceryList;
+			sourceTree = "<group>";
+		};
+		AA0006610000000000000000 /* en.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				AA000201000000000000000B /* InfoPlist.strings */,
+			);
+			path = en.lproj;
+			sourceTree = "<group>";
+		};
+		AA0006620000000000000000 /* he.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				AA000201000000000000000C /* InfoPlist.strings */,
+			);
+			path = he.lproj;
+			sourceTree = "<group>";
+		};
+		AA0007000000000000000000 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001010000000000000001 /* GroceryListApp.swift */,
+				AA0001010000000000000002 /* ContentView.swift */,
+				AA0009500000000000000000 /* AppIntents */,
+				AA0009000000000000000000 /* Features */,
+				AA0009600000000000000000 /* Localization */,
+				AA000A000000000000000000 /* Models */,
+				AA000B000000000000000000 /* Services */,
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
+		AA0008000000000000000000 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0002010000000000000000 /* Shoplister_v2.app */,
+				AA0002010000000000000008 /* ShareExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0009000000000000000000 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				AA0009400000000000000000 /* Settings */,
+				AA0009100000000000000000 /* Inventory */,
+				AA0009200000000000000000 /* Shopping */,
+				AA0009300000000000000000 /* Shared */,
+				AA0009710000000000000000 /* Recipes */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		AA0009100000000000000000 /* Inventory */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001010000000000000008 /* InventoryView.swift */,
+				AA0001010000000000000009 /* ItemEditorView.swift */,
+				AA000101000000000000000A /* NewItemView.swift */,
+			);
+			path = Inventory;
+			sourceTree = "<group>";
+		};
+		AA0009200000000000000000 /* Shopping */ = {
+			isa = PBXGroup;
+			children = (
+				AA000101000000000000000C /* ShoppingView.swift */,
+				AA000101000000000000004F /* StorePullToAddCatalogSearchView.swift */,
+				AA000101000000000000000D /* ShoppingRowView.swift */,
+				AA0001010000000000000053 /* ShoppingQuantitySwipeColumn.swift */,
+				AA000101000000000000003D /* ShoppingListShareText.swift */,
+			);
+			path = Shopping;
+			sourceTree = "<group>";
+		};
+		AA0009300000000000000000 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				AA000101000000000000004E /* StoreTabEllipsisMenu.swift */,
+				AA0001010000000000000016 /* ListRowSeparatorGuides.swift */,
+				AA0001020000000000000106 /* HomeCatalogListChrome.swift */,
+				AA0001020000000000000108 /* HomeFirstVisitExplainerView.swift */,
+				AA000102000000000000010A /* WelcomeExplainerOverlay.swift */,
+				AA0001010000000000000054 /* QuantityPillMaterialStyle.swift */,
+				AA0001010000000000000019 /* CameraPicker.swift */,
+				AA000101000000000000001A /* ItemImageCompactPreviewOverlay.swift */,
+				AA0001010000000000000055 /* ShoppingRowQuickActionsMenu.swift */,
+				AA0001010000000000000056 /* HomeCatalogRowContextMenu.swift */,
+				AA0001010000000000000057 /* CatalogMoveNewSectionPrompt.swift */,
+				AA0001010000000000000058 /* CatalogItemSectionPicker.swift */,
+				AA000101000000000000005A /* CatalogLayoutMirroring.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		AA0009400000000000000000 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				AA000101000000000000000F /* SettingsView.swift */,
+				AA000102000000000000010B /* SettingsSectionViews.swift */,
+				AA000102000000000000010C /* SettingsAppFeaturesView.swift */,
+				AA000102000000000000010D /* AppFeaturesCatalog.swift */,
+				AA0001010000000000000046 /* TextSizeSettingsView.swift */,
+				AA0001010000000000000050 /* ThemeSettingsView.swift */,
+				AA0001010000000000000051 /* SettingsStoreListPreview.swift */,
+				AA000101000000000000001F /* ActivityView.swift */,
+				AA0001010000000000000011 /* GroupTagEditorSheet.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		AA0009500000000000000000 /* AppIntents */ = {
+			isa = PBXGroup;
+			children = (
+				AA000101000000000000004A /* ImportTextToShoppingListIntent.swift */,
+			);
+			path = AppIntents;
+			sourceTree = "<group>";
+		};
+		AA0009600000000000000000 /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				AA000101000000000000005B /* LocalizedCopy.swift */,
+				AA000201000000000000000A /* Localizable.xcstrings */,
+			);
+			path = Localization;
+			sourceTree = "<group>";
+		};
+		AA0009710000000000000000 /* Recipes */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001020000000000000103 /* RecipesListView.swift */,
+				AA0001020000000000000104 /* RecipeApplySheet.swift */,
+			);
+			path = Recipes;
+			sourceTree = "<group>";
+		};
+		AA000A000000000000000000 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001010000000000000004 /* GroceryItem.swift */,
+				AA0001010000000000000005 /* InventorySection.swift */,
+				AA0001010000000000000006 /* ShoppingEntry.swift */,
+				AA0001010000000000000007 /* ShoppingSection.swift */,
+				AA0001010000000000000020 /* AppAppearance.swift */,
+				AA0001010000000000000048 /* AppTheme.swift */,
+				AA0001010000000000000023 /* AppAutoLock.swift */,
+				AA0001010000000000000024 /* AppShoppingSortChecked.swift */,
+				AA0001010000000000000044 /* AppShoppingBadgeUnchecked.swift */,
+				AA0001020000000000000107 /* AppHomeFirstVisitExplainer.swift */,
+				AA0001020000000000000109 /* AppWelcomeExplainer.swift */,
+				AA0001010000000000000014 /* AppContentLanguage.swift */,
+				AA0001010000000000000015 /* CatalogContentLocalization.swift */,
+				AA0001010000000000000047 /* CatalogSearchNormalization.swift */,
+				AA0001010000000000000013 /* AppTextSize.swift */,
+				AA0001010000000000000010 /* Tag.swift */,
+				AA0001010000000000000018 /* ItemImageStore.swift */,
+				AA0001010000000000000059 /* AppSystemLocale.swift */,
+				AA0001020000000000000102 /* Recipe.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA000B000000000000000000 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001010000000000000003 /* GroceryStore.swift */,
+				AA000101000000000000004C /* ShareTextLineImport.swift */,
+				AA0001010000000000000017 /* BilingualSeedCatalog.swift */,
+				AA000101000000000000001C /* FullWindowOverlayCoordinator.swift */,
+				AA000101000000000000001D /* AppHaptics.swift */,
+				AA000101000000000000001E /* CatalogBackupCodec.swift */,
+				AA0001010000000000000035 /* ShareExtensionAppGroupSupport.swift */,
+				AA0001010000000000000045 /* ShoppingIconBadge.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AA000S000000000000000000 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				AA000101000000000000002B /* ShareViewController.swift */,
+				AA0001010000000000000037 /* ShareImportFlow.swift */,
+				AA0002010000000000000005 /* Info.plist */,
+				AA0002010000000000000006 /* ShareExtension.entitlements */,
+			);
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA000C000000000000000000 /* Shoplister_v2 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0013000000000000000000 /* Build configuration list for PBXNativeTarget "Shoplister_v2" */;
+			buildPhases = (
+				AA000D000000000000000000 /* Sources */,
+				AA000E000000000000000000 /* Frameworks */,
+				AA000F000000000000000000 /* Resources */,
+				AA000E100000000000000000 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA000Q000000000000000000 /* PBXTargetDependency */,
+			);
+			name = Shoplister_v2;
+			productName = Shoplister_v2;
+			productReference = AA0002010000000000000000 /* Shoplister_v2.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AA000H000000000000000000 /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000H3000000000000000000 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				AA000H100000000000000000 /* Sources */,
+				AA000H200000000000000000 /* Frameworks */,
+				AA000H400000000000000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ShareExtension;
+			productName = ShareExtension;
+			productReference = AA0002010000000000000008 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0010000000000000000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					AA000C000000000000000000 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AA000H000000000000000000 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = AA0012000000000000000000 /* Build configuration list for PBXProject "Shoplister_v2" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				he,
+				Base,
+			);
+			mainGroup = AA0005000000000000000000;
+			productRefGroup = AA0008000000000000000000 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA000C000000000000000000 /* Shoplister_v2 */,
+				AA000H000000000000000000 /* ShareExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA000F000000000000000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000F000000000000000F /* Assets.xcassets in Resources */,
+				AA00003A000000000000003A /* LaunchScreen.storyboard in Resources */,
+				AA0000210000000000000021 /* seed-library-backup-en.txt in Resources */,
+				AA0000220000000000000022 /* seed-library-backup-he.txt in Resources */,
+				AA00005C000000000000005C /* Localizable.xcstrings in Resources */,
+				AA00005E000000000000005E /* InfoPlist.strings in Resources */,
+				AA00005F000000000000005F /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000H400000000000000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00005D000000000000005D /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA000D000000000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000010000000000000001 /* GroceryListApp.swift in Sources */,
+				AA0000020000000000000002 /* ContentView.swift in Sources */,
+				AA0000100000000000000010 /* SettingsView.swift in Sources */,
+				AA0000030000000000000003 /* GroceryStore.swift in Sources */,
+				AA00001C000000000000001C /* FullWindowOverlayCoordinator.swift in Sources */,
+				AA00001D000000000000001D /* AppHaptics.swift in Sources */,
+				AA00001E000000000000001E /* CatalogBackupCodec.swift in Sources */,
+				AA00001F000000000000001F /* ActivityView.swift in Sources */,
+				AA0000180000000000000018 /* BilingualSeedCatalog.swift in Sources */,
+				AA0000190000000000000019 /* ItemImageStore.swift in Sources */,
+				AA00001A000000000000001A /* CameraPicker.swift in Sources */,
+				AA00001B000000000000001B /* ItemImageCompactPreviewOverlay.swift in Sources */,
+				AA0000040000000000000004 /* GroceryItem.swift in Sources */,
+				AA0000050000000000000005 /* InventorySection.swift in Sources */,
+				AA0000060000000000000006 /* ShoppingEntry.swift in Sources */,
+				AA0000070000000000000007 /* ShoppingSection.swift in Sources */,
+				AA0000110000000000000011 /* Tag.swift in Sources */,
+				AA0000200000000000000020 /* AppAppearance.swift in Sources */,
+				AA0000490000000000000049 /* AppTheme.swift in Sources */,
+				AA0000230000000000000023 /* AppAutoLock.swift in Sources */,
+				AA0000240000000000000024 /* AppShoppingSortChecked.swift in Sources */,
+				AA0000140000000000000014 /* AppTextSize.swift in Sources */,
+				AA0000150000000000000015 /* AppContentLanguage.swift in Sources */,
+				AA0000160000000000000016 /* CatalogContentLocalization.swift in Sources */,
+				AA0000430000000000000043 /* CatalogSearchNormalization.swift in Sources */,
+				AA0000080000000000000008 /* InventoryView.swift in Sources */,
+				AA0000090000000000000009 /* ItemEditorView.swift in Sources */,
+				AA00000A000000000000000A /* NewItemView.swift in Sources */,
+				AA0000170000000000000017 /* ListRowSeparatorGuides.swift in Sources */,
+				AA0000670000000000000067 /* HomeCatalogListChrome.swift in Sources */,
+				AA0000680000000000000068 /* AppHomeFirstVisitExplainer.swift in Sources */,
+				AA0000690000000000000069 /* HomeFirstVisitExplainerView.swift in Sources */,
+				AA00006A000000000000006A /* AppWelcomeExplainer.swift in Sources */,
+				AA00006B000000000000006B /* WelcomeExplainerOverlay.swift in Sources */,
+				AA00006C000000000000006C /* SettingsSectionViews.swift in Sources */,
+				AA00006D000000000000006D /* SettingsAppFeaturesView.swift in Sources */,
+				AA00006E000000000000006E /* AppFeaturesCatalog.swift in Sources */,
+				AA00000C000000000000000C /* ShoppingView.swift in Sources */,
+				AA00004F000000000000004F /* StorePullToAddCatalogSearchView.swift in Sources */,
+				AA00000D000000000000000D /* ShoppingRowView.swift in Sources */,
+				AA0000530000000000000053 /* ShoppingQuantitySwipeColumn.swift in Sources */,
+				AA0000120000000000000012 /* GroupTagEditorSheet.swift in Sources */,
+				AA0000360000000000000036 /* ShareExtensionAppGroupSupport.swift in Sources */,
+				AA00004E000000000000004E /* StoreTabEllipsisMenu.swift in Sources */,
+				AA00003D000000000000003D /* ShoppingListShareText.swift in Sources */,
+				AA0000400000000000000040 /* AppShoppingBadgeUnchecked.swift in Sources */,
+				AA0000410000000000000041 /* ShoppingIconBadge.swift in Sources */,
+				AA0000420000000000000042 /* TextSizeSettingsView.swift in Sources */,
+				AA0000500000000000000050 /* ThemeSettingsView.swift in Sources */,
+				AA0000510000000000000051 /* SettingsStoreListPreview.swift in Sources */,
+				AA0000540000000000000054 /* QuantityPillMaterialStyle.swift in Sources */,
+				AA0000550000000000000055 /* ShoppingRowQuickActionsMenu.swift in Sources */,
+				AA0000560000000000000056 /* HomeCatalogRowContextMenu.swift in Sources */,
+				AA0000570000000000000057 /* CatalogMoveNewSectionPrompt.swift in Sources */,
+				AA0000580000000000000058 /* CatalogItemSectionPicker.swift in Sources */,
+				AA0000590000000000000059 /* AppSystemLocale.swift in Sources */,
+				AA00005A000000000000005A /* CatalogLayoutMirroring.swift in Sources */,
+				83840ABB2FE5D790001D1EBA /* LocalizedCopy.swift in Sources */,
+				AA0000630000000000000063 /* Recipe.swift in Sources */,
+				AA0000640000000000000064 /* RecipesListView.swift in Sources */,
+				AA0000650000000000000065 /* RecipeApplySheet.swift in Sources */,
+				AA00004A000000000000004A /* ImportTextToShoppingListIntent.swift in Sources */,
+				AA00004C000000000000004C /* ShareTextLineImport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000H100000000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00002F000000000000002F /* ShareViewController.swift in Sources */,
+				AA0000380000000000000038 /* ShareImportFlow.swift in Sources */,
+				AA0000390000000000000039 /* ListRowSeparatorGuides.swift in Sources */,
+				AA0000480000000000000048 /* CatalogSearchNormalization.swift in Sources */,
+				AA00005B000000000000005B /* LocalizedCopy.swift in Sources */,
+				AA0000600000000000000060 /* AppSystemLocale.swift in Sources */,
+				AA0000610000000000000061 /* CatalogLayoutMirroring.swift in Sources */,
+				AA0000620000000000000062 /* AppContentLanguage.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA000Q000000000000000000 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA000H000000000000000000 /* ShareExtension */;
+			targetProxy = AA000P000000000000000000 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AA000H3100000000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				DEVELOPMENT_TEAM = V82Z48RCF5;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianengelman.grocerylist.v2.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA000H3100000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				DEVELOPMENT_TEAM = V82Z48RCF5;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianengelman.grocerylist.v2.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AA0011000000000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = V82Z48RCF5;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianengelman.grocerylist.v2;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USE_HEADERMAP = YES;
+			};
+			name = Debug;
+		};
+		AA0011000000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = V82Z48RCF5;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianengelman.grocerylist.v2;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USE_HEADERMAP = YES;
+			};
+			name = Release;
+		};
+		AA0014000000000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = GroceryList/GroceryList.entitlements;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V82Z48RCF5;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GroceryList/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianengelman.grocerylist.v2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				USE_HEADERMAP = YES;
+			};
+			name = Debug;
+		};
+		AA0014000000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = GroceryList/GroceryList.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V82Z48RCF5;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GroceryList/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianengelman.grocerylist.v2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				USE_HEADERMAP = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000H3000000000000000000 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000H3100000000000000000 /* Debug */,
+				AA000H3100000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AA0012000000000000000000 /* Build configuration list for PBXProject "Shoplister_v2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0011000000000000000000 /* Debug */,
+				AA0011000000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AA0013000000000000000000 /* Build configuration list for PBXNativeTarget "Shoplister_v2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0014000000000000000000 /* Debug */,
+				AA0014000000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA0010000000000000000000 /* Project object */;
+}

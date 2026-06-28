@@ -1,0 +1,4 @@
+/* Camera and photo library permission prompts. */
+"NSCameraUsageDescription" = "Take photos to attach to grocery items in your library.";
+"NSPhotoLibraryUsageDescription" = "Choose photos from your library to attach to grocery items.";
+"CFBundleDisplayName" = "Shoplister";
