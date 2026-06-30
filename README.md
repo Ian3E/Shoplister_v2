@@ -1,6 +1,6 @@
-# Shoplister v2 (UX experiment branch)
+# Shoplister v2
 
-**Shoplister v2** is a copy of [Shoplister v1](../Shoplister_v1) for trying significant UX changes without affecting the main project.
+**Shoplister v2** is the production iOS app in this repository — a grocery list and item library with English/Hebrew support, saved lists, and on-device backup. It evolved from [Shoplister v1](../Shoplister_v1) as a separate App Store listing with a new bundle ID.
 
 The Xcode project is **`Shoplister_v2.xcodeproj`**; the main app target is **Shoplister_v2**. The on-device name is **Shoplister**.
 
@@ -53,3 +53,36 @@ To publish after pushing to GitHub:
 4. Save; GitHub will serve the site at `https://ian3e.github.io/Shoplister_v2/`
 
 Use the same URL in **App Store Connect** → App Privacy → Privacy Policy URL.
+
+## App Store submission checklist
+
+Complete these steps in [Apple Developer](https://developer.apple.com) and [App Store Connect](https://appstoreconnect.apple.com) after archiving from Xcode.
+
+### Developer Portal (signing)
+
+- App IDs: `com.ianengelman.grocerylist.v2` and `com.ianengelman.grocerylist.v2.ShareExtension`
+- App Group `group.com.ianengelman.grocerylist.v2` enabled on **both** App IDs
+- Provisioning profiles regenerate cleanly; **Product → Archive** succeeds for Release / Any iOS Device
+
+### App Store Connect (new listing)
+
+Create a **new app** for bundle ID `com.ianengelman.grocerylist.v2` (not an update to v1).
+
+| Field | Value |
+|-------|--------|
+| Privacy Policy URL | `https://ian3e.github.io/Shoplister_v2/privacy.html` |
+| Support | `support.shoplister@gmail.com` |
+
+**App Privacy questionnaire (summary):**
+
+- Grocery/library data: **not collected** (on device only)
+- Photos: used for app functionality, not linked to identity, not for tracking
+- No third-party SDK data collection
+
+**Before submit:**
+
+1. Age rating questionnaire (likely 4+)
+2. iPhone portrait screenshots
+3. Description, subtitle, keywords
+4. Archive → Upload → TestFlight → Submit for Review
+5. Export compliance: with `ITSAppUsesNonExemptEncryption` = false in Info.plist, answer **No** to custom encryption

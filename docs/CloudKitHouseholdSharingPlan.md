@@ -166,7 +166,7 @@ When a member's device language preference drifts from `Household.libraryLanguag
 
 When user taps **Create household from this library**:
 
-1. Offer backup export (`CatalogBackupCodec`) as safety net
+1. Offer backup export (`LibraryBackupCodec`) as safety net
 2. Set `Household.libraryLanguage` to the user's **current active** catalog language
 3. Upload that language's `V3Bundle` + images to new shared zone (do not upload the inactive language bundle)
 4. Mark local data as bound to `householdID`
@@ -257,7 +257,7 @@ Local-only users: no CloudKit writes, no behavior change from today.
 | `SettingsView.swift` | Household section, iCloud status; household-aware language picker with whole-household reset |
 | `ShareExtensionAppGroupSupport.swift` | Household-aware snapshot with stable IDs |
 | `GroceryList.entitlements` | CloudKit + Push Notifications |
-| `CatalogBackupCodec.swift` | Keep as manual export escape hatch; import must not regenerate UUIDs when household-bound |
+| `LibraryBackupCodec.swift` | Keep as manual export escape hatch; import preserves item UUIDs (v4 `item_id` column) |
 
 ---
 

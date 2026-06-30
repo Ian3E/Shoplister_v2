@@ -56,8 +56,12 @@ enum LocalizedCopy {
         String(localized: "Preview", comment: "Preview section header")
     }
 
-    static var version10: String {
-        String(localized: "Version 1.0", comment: "App version label in Settings")
+    static func appVersionLabel(version: String, build: String) -> String {
+        String(
+            format: String(localized: "Version %@ (%@)", comment: "App version label in Settings About"),
+            version,
+            build
+        )
     }
 
     static var export: String {
@@ -348,10 +352,6 @@ enum LocalizedCopy {
             localized: "Use the Import Text to Shopping List shortcut to add items when each line matches a library item name.",
             comment: "App feature description: Shortcuts text import"
         )
-    }
-
-    static var comingSoon: String {
-        String(localized: "Coming soon", comment: "Accessibility hint for inactive About rows")
     }
 
     static var language: String {
@@ -680,17 +680,6 @@ enum LocalizedCopy {
         )
     }
 
-    static var resetExplainers: String {
-        String(
-            localized: "Reset explainers",
-            comment: "Settings button to show welcome and first-item explainers again"
-        )
-    }
-
-    static var settingsDebug: String {
-        String(localized: "Debug", comment: "Debug settings section title")
-    }
-
     static var firstShoppingItemExplainerCongratulations: String {
         String(localized: "Congratulations!", comment: "First shopping item explainer title")
     }
@@ -728,10 +717,6 @@ enum LocalizedCopy {
 
     static var savedLists: String {
         String(localized: "Saved lists", comment: "Saved lists navigation title and Home toolbar button")
-    }
-
-    static var recipes: String {
-        savedLists
     }
 
     static var newRecipe: String {

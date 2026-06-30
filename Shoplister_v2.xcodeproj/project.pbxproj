@@ -37,6 +37,8 @@
 		AA00001E000000000000001E /* LibraryBackupCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001E /* LibraryBackupCodec.swift */; };
 		AA0000700000000000000070 /* LibraryBackupArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000070 /* LibraryBackupArchive.swift */; };
 		AA0000710000000000000071 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AA000PKG2000000000000002 /* ZIPFoundation */; };
+		AA0000720000000000000072 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000D /* PrivacyInfo.xcprivacy */; };
+		AA0000730000000000000073 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000E /* PrivacyInfo.xcprivacy */; };
 		AA00001F000000000000001F /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001F /* ActivityView.swift */; };
 		AA0000200000000000000020 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000020 /* AppAppearance.swift */; };
 		AA0000210000000000000021 /* seed-library-backup-en.txt in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000003 /* seed-library-backup-en.txt */; };
@@ -195,6 +197,8 @@
 		AA000201000000000000000A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		AA000201000000000000000B /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
 		AA000201000000000000000C /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = InfoPlist.strings; sourceTree = "<group>"; };
+		AA000201000000000000000D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AA000201000000000000000E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -234,6 +238,7 @@
 				AA0002010000000000000001 /* Assets.xcassets */,
 				AA0002010000000000000009 /* LaunchScreen.storyboard */,
 				AA0002010000000000000002 /* Info.plist */,
+				AA000201000000000000000D /* PrivacyInfo.xcprivacy */,
 				AA0002010000000000000007 /* GroceryList.entitlements */,
 				AA0006610000000000000000 /* en.lproj */,
 				AA0006620000000000000000 /* he.lproj */,
@@ -424,6 +429,7 @@
 				AA000101000000000000002B /* ShareViewController.swift */,
 				AA0001010000000000000037 /* ShareImportFlow.swift */,
 				AA0002010000000000000005 /* Info.plist */,
+				AA000201000000000000000E /* PrivacyInfo.xcprivacy */,
 				AA0002010000000000000006 /* ShareExtension.entitlements */,
 			);
 			path = ShareExtension;
@@ -524,6 +530,7 @@
 				AA00005C000000000000005C /* Localizable.xcstrings in Resources */,
 				AA00005E000000000000005E /* InfoPlist.strings in Resources */,
 				AA00005F000000000000005F /* InfoPlist.strings in Resources */,
+				AA0000720000000000000072 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -532,6 +539,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00005D000000000000005D /* Localizable.xcstrings in Resources */,
+				AA0000730000000000000073 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

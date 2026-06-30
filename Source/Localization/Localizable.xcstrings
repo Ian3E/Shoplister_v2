@@ -559,17 +559,6 @@
         }
       }
     },
-    "Coming soon": {
-      "comment": "Accessibility hint for inactive About rows",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "בקרוב"
-          }
-        }
-      }
-    },
     "Confirm before clearing list": {
       "comment": "Confirm before clearing list toggle",
       "localizations": {
@@ -687,17 +676,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "נתונים ושיתוף"
-          }
-        }
-      }
-    },
-    "Debug": {
-      "comment": "Debug settings section title",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ניפוי שגיאות"
           }
         }
       }
@@ -994,18 +972,6 @@
         }
       }
     },
-    "Experimental Home list layout. Changes here do not affect the real Home screen.": {
-      "comment": "Footer on Home sandbox preview screen",
-      "extractionState": "stale",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "פריסת רשימת בית ניסיונית. שינויים כאן אינם משפיעים על מסך הבית האמיתי."
-          }
-        }
-      }
-    },
     "Export": {
       "comment": "Export backup button",
       "localizations": {
@@ -1057,18 +1023,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "קטן מאוד"
-          }
-        }
-      }
-    },
-    "General": {
-      "comment": "General settings section title",
-      "extractionState": "stale",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "כללי"
           }
         }
       }
@@ -1137,18 +1091,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ספריית הבית"
-          }
-        }
-      }
-    },
-    "Home sandbox": {
-      "comment": "Home sandbox debug screen title",
-      "extractionState": "stale",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ארגז חול בית"
           }
         }
       }
@@ -1952,18 +1894,6 @@
         }
       }
     },
-    "Recipes": {
-      "comment": "Recipes navigation title and toolbar button",
-      "extractionState": "stale",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "מתכונים"
-          }
-        }
-      }
-    },
     "Red": {
       "comment": "Red theme color name",
       "localizations": {
@@ -2038,17 +1968,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "החלפה"
-          }
-        }
-      }
-    },
-    "Reset explainers": {
-      "comment": "Settings button to show welcome and first-item explainers again",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "איפוס הסברים"
           }
         }
       }
@@ -2629,13 +2548,13 @@
         }
       }
     },
-    "Version 1.0": {
-      "comment": "App version label in Settings",
+    "Version %@ (%@)": {
+      "comment": "App version label in Settings About",
       "localizations": {
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "גרסה 1.0"
+            "value": "גרסה %@ (%@)"
           }
         }
       }

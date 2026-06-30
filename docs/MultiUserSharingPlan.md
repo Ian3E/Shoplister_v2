@@ -26,7 +26,7 @@ flowchart LR
 
 Existing “sharing” is **export-only**:
 - Shopping list → plain text via [`ShoppingListShareText.swift`](../Source/Features/Shopping/ShoppingListShareText.swift)
-- Catalog backup → manual `.txt` import/export via [`CatalogBackupCodec.swift`](../Source/Services/CatalogBackupCodec.swift)
+- Catalog backup → zip import/export via [`LibraryBackupCodec.swift`](../Source/Services/LibraryBackupCodec.swift) and [`LibraryBackupArchive.swift`](../Source/Services/LibraryBackupArchive.swift)
 - Share extension → name-matched add-to-shopping on **same device** via [`ShareExtensionAppGroupSupport.swift`](../Source/Services/ShareExtensionAppGroupSupport.swift)
 
 None of this supports live collaboration between users.
@@ -170,7 +170,7 @@ Plan around **Option A** to preserve current product behavior.
 
 ### 3. Stable IDs become critical
 
-[`CatalogBackupCodec`](../Source/Services/CatalogBackupCodec.swift) currently assigns **new UUIDs on import**. Shared collaboration requires **stable `GroceryItem.id` across all members**. Share extension matching should move from name-based to **ID-based** where possible, with name fallback for text imports.
+[`LibraryBackupCodec`](../Source/Services/LibraryBackupCodec.swift) **preserves item UUIDs on import** (v4 format with `item_id` column). Shared collaboration still requires **stable `GroceryItem.id` across all members** for live sync. Share extension matching should move from name-based to **ID-based** where possible, with name fallback for text imports.
 
 ### 4. Images
 
@@ -242,7 +242,7 @@ Start with **field-level last-write-wins + tombstones**. Avoid custom CRDTs unti
 | Entitlements | Add CloudKit container + push |
 | Settings | Household UI, sign-in status, leave/join |
 | Share extension + App Group | Household-aware snapshot + IDs |
-| [`CatalogBackupCodec.swift`](../Source/Services/CatalogBackupCodec.swift) | Keep for backup/export; not primary sync |
+| [`LibraryBackupCodec.swift`](../Source/Services/LibraryBackupCodec.swift) | Keep for backup/export; not primary sync; import preserves UUIDs |
 | Tests | Sync merge cases, offline queue, invite acceptance |
 
 ---

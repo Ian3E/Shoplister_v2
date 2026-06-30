@@ -289,7 +289,7 @@ struct SettingsAboutView: View {
                     Text(LocalizedCopy.appName)
                         .font(.title2.weight(.semibold))
 
-                    Text(LocalizedCopy.version10)
+                    Text(SettingsAboutAppInfo.versionLabel)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -310,6 +310,14 @@ struct SettingsAboutView: View {
         }
         .navigationTitle(LocalizedCopy.settingsAbout)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private enum SettingsAboutAppInfo {
+    static var versionLabel: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+        return LocalizedCopy.appVersionLabel(version: version, build: build)
     }
 }
 
