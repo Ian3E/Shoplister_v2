@@ -323,7 +323,7 @@ enum LocalizedCopy {
 
     static var appFeatureBackupDescription: String {
         String(
-            localized: "Export your library, sections, and saved lists as a plain text file. Import to restore or move to another device. Images are not included.",
+            localized: "Export your library, sections, recipes, and item photos as a zip file. Import to restore or move to another device.",
             comment: "App feature description: library backup export and import"
         )
     }
@@ -488,14 +488,14 @@ enum LocalizedCopy {
 
     static var exportBackupExplainer: String {
         String(
-            localized: "Exports the library and section lists in a plain text file which can be imported later. Images are not exported.",
+            localized: "Exports your library, sections, recipes, and item photos in a zip file that can be imported later.",
             comment: "Export backup confirmation alert message"
         )
     }
 
     static var importBackupExplainer: String {
         String(
-            localized: "This will delete and replace all library items and sections and cannot be undone.",
+            localized: "This will delete and replace all library items, sections, and photos for this language and cannot be undone.",
             comment: "Import backup confirmation alert message"
         )
     }
@@ -1219,10 +1219,44 @@ enum LocalizedCopy {
         )
     }
 
-    static var backupInvalidCatalogHeader: String {
+    static var backupInvalidLibraryHeader: String {
         String(
-            localized: "Missing or invalid library item header row after “[library]” (expected tab-separated: name, home_section, shopping_section).",
-            comment: "Backup import error for invalid catalog header row"
+            localized: "Missing or invalid library item header row after “[library]” (expected tab-separated: name, home_section, shopping_section, home_order, item_id).",
+            comment: "Backup import error for invalid library header row"
+        )
+    }
+
+    static var backupInvalidZipArchive: String {
+        String(
+            localized: "This file is not a valid Shoplister library backup zip.",
+            comment: "Backup import error when zip cannot be read"
+        )
+    }
+
+    static var backupMissingLibraryFile: String {
+        String(
+            localized: "This backup zip is missing library.txt.",
+            comment: "Backup import error when library.txt is absent from zip"
+        )
+    }
+
+    static func backupInvalidImageFileName(_ name: String) -> String {
+        String(
+            format: String(
+                localized: "Invalid image file name in backup: “%@”.",
+                comment: "Backup import error for malformed image filename in zip"
+            ),
+            name
+        )
+    }
+
+    static func backupInvalidItemID(line: Int) -> String {
+        String(
+            format: String(
+                localized: "Line %lld: item_id must be a valid UUID.",
+                comment: "Backup import error for invalid item_id on a library row"
+            ),
+            line
         )
     }
 

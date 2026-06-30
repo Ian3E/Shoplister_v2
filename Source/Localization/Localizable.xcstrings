@@ -1017,24 +1017,24 @@
         }
       }
     },
-    "Export your library, sections, and saved lists as a plain text file. Import to restore or move to another device. Images are not included.": {
+    "Export your library, sections, recipes, and item photos as a zip file. Import to restore or move to another device.": {
       "comment": "App feature description: library backup export and import",
       "localizations": {
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "ייצאו את הספרייה, הקבוצות והרשימות השמורות כקובץ טקסט. ייבאו לשחזור או מעבר למכשיר אחר. תמונות לא נכללות."
+            "value": "ייצאו את הספרייה, הקבוצות, המתכונים ותמונות הפריטים כקובץ zip. ייבאו לשחזור או מעבר למכשיר אחר."
           }
         }
       }
     },
-    "Exports the library and section lists in a plain text file which can be imported later. Images are not exported.": {
+    "Exports your library, sections, recipes, and item photos in a zip file that can be imported later.": {
       "comment": "Export backup confirmation alert message",
       "localizations": {
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "מייצא את הספרייה ורשימות הקבוצות לקובץ טקסט שניתן לייבא מאוחר יותר. תמונות אינן מיוצאות."
+            "value": "מייצא את הספרייה, הקבוצות, המתכונים ותמונות הפריטים בקובץ zip שניתן לייבא מאוחר יותר."
           }
         }
       }
@@ -1376,6 +1376,28 @@
         }
       }
     },
+    "Invalid image file name in backup: “%@”.": {
+      "comment": "Backup import error for malformed image filename in zip",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שם קובץ תמונה לא תקין בגיבוי: ״%@״."
+          }
+        }
+      }
+    },
+    "Line %lld: item_id must be a valid UUID.": {
+      "comment": "Backup import error for invalid item_id on a library row",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שורה %lld: item_id חייב להיות UUID תקין."
+          }
+        }
+      }
+    },
     "Line %lld: recipe name is empty.": {
       "comment": "Backup import error for empty recipe name on a recipe_items row",
       "localizations": {
@@ -1509,13 +1531,35 @@
         }
       }
     },
-    "Missing or invalid library item header row after “[library]” (expected tab-separated: name, home_section, shopping_section).": {
-      "comment": "Backup import error for invalid catalog header row",
+    "Missing or invalid library item header row after “[library]” (expected tab-separated: name, home_section, shopping_section, home_order, item_id).": {
+      "comment": "Backup import error for invalid library header row",
       "localizations": {
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "שורת כותרת פריטי הספרייה חסרה או לא תקינה אחרי ״[library]״ (צפוי מופרד בטאב: name, home_section, shopping_section)."
+            "value": "שורת כותרת פריטי הספרייה חסרה או לא תקינה אחרי ״[library]״ (צפוי מופרד בטאב: name, home_section, shopping_section, home_order, item_id)."
+          }
+        }
+      }
+    },
+    "This backup zip is missing library.txt.": {
+      "comment": "Backup import error when library.txt is absent from zip",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בקובץ הגיבוי חסר library.txt."
+          }
+        }
+      }
+    },
+    "This file is not a valid Shoplister library backup zip.": {
+      "comment": "Backup import error when zip cannot be read",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "קובץ זה אינו קובץ גיבוי ספרייה תקין של Shoplister."
           }
         }
       }
@@ -2530,13 +2574,13 @@
         }
       }
     },
-    "This will delete and replace all library items and sections and cannot be undone.": {
+    "This will delete and replace all library items, sections, and photos for this language and cannot be undone.": {
       "comment": "Import backup confirmation alert message",
       "localizations": {
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "פעולה זו תמחק ותחליף את כל פריטי הספרייה והקבוצות ולא ניתן לבטלה."
+            "value": "פעולה זו תמחק ותחליף את כל פריטי הספרייה, הקבוצות והתמונות לשפה זו ולא ניתן לבטלה."
           }
         }
       }

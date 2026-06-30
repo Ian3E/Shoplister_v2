@@ -1,16 +1,17 @@
 import Foundation
 
-/// Plain-text catalog backup for one `AppContentLanguage` (names + section titles + recipes; no images).
-enum CatalogBackupCodec {
-    static let formatVersion = 3
-    static let minimumImportFormatVersion = 2
+/// Plain-text library backup for one `AppContentLanguage` (sections, items, recipes; images ship in the zip archive).
+enum LibraryBackupCodec {
+    static let formatVersion = 4
+    static let minimumImportFormatVersion = 4
+    static let libraryFileName = "library.txt"
 
     enum BackupError: LocalizedError {
         case missingFormatHeader
         case unsupportedFormat(Int)
         case languageMismatch(expected: AppContentLanguage, found: AppContentLanguage)
         case missingLanguageHeader
-        case invalidCatalogHeader
+        case invalidLibraryHeader
         case invalidRecipeItemsHeader
         case wrongColumnCount(line: Int, expected: Int, got: Int)
         case emptyInventoryGroups
@@ -20,6 +21,7 @@ enum CatalogBackupCodec {
         case emptyItemName(line: Int)
         case emptyRecipeName(line: Int)
         case invalidRecipeQuantity(line: Int)
+        case invalidItemID(line: Int)
 
         var errorDescription: String? {
             switch self {
@@ -31,8 +33,8 @@ enum CatalogBackupCodec {
                 return LocalizedCopy.backupLanguageMismatch(found: found.title, expected: expected.title)
             case .missingLanguageHeader:
                 return LocalizedCopy.backupMissingLanguageHeader
-            case .invalidCatalogHeader:
-                return LocalizedCopy.backupInvalidCatalogHeader
+            case .invalidLibraryHeader:
+                return LocalizedCopy.backupInvalidLibraryHeader
             case .invalidRecipeItemsHeader:
                 return LocalizedCopy.backupInvalidRecipeItemsHeader
             case .wrongColumnCount(let line, let expected, let got):
@@ -51,18 +53,27 @@ enum CatalogBackupCodec {
                 return LocalizedCopy.backupEmptyRecipeName(line: line)
             case .invalidRecipeQuantity(let line):
                 return LocalizedCopy.backupInvalidRecipeQuantity(line: line)
+            case .invalidItemID(let line):
+                return LocalizedCopy.backupInvalidItemID(line: line)
             }
         }
     }
 
-    struct ParsedCatalogBackup {
+    struct ParsedLibraryBackup {
         let language: AppContentLanguage
         let inventoryGroupTitles: [String]
         let shoppingGroupTitles: [String]
-        /// Normalized item rows (group titles match `inventoryGroupTitles` / `shoppingGroupTitles`).
-        let rows: [(name: String, inventoryGroup: String, shoppingGroup: String, inventoryOrder: Int?)]
+        let rows: [Row]
         let recipeTitles: [String]
         let recipeItemRows: [(recipeName: String, itemName: String, quantity: Int)]
+
+        struct Row: Equatable {
+            let name: String
+            let inventoryGroup: String
+            let shoppingGroup: String
+            let inventoryOrder: Int
+            let itemID: UUID
+        }
     }
 
     // MARK: - Export
@@ -81,9 +92,9 @@ enum CatalogBackupCodec {
         lines.append("#")
         lines.append("# Edit in any plain-text editor. Lines starting with # are comments.")
         lines.append("# Sections: [home_sections], [shopping_sections], [library], [recipes], [recipe_items].")
-        lines.append("# Library item rows are TAB-separated: name, home_section, shopping_section.")
+        lines.append("# Library item rows are TAB-separated: name, home_section, shopping_section, home_order, item_id.")
         lines.append("# Recipe item rows are TAB-separated: recipe_name, item_name, quantity.")
-        lines.append("# Section lists are one title per line (order is kept). Images are not exported.")
+        lines.append("# Item photos are stored in the images/ folder next to this file (one JPEG per item_id).")
         lines.append("")
 
         lines.append("[home_sections]")
@@ -99,7 +110,7 @@ enum CatalogBackupCodec {
         lines.append("")
 
         lines.append("[library]")
-        lines.append("name\thome_section\tshopping_section\thome_order")
+        lines.append("name\thome_section\tshopping_section\thome_order\titem_id")
         for item in catalog {
             let invTitle = inventoryTags.first { $0.id == item.inventoryTagID }?.title
                 ?? (language == .hebrew ? Tag.unsortedHebrewTitle : Tag.unsortedCanonicalTitle)
@@ -110,6 +121,7 @@ enum CatalogBackupCodec {
                 sanitizeFieldForTSV(invTitle),
                 sanitizeFieldForTSV(shopTitle),
                 "\(max(0, item.sortOrder))",
+                item.id.uuidString,
             ].joined(separator: "\t")
             lines.append(row)
         }
@@ -157,7 +169,7 @@ enum CatalogBackupCodec {
 
     // MARK: - Import
 
-    static func parseDocument(_ text: String, expectedLanguage: AppContentLanguage) throws -> ParsedCatalogBackup {
+    static func parseDocument(_ text: String, expectedLanguage: AppContentLanguage) throws -> ParsedLibraryBackup {
         var normalizedText = text
         if normalizedText.first == "\u{FEFF}" {
             normalizedText.removeFirst()
@@ -169,15 +181,8 @@ enum CatalogBackupCodec {
         var invGroups: [String] = []
         var shopGroups: [String] = []
         var recipeTitles: [String] = []
-        enum CatalogHeaderKind {
-            case v3
-            case legacyArchived
-            case withInventoryOrder
-        }
-
-        var catalogHeaderSeen = false
-        var catalogHeaderKind: CatalogHeaderKind = .v3
-        var rows: [(name: String, inv: String, shop: String, invOrder: Int?)] = []
+        var libraryHeaderSeen = false
+        var rows: [ParsedLibraryBackup.Row] = []
         var recipeItemsHeaderSeen = false
         var recipeItemRows: [(recipeName: String, itemName: String, quantity: Int)] = []
 
@@ -206,7 +211,7 @@ enum CatalogBackupCodec {
             if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") {
                 section = String(trimmed.dropFirst().dropLast())
                 if section == "library" {
-                    catalogHeaderSeen = false
+                    libraryHeaderSeen = false
                 }
                 if section == "recipe_items" {
                     recipeItemsHeaderSeen = false
@@ -216,27 +221,15 @@ enum CatalogBackupCodec {
             guard let sec = section else { continue }
 
             if sec == "library" {
-                if !catalogHeaderSeen {
+                if !libraryHeaderSeen {
                     if sanitizeSingleLine(trimmed).isEmpty { continue }
                     let cols = trimmed.split(separator: "\t", omittingEmptySubsequences: false).map(String.init)
                     let normalized = cols.map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
-                    let header3 = ["name", "home_section", "shopping_section"]
-                    let header4 = ["name", "home_section", "shopping_section", "archived"]
-                    let header4Order = ["name", "home_section", "shopping_section", "home_order"]
-                    let ok3 = normalized.count == 3 && zip(normalized, header3).allSatisfy({ $0 == $1 })
-                    let ok4Archived = normalized.count == 4 && zip(normalized, header4).allSatisfy({ $0 == $1 })
-                    let ok4Order = normalized.count == 4 && zip(normalized, header4Order).allSatisfy({ $0 == $1 })
-                    guard ok3 || ok4Archived || ok4Order else {
-                        throw BackupError.invalidCatalogHeader
+                    let header = ["name", "home_section", "shopping_section", "home_order", "item_id"]
+                    guard normalized.count == 5 && zip(normalized, header).allSatisfy({ $0 == $1 }) else {
+                        throw BackupError.invalidLibraryHeader
                     }
-                    if ok4Archived {
-                        catalogHeaderKind = .legacyArchived
-                    } else if ok4Order {
-                        catalogHeaderKind = .withInventoryOrder
-                    } else {
-                        catalogHeaderKind = .v3
-                    }
-                    catalogHeaderSeen = true
+                    libraryHeaderSeen = true
                     continue
                 }
                 if sanitizeSingleLine(trimmed).isEmpty { continue }
@@ -244,17 +237,26 @@ enum CatalogBackupCodec {
                     String($0).trimmingCharacters(in: .whitespaces)
                 }
                 let lineNumber = rows.count + 1
-                let expectedCols = catalogHeaderKind == .v3 ? 3 : 4
-                guard cols.count == expectedCols else {
-                    throw BackupError.wrongColumnCount(line: lineNumber, expected: expectedCols, got: cols.count)
+                guard cols.count == 5 else {
+                    throw BackupError.wrongColumnCount(line: lineNumber, expected: 5, got: cols.count)
                 }
                 let name = cols[0]
                 guard !name.isEmpty else { throw BackupError.emptyItemName(line: lineNumber) }
-                var invOrder: Int?
-                if catalogHeaderKind == .withInventoryOrder {
-                    invOrder = Int(cols[3].trimmingCharacters(in: .whitespacesAndNewlines))
+                guard let order = Int(cols[3].trimmingCharacters(in: .whitespacesAndNewlines)) else {
+                    throw BackupError.wrongColumnCount(line: lineNumber, expected: 5, got: cols.count)
                 }
-                rows.append((name: name, inv: cols[1], shop: cols[2], invOrder: invOrder))
+                guard let itemID = UUID(uuidString: cols[4]) else {
+                    throw BackupError.invalidItemID(line: lineNumber)
+                }
+                rows.append(
+                    ParsedLibraryBackup.Row(
+                        name: name,
+                        inventoryGroup: cols[1],
+                        shoppingGroup: cols[2],
+                        inventoryOrder: max(0, order),
+                        itemID: itemID
+                    )
+                )
             } else if sec == "recipe_items" {
                 if !recipeItemsHeaderSeen {
                     if sanitizeSingleLine(trimmed).isEmpty { continue }
@@ -307,26 +309,26 @@ enum CatalogBackupCodec {
         let shopSet = Set(shopGroups.map { normalizeGroupTitle($0, language: fileLang).lowercased() })
 
         for (i, row) in rows.enumerated() {
-            let invN = normalizeGroupTitle(row.inv, language: fileLang)
-            let shopN = normalizeGroupTitle(row.shop, language: fileLang)
+            let invN = normalizeGroupTitle(row.inventoryGroup, language: fileLang)
+            let shopN = normalizeGroupTitle(row.shoppingGroup, language: fileLang)
             guard invSet.contains(invN.lowercased()) else {
-                throw BackupError.unknownInventoryGroup(itemLine: i + 1, title: row.inv)
+                throw BackupError.unknownInventoryGroup(itemLine: i + 1, title: row.inventoryGroup)
             }
             guard shopSet.contains(shopN.lowercased()) else {
-                throw BackupError.unknownShoppingGroup(itemLine: i + 1, title: row.shop)
+                throw BackupError.unknownShoppingGroup(itemLine: i + 1, title: row.shoppingGroup)
             }
         }
 
         let invNormalized = invGroups.map { normalizeGroupTitle($0, language: fileLang) }
         let shopNormalized = shopGroups.map { normalizeGroupTitle($0, language: fileLang) }
 
-        let normalizedRows: [(name: String, inventoryGroup: String, shoppingGroup: String, inventoryOrder: Int?)] = rows.map { r in
-            let invOrder = r.invOrder.map { max(0, $0) }
-            return (
-                name: normalizeField(r.name),
-                inventoryGroup: normalizeGroupTitle(r.inv, language: fileLang),
-                shoppingGroup: normalizeGroupTitle(r.shop, language: fileLang),
-                inventoryOrder: invOrder
+        let normalizedRows = rows.map { row in
+            ParsedLibraryBackup.Row(
+                name: normalizeField(row.name),
+                inventoryGroup: normalizeGroupTitle(row.inventoryGroup, language: fileLang),
+                shoppingGroup: normalizeGroupTitle(row.shoppingGroup, language: fileLang),
+                inventoryOrder: row.inventoryOrder,
+                itemID: row.itemID
             )
         }
 
@@ -341,7 +343,7 @@ enum CatalogBackupCodec {
             )
         }
 
-        return ParsedCatalogBackup(
+        return ParsedLibraryBackup(
             language: fileLang,
             inventoryGroupTitles: invNormalized,
             shoppingGroupTitles: shopNormalized,
@@ -363,7 +365,6 @@ enum CatalogBackupCodec {
         return out
     }
 
-    /// Drops duplicate titles (case-insensitive) and ensures the catch-all section exists for the language.
     private static func prepareGroupTitles(_ titles: [String], language: AppContentLanguage) -> [String] {
         var t = dedupePreservingOrder(titles.map { sanitizeSingleLine($0) }.filter { !$0.isEmpty })
         if !t.contains(where: { Tag.isUnsortedCanonicalTitle($0) }) {

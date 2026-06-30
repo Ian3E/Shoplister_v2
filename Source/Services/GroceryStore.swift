@@ -1284,35 +1284,51 @@ final class GroceryStore: ObservableObject {
         )
     }
 
-    // MARK: - Catalog backup (one language, plain text; no images)
+    // MARK: - Library backup (one language, zip with library.txt + images)
 
-    func exportCatalogBackupText(for language: AppContentLanguage) -> String {
-        if language == .hebrew {
-            return CatalogBackupCodec.exportDocument(
+    func exportLibraryBackup(for language: AppContentLanguage) throws -> URL {
+        switch language {
+        case .hebrew:
+            return try LibraryBackupArchive.exportZip(
                 language: language,
                 catalog: hebrew.catalog,
                 inventoryTags: hebrew.inventoryTags,
                 shoppingTags: hebrew.shoppingTags,
                 recipes: hebrew.recipes
             )
+        case .english:
+            return try LibraryBackupArchive.exportZip(
+                language: language,
+                catalog: english.catalog,
+                inventoryTags: english.inventoryTags,
+                shoppingTags: english.shoppingTags,
+                recipes: english.recipes
+            )
         }
-        return CatalogBackupCodec.exportDocument(
-            language: language,
-            catalog: english.catalog,
-            inventoryTags: english.inventoryTags,
-            shoppingTags: english.shoppingTags,
-            recipes: english.recipes
-        )
     }
 
-    /// Replaces catalog, tags, and recipes for the given language, clears shopping list.
+    /// Replaces library items, tags, and recipes for the given language, clears shopping list, restores images.
     /// Returns the number of recipe ingredient rows skipped because the item name was not in the library.
     @discardableResult
-    func importCatalogBackupDocument(_ text: String, into language: AppContentLanguage) throws -> Int {
-        let parsed = try CatalogBackupCodec.parseDocument(text, expectedLanguage: language)
+    func importLibraryBackup(from zipURL: URL, into language: AppContentLanguage) throws -> Int {
+        let payload = try LibraryBackupArchive.loadImportPayload(from: zipURL, expectedLanguage: language)
+        defer {
+            if let imagesDirectoryURL = payload.imagesDirectoryURL {
+                try? FileManager.default.removeItem(at: imagesDirectoryURL)
+            }
+        }
+        return try applyImportedLibrary(payload, into: language)
+    }
 
-        func buildCatalog(
-            rows: [(name: String, inventoryGroup: String, shoppingGroup: String, inventoryOrder: Int?)],
+    @discardableResult
+    private func applyImportedLibrary(
+        _ payload: LibraryBackupArchive.ImportPayload,
+        into language: AppContentLanguage
+    ) throws -> Int {
+        let parsed = payload.parsed
+
+        func buildLibrary(
+            rows: [LibraryBackupCodec.ParsedLibraryBackup.Row],
             invTags: [Tag],
             shopTags: [Tag]
         ) throws -> [GroceryItem] {
@@ -1320,17 +1336,17 @@ final class GroceryStore: ObservableObject {
             let shopMap = Dictionary(uniqueKeysWithValues: shopTags.map { ($0.title.lowercased(), $0.id) })
             return try rows.map { row in
                 guard let iid = invMap[row.inventoryGroup.lowercased()] else {
-                    throw CatalogBackupCodec.BackupError.unknownInventoryGroup(itemLine: -1, title: row.inventoryGroup)
+                    throw LibraryBackupCodec.BackupError.unknownInventoryGroup(itemLine: -1, title: row.inventoryGroup)
                 }
                 guard let sid = shopMap[row.shoppingGroup.lowercased()] else {
-                    throw CatalogBackupCodec.BackupError.unknownShoppingGroup(itemLine: -1, title: row.shoppingGroup)
+                    throw LibraryBackupCodec.BackupError.unknownShoppingGroup(itemLine: -1, title: row.shoppingGroup)
                 }
                 return GroceryItem(
-                    id: UUID(),
+                    id: row.itemID,
                     name: row.name,
                     inventoryTagID: iid,
                     shoppingTagID: sid,
-                    sortOrder: row.inventoryOrder ?? 0,
+                    sortOrder: row.inventoryOrder,
                     hasImage: false
                 )
             }
@@ -1393,6 +1409,16 @@ final class GroceryStore: ObservableObject {
             return (recipes, skipped)
         }
 
+        func restoreImages(for catalog: [GroceryItem], in bundle: inout V3Bundle) throws {
+            guard let imagesDirectoryURL = payload.imagesDirectoryURL else { return }
+            let imageURLs = try LibraryBackupArchive.imageURLsByItemID(in: imagesDirectoryURL)
+            let catalogIDs = Set(catalog.map(\.id))
+            for (itemID, sourceURL) in imageURLs where catalogIDs.contains(itemID) {
+                try ItemImageStore.importImage(from: sourceURL, forItemID: itemID)
+            }
+            normalizeItemImages(in: &bundle)
+        }
+
         var skippedRecipeRows = 0
 
         switch language {
@@ -1406,7 +1432,7 @@ final class GroceryStore: ObservableObject {
             hebrew.shoppingTags = parsed.shoppingGroupTitles.enumerated().map {
                 Tag(kind: .shopping, title: $0.element, sortOrder: $0.offset)
             }
-            hebrew.catalog = try buildCatalog(rows: parsed.rows, invTags: hebrew.inventoryTags, shopTags: hebrew.shoppingTags)
+            hebrew.catalog = try buildLibrary(rows: parsed.rows, invTags: hebrew.inventoryTags, shopTags: hebrew.shoppingTags)
             let builtRecipes = buildRecipes(
                 titles: parsed.recipeTitles,
                 rows: parsed.recipeItemRows,
@@ -1415,10 +1441,10 @@ final class GroceryStore: ObservableObject {
             hebrew.recipes = builtRecipes.recipes
             skippedRecipeRows = builtRecipes.skippedRows
             hebrew.shopping.removeAll()
+            try restoreImages(for: hebrew.catalog, in: &hebrew)
             normalizeTagArrayInBundle(&hebrew)
             repairOrphanedTagIds(in: &hebrew)
             normalizeCatalogSortOrders(in: &hebrew)
-            normalizeItemImages(in: &hebrew)
             sortSideTagsInPlace(&hebrew)
             sortCatalog(for: .hebrew)
         case .english:
@@ -1431,7 +1457,7 @@ final class GroceryStore: ObservableObject {
             english.shoppingTags = parsed.shoppingGroupTitles.enumerated().map {
                 Tag(kind: .shopping, title: $0.element, sortOrder: $0.offset)
             }
-            english.catalog = try buildCatalog(rows: parsed.rows, invTags: english.inventoryTags, shopTags: english.shoppingTags)
+            english.catalog = try buildLibrary(rows: parsed.rows, invTags: english.inventoryTags, shopTags: english.shoppingTags)
             let builtRecipes = buildRecipes(
                 titles: parsed.recipeTitles,
                 rows: parsed.recipeItemRows,
@@ -1440,10 +1466,10 @@ final class GroceryStore: ObservableObject {
             english.recipes = builtRecipes.recipes
             skippedRecipeRows = builtRecipes.skippedRows
             english.shopping.removeAll()
+            try restoreImages(for: english.catalog, in: &english)
             normalizeTagArrayInBundle(&english)
             repairOrphanedTagIds(in: &english)
             normalizeCatalogSortOrders(in: &english)
-            normalizeItemImages(in: &english)
             sortSideTagsInPlace(&english)
             sortCatalog(for: .english)
         }

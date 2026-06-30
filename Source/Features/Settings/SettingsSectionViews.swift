@@ -53,7 +53,7 @@ struct SettingsItemLibraryView: View {
     @State private var catalogLanguagePickerValue: String = AppContentLanguage.english.rawValue
     @State private var sharePayload: SettingsSharePayload?
     @State private var isPickingImportFile = false
-    @State private var pendingImportText: String?
+    @State private var pendingImportURL: URL?
     @State private var isPresentingImportReplaceConfirm = false
     @State private var isPresentingExportConfirm = false
     @State private var isPresentingClearLibraryConfirm = false
@@ -109,8 +109,8 @@ struct SettingsItemLibraryView: View {
             isPresentingClearLibraryConfirm: $isPresentingClearLibraryConfirm,
             backupErrorMessage: $backupErrorMessage,
             backupSuccessMessage: $backupSuccessMessage,
-            pendingImportText: $pendingImportText,
-            onExport: exportCatalogBackup,
+            pendingImportURL: $pendingImportURL,
+            onExport: exportLibraryBackup,
             onImport: runPendingImport,
             onClearLibrary: { store.clearLibrary(for: catalogLanguage) },
             store: store
@@ -120,7 +120,7 @@ struct SettingsItemLibraryView: View {
         }
         .fileImporter(
             isPresented: $isPickingImportFile,
-            allowedContentTypes: [.plainText, .utf8PlainText],
+            allowedContentTypes: [.zip],
             allowsMultipleSelection: false,
             onCompletion: handleImportFilePickerResult
         )
@@ -141,12 +141,13 @@ struct SettingsItemLibraryView: View {
                 }
             }
             do {
-                let data = try Data(contentsOf: url)
-                guard let text = String(data: data, encoding: .utf8) else {
-                    backupErrorMessage = LocalizedCopy.utf8ReadError
-                    return
+                let dest = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("shoplister-import-pending-\(UUID().uuidString).zip")
+                if FileManager.default.fileExists(atPath: dest.path) {
+                    try FileManager.default.removeItem(at: dest)
                 }
-                pendingImportText = text
+                try FileManager.default.copyItem(at: url, to: dest)
+                pendingImportURL = dest
                 isPresentingImportReplaceConfirm = true
             } catch {
                 backupErrorMessage = error.localizedDescription
@@ -156,14 +157,9 @@ struct SettingsItemLibraryView: View {
         }
     }
 
-    private func exportCatalogBackup() {
-        let lang = catalogLanguage
-        let text = store.exportCatalogBackupText(for: lang)
-        let suffix = lang == .hebrew ? "he" : "en"
-        let fileName = "shoplister-library-backup-\(suffix).txt"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+    private func exportLibraryBackup() {
         do {
-            try text.write(to: url, atomically: true, encoding: .utf8)
+            let url = try store.exportLibraryBackup(for: catalogLanguage)
             sharePayload = SettingsSharePayload(url: url)
         } catch {
             backupErrorMessage = error.localizedDescription
@@ -171,10 +167,11 @@ struct SettingsItemLibraryView: View {
     }
 
     private func runPendingImport() {
-        guard let text = pendingImportText else { return }
-        pendingImportText = nil
+        guard let url = pendingImportURL else { return }
+        pendingImportURL = nil
+        defer { try? FileManager.default.removeItem(at: url) }
         do {
-            let skippedRecipeRows = try store.importCatalogBackupDocument(text, into: catalogLanguage)
+            let skippedRecipeRows = try store.importLibraryBackup(from: url, into: catalogLanguage)
             if skippedRecipeRows > 0 {
                 backupSuccessMessage = LocalizedCopy.importSuccessMessage
                     + "\n"
@@ -538,7 +535,7 @@ private struct SettingsItemLibraryAlertsModifier: ViewModifier {
     @Binding var isPresentingClearLibraryConfirm: Bool
     @Binding var backupErrorMessage: String?
     @Binding var backupSuccessMessage: String?
-    @Binding var pendingImportText: String?
+    @Binding var pendingImportURL: URL?
     let onExport: () -> Void
     let onImport: () -> Void
     let onClearLibrary: () -> Void
@@ -589,7 +586,7 @@ private struct SettingsItemLibraryAlertsModifier: ViewModifier {
                 Text(LocalizedCopy.exportBackupExplainer)
             }
             .alert(LocalizedCopy.importAction, isPresented: $isPresentingImportReplaceConfirm) {
-                Button(LocalizedCopy.cancel, role: .cancel) { pendingImportText = nil }
+                Button(LocalizedCopy.cancel, role: .cancel) { pendingImportURL = nil }
                 Button(LocalizedCopy.replace, role: .destructive, action: onImport)
             } message: {
                 Text(LocalizedCopy.importBackupExplainer)

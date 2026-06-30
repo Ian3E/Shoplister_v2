@@ -36,6 +36,14 @@ enum ItemImageStore {
         try? FileManager.default.removeItem(at: url)
     }
 
+    static func importImage(from sourceURL: URL, forItemID id: UUID) throws {
+        let dest = fileURL(forItemID: id)
+        if FileManager.default.fileExists(atPath: dest.path) {
+            try FileManager.default.removeItem(at: dest)
+        }
+        try FileManager.default.copyItem(at: sourceURL, to: dest)
+    }
+
     /// Removes every stored image file (used when resetting the library).
     static func deleteAllStoredImages() {
         let dir = directoryURL

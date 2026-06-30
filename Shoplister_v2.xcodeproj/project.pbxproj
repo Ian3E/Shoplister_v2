@@ -34,7 +34,9 @@
 		AA00001B000000000000001B /* ItemImageCompactPreviewOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001A /* ItemImageCompactPreviewOverlay.swift */; };
 		AA00001C000000000000001C /* FullWindowOverlayCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001C /* FullWindowOverlayCoordinator.swift */; };
 		AA00001D000000000000001D /* AppHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001D /* AppHaptics.swift */; };
-		AA00001E000000000000001E /* CatalogBackupCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001E /* CatalogBackupCodec.swift */; };
+		AA00001E000000000000001E /* LibraryBackupCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001E /* LibraryBackupCodec.swift */; };
+		AA0000700000000000000070 /* LibraryBackupArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000070 /* LibraryBackupArchive.swift */; };
+		AA0000710000000000000071 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AA000PKG2000000000000002 /* ZIPFoundation */; };
 		AA00001F000000000000001F /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000001F /* ActivityView.swift */; };
 		AA0000200000000000000020 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000020 /* AppAppearance.swift */; };
 		AA0000210000000000000021 /* seed-library-backup-en.txt in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000003 /* seed-library-backup-en.txt */; };
@@ -139,7 +141,8 @@
 		AA000101000000000000001A /* ItemImageCompactPreviewOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemImageCompactPreviewOverlay.swift; sourceTree = "<group>"; };
 		AA000101000000000000001C /* FullWindowOverlayCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullWindowOverlayCoordinator.swift; sourceTree = "<group>"; };
 		AA000101000000000000001D /* AppHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHaptics.swift; sourceTree = "<group>"; };
-		AA000101000000000000001E /* CatalogBackupCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogBackupCodec.swift; sourceTree = "<group>"; };
+		AA000101000000000000001E /* LibraryBackupCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryBackupCodec.swift; sourceTree = "<group>"; };
+		AA0001010000000000000070 /* LibraryBackupArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryBackupArchive.swift; sourceTree = "<group>"; };
 		AA000101000000000000001F /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
 		AA0001010000000000000020 /* AppAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearance.swift; sourceTree = "<group>"; };
 		AA0001010000000000000023 /* AppAutoLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAutoLock.swift; sourceTree = "<group>"; };
@@ -199,6 +202,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA0000710000000000000071 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,7 +410,8 @@
 				AA0001010000000000000017 /* BilingualSeedCatalog.swift */,
 				AA000101000000000000001C /* FullWindowOverlayCoordinator.swift */,
 				AA000101000000000000001D /* AppHaptics.swift */,
-				AA000101000000000000001E /* CatalogBackupCodec.swift */,
+				AA000101000000000000001E /* LibraryBackupCodec.swift */,
+				AA0001010000000000000070 /* LibraryBackupArchive.swift */,
 				AA0001010000000000000035 /* ShareExtensionAppGroupSupport.swift */,
 				AA0001010000000000000045 /* ShoppingIconBadge.swift */,
 			);
@@ -442,6 +447,9 @@
 				AA000Q000000000000000000 /* PBXTargetDependency */,
 			);
 			name = Shoplister_v2;
+			packageProductDependencies = (
+				AA000PKG2000000000000002 /* ZIPFoundation */,
+			);
 			productName = Shoplister_v2;
 			productReference = AA0002010000000000000000 /* Shoplister_v2.app */;
 			productType = "com.apple.product-type.application";
@@ -491,6 +499,9 @@
 				Base,
 			);
 			mainGroup = AA0005000000000000000000;
+			packageReferences = (
+				AA000PKG1000000000000001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+			);
 			productRefGroup = AA0008000000000000000000 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -537,7 +548,8 @@
 				AA0000030000000000000003 /* GroceryStore.swift in Sources */,
 				AA00001C000000000000001C /* FullWindowOverlayCoordinator.swift in Sources */,
 				AA00001D000000000000001D /* AppHaptics.swift in Sources */,
-				AA00001E000000000000001E /* CatalogBackupCodec.swift in Sources */,
+				AA00001E000000000000001E /* LibraryBackupCodec.swift in Sources */,
+				AA0000700000000000000070 /* LibraryBackupArchive.swift in Sources */,
 				AA00001F000000000000001F /* ActivityView.swift in Sources */,
 				AA0000180000000000000018 /* BilingualSeedCatalog.swift in Sources */,
 				AA0000190000000000000019 /* ItemImageStore.swift in Sources */,
@@ -870,6 +882,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AA000PKG1000000000000001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA000PKG2000000000000002 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000PKG1000000000000001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA0010000000000000000000 /* Project object */;
 }
