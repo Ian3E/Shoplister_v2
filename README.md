@@ -38,3 +38,18 @@ The app entry point is `GroceryListApp` (`Source/GroceryListApp.swift`). Resourc
 | **Store** | Shopping list by store sections; check off items; clear checked / clear all |
 | **Share extension** | Plain text shared into Shoplister is matched to the catalog; pending ops merge when the main app opens |
 | **Settings** | Text size, appearance, language, backup/restore, etc. |
+
+## Privacy policy (GitHub Pages)
+
+The privacy policy lives at [`docs/privacy.html`](docs/privacy.html). The app links to:
+
+**https://ian3e.github.io/Shoplister_v2/privacy.html**
+
+To publish after pushing to GitHub:
+
+1. Open the repo on GitHub → **Settings** → **Pages**
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**
+3. Choose branch **main** and folder **/docs**
+4. Save; GitHub will serve the site at `https://ian3e.github.io/Shoplister_v2/`
+
+Use the same URL in **App Store Connect** → App Privacy → Privacy Policy URL.

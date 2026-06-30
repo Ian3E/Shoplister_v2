@@ -1797,6 +1797,17 @@
         }
       }
     },
+    "Opens in Safari": {
+      "comment": "Accessibility hint for external policy link",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נפתח ב-Safari"
+          }
+        }
+      }
+    },
     "Pull down on the shopping list to search your library and add items without leaving the list.": {
       "comment": "App feature description: pull down to add items",
       "extractionState": "stale",

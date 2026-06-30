@@ -307,7 +307,7 @@ struct SettingsAboutView: View {
                 } label: {
                     Text(LocalizedCopy.appFeatures)
                 }
-                SettingsAboutInactiveRow(title: LocalizedCopy.privacyPolicy)
+                SettingsAboutPrivacyPolicyRow()
                 SettingsAboutContactSupportRow()
             }
         }
@@ -316,18 +316,25 @@ struct SettingsAboutView: View {
     }
 }
 
-private struct SettingsAboutInactiveRow: View {
-    let title: String
+private enum AppLegalLinks {
+    static let privacyPolicy = URL(string: "https://ian3e.github.io/Shoplister_v2/privacy.html")!
+}
+
+private struct SettingsAboutPrivacyPolicyRow: View {
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        HStack {
-            Text(title)
-            Spacer()
+        Button {
+            openURL(AppLegalLinks.privacyPolicy)
+        } label: {
+            HStack {
+                Text(LocalizedCopy.privacyPolicy)
+                    .foregroundStyle(.blue)
+                Spacer()
+            }
         }
-        .foregroundStyle(.tertiary)
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityHint(LocalizedCopy.comingSoon)
+        .buttonStyle(.plain)
+        .accessibilityHint(LocalizedCopy.opensInBrowser)
     }
 }
 

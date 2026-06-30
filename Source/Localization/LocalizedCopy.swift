@@ -90,6 +90,10 @@ enum LocalizedCopy {
         String(localized: "Privacy Policy", comment: "Privacy Policy row on About screen")
     }
 
+    static var opensInBrowser: String {
+        String(localized: "Opens in Safari", comment: "Accessibility hint for external policy link")
+    }
+
     static var contactSupport: String {
         String(localized: "Contact Support", comment: "Contact Support row on About screen")
     }
