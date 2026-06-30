@@ -7,7 +7,6 @@ private enum SettingsRoute: Hashable {
     case appearance
     case device
     case about
-    case debug
 }
 
 struct SettingsView: View {
@@ -27,14 +26,10 @@ struct SettingsView: View {
             List {
                 Section {
                     settingsLink(.shoppingList, title: LocalizedCopy.shoppingListSectionTitle, systemImage: "checklist")
-                    settingsLink(.itemLibrary, title: LocalizedCopy.settingsItemLibrary, systemImage: "character.book.closed")
-                    settingsLink(.appearance, title: LocalizedCopy.appearance, systemImage: "paintbrush")
+                    settingsLink(.itemLibrary, title: LocalizedCopy.settingsItemLibrary, systemImage: "character.book.closed.fill")
+                    settingsLink(.appearance, title: LocalizedCopy.appearance, systemImage: "paintbrush.fill")
                     settingsLink(.device, title: LocalizedCopy.device, systemImage: "iphone")
-                    settingsLink(.about, title: LocalizedCopy.settingsAbout, systemImage: "info.circle")
-                }
-
-                Section {
-                    settingsLink(.debug, title: LocalizedCopy.settingsDebug, systemImage: "ladybug")
+                    settingsLink(.about, title: LocalizedCopy.settingsAbout, systemImage: "info.circle.fill")
                 }
             }
             .navigationTitle(LocalizedCopy.settings)
@@ -77,8 +72,6 @@ struct SettingsView: View {
             SettingsDeviceView()
         case .about:
             SettingsAboutView()
-        case .debug:
-            SettingsDebugView(onDismissSettings: closeSettings)
         }
     }
 
@@ -122,11 +115,6 @@ private extension SettingsRoute {
             (
                 Color(red: 0.68, green: 0.68, blue: 0.70),
                 Color(red: 0.48, green: 0.48, blue: 0.50)
-            )
-        case .debug:
-            (
-                Color(red: 1.00, green: 0.45, blue: 0.42),
-                Color(red: 0.92, green: 0.18, blue: 0.14)
             )
         }
         return LinearGradient(

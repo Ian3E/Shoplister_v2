@@ -522,29 +522,6 @@ private enum SupportContactMail {
     }
 }
 
-// MARK: - Debug
-
-struct SettingsDebugView: View {
-    let onDismissSettings: () -> Void
-
-    @AppStorage(AppWelcomeExplainer.storageKey) private var hasSeenWelcomeExplainer = false
-    @AppStorage(AppHomeFirstVisitExplainer.storageKey) private var hasSeenFirstShoppingItemExplainer = false
-
-    var body: some View {
-        List {
-            Section {
-                Button(LocalizedCopy.resetExplainers) {
-                    hasSeenWelcomeExplainer = false
-                    hasSeenFirstShoppingItemExplainer = false
-                    onDismissSettings()
-                }
-            }
-        }
-        .navigationTitle(LocalizedCopy.settingsDebug)
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 // MARK: - Shared
 
 struct SettingsSharePayload: Identifiable {
