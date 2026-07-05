@@ -47,7 +47,6 @@ struct SettingsStoreListPreview: View {
                 ForEach(section.rows) { row in
                     SettingsStoreListPreviewItemRow(spacingScale: spacingScale) {
                         ShoppingRowView(entry: row.entry, item: row.item)
-                            .environmentObject(ShoppingRowQuantitySwipeState())
                     }
                 }
             }

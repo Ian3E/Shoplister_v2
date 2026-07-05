@@ -19,6 +19,8 @@ struct StorePullToAddCatalogSearchView: View {
     @Binding var pinnedSearchQuery: String
     var onPresentNewItem: (String) -> Void
 
+    @State private var expandedPullToAddQuantityPillItemID: UUID?
+
     private var trimmedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -119,6 +121,7 @@ struct StorePullToAddCatalogSearchView: View {
             ForEach(sortedCatalogItemsForList) { item in
                 StorePullToAddCatalogItemRow(
                     item: item,
+                    expandedQuantityPillItemID: $expandedPullToAddQuantityPillItemID,
                     onAddedToShopping: pinSearchAndClearField
                 )
                 .homeCatalogListItemRowStyle()
@@ -132,6 +135,7 @@ struct StorePullToAddCatalogSearchView: View {
         .listSectionSpacing(ShoppingListMetrics.interSectionSpacing)
         .scrollEdgeSoftTopIfAvailable(when: showsCatalogListRows)
         .catalogListLayoutDirection()
+        .environment(\.expandedQuantityPillItemID, expandedPullToAddQuantityPillItemID)
     }
 
     private func pinSearchAndClearField() {
@@ -225,15 +229,23 @@ private struct StorePullToAddCreateItemButtonStyle: ViewModifier {
     }
 }
 
+private enum StorePullToAddCatalogItemRowMetrics {
+    static let quantityPillGutterAnimation = Animation.spring(response: 0.28, dampingFraction: 0.82)
+}
+
 private struct StorePullToAddCatalogItemRow: View {
     @EnvironmentObject private var store: GroceryStore
     @Environment(\.appContentLanguage) private var catalogLanguage
     @Environment(\.appTheme) private var appTheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.shoppingListSpacingScale) private var spacingScale
 
     let item: GroceryItem
+    @Binding var expandedQuantityPillItemID: UUID?
     let onAddedToShopping: () -> Void
+
+    @State private var isQuantityPillExpanded = false
 
     private var usesManualMirror: Bool {
         CatalogLayoutMirroring.catalogListUsesManualMirror(for: catalogLanguage)
@@ -255,11 +267,48 @@ private struct StorePullToAddCatalogItemRow: View {
                     layoutDirection: layoutDirection
                 )
             )
-            .contentShape(Rectangle())
-            .onTapGesture { handleTap() }
+            .overlay {
+                CatalogListRowTapTouchOverlay(
+                    item: item,
+                    usesGlassChrome: true,
+                    onTap: handleTap
+                )
+                .listRowFullBleedHitArea()
+            }
+            .onChange(of: expandedQuantityPillItemID) { _, expandedID in
+                syncQuantityPillExpansion(with: expandedID)
+            }
+            .onChange(of: isInShopping) { _, inShopping in
+                guard !inShopping, isQuantityPillExpanded else { return }
+                isQuantityPillExpanded = false
+            }
+    }
+
+    private func syncQuantityPillExpansion(with expandedID: UUID?) {
+        let shouldExpand = expandedID == item.id
+        guard isQuantityPillExpanded != shouldExpand else { return }
+        isQuantityPillExpanded = shouldExpand
+    }
+
+    private var quantityPillExpandedBinding: Binding<Bool> {
+        Binding(
+            get: { isQuantityPillExpanded },
+            set: { newValue in
+                isQuantityPillExpanded = newValue
+                if newValue {
+                    expandedQuantityPillItemID = item.id
+                } else if expandedQuantityPillItemID == item.id {
+                    expandedQuantityPillItemID = nil
+                }
+            }
+        )
     }
 
     private func handleTap() {
+        if expandedQuantityPillItemID == item.id {
+            return
+        }
+        expandedQuantityPillItemID = nil
         if isInShopping {
             store.removeFromShopping(itemID: item.id)
         } else {
@@ -279,7 +328,18 @@ private struct StorePullToAddCatalogItemRow: View {
 
     private var quantityPillTextGutter: CGFloat {
         if isInShopping {
-            return CatalogListRowDensity.quantityPillLiveReservedWidth(forQuantity: qty)
+            if isQuantityPillExpanded {
+                return CatalogListRowDensity.quantityPillExpandedReservedWidth(
+                    forQuantity: qty,
+                    usesGlassChrome: true,
+                    scale: spacingScale
+                )
+            }
+            return CatalogListRowDensity.quantityPillCollapsedRenderedWidth(
+                forQuantity: qty,
+                usesGlassChrome: true,
+                scale: spacingScale
+            )
         }
         return CatalogListRowDensity.quantityPillSlotMinWidth
     }
@@ -291,6 +351,7 @@ private struct StorePullToAddCatalogItemRow: View {
             .foregroundStyle(isInShopping ? appTheme.color : .primary)
             .lineLimit(1)
             .padding(.leading, quantityPillTextGutter)
+            .animation(StorePullToAddCatalogItemRowMetrics.quantityPillGutterAnimation, value: quantityPillTextGutter)
             .frame(maxWidth: .infinity, alignment: .trailing)
             .overlay(alignment: .leading) {
                 if isInShopping {
@@ -306,6 +367,7 @@ private struct StorePullToAddCatalogItemRow: View {
             .foregroundStyle(isInShopping ? appTheme.color : .primary)
             .lineLimit(1)
             .padding(.trailing, quantityPillTextGutter)
+            .animation(StorePullToAddCatalogItemRowMetrics.quantityPillGutterAnimation, value: quantityPillTextGutter)
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay(alignment: .trailing) {
                 if isInShopping {
@@ -325,20 +387,19 @@ private struct StorePullToAddCatalogItemRow: View {
     }
 
     private func quantityPill(qty: Int, itemID: UUID) -> some View {
-        Button {
-            store.incrementUncheckedShoppingQuantity(itemID: itemID, delta: 1)
-        } label: {
-            Text("\(qty)")
-                .font(.subheadline.monospacedDigit().weight(.semibold))
-                .lineLimit(1)
-        }
-        .modifier(QuantityPillMaterialStyle())
-        .frame(
-            minWidth: CatalogListRowDensity.quantityPillLiveReservedWidth(forQuantity: qty),
-            alignment: .center
+        ExpandableQuantityPill(
+            quantity: qty,
+            style: .glass,
+            usesLivePadding: false,
+            edgeAlignment: usesManualMirror ? .leading : .trailing,
+            isExpanded: quantityPillExpandedBinding,
+            onIncrement: {
+                store.incrementUncheckedShoppingQuantity(itemID: itemID, delta: 1)
+            },
+            onDecrement: {
+                store.adjustUncheckedShoppingQuantity(itemID: itemID, delta: -1)
+            }
         )
-        .contentShape(Rectangle())
-        .accessibilityLabel(LocalizedCopy.increaseQuantity)
     }
 }
 

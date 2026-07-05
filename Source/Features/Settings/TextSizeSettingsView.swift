@@ -34,8 +34,13 @@ struct TextSizeSettingsView: View {
             }
 
             Section {
-                SettingsStoreListPreview(textSize: draftSize)
-                    .environment(\.appTheme, draftThemeSelection)
+                VStack(spacing: 0) {
+                    SettingsStoreListPreview(textSize: draftSize)
+                        .environment(\.appTheme, draftThemeSelection)
+                        .frame(maxWidth: .infinity, alignment: .top)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .listRowInsets(EdgeInsets())
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)

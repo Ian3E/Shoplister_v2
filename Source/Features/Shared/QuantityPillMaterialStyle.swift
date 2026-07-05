@@ -4,7 +4,7 @@ import SwiftUI
 struct QuantityPillMaterialStyle: ViewModifier {
     @Environment(\.appTheme) private var appTheme
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.shoppingListSpacingScale) private var spacingScale
 
     private var pillFill: Color {
         colorScheme == .dark ? Color(white: 0.1) : .white
@@ -22,8 +22,8 @@ struct QuantityPillMaterialStyle: ViewModifier {
         content
             .buttonStyle(.plain)
             .foregroundStyle(appTheme.color)
-            .padding(.horizontal, CatalogListRowDensity.quantityPillLiveHorizontalPadding)
-            .padding(.vertical, CatalogListRowDensity.quantityPillLiveVerticalPadding(for: dynamicTypeSize))
+            .padding(.horizontal, CatalogListRowDensity.quantityPillLiveHorizontalPadding(scale: spacingScale))
+            .padding(.vertical, CatalogListRowDensity.quantityPillLiveVerticalPadding(scale: spacingScale))
             .background {
                 Capsule(style: .continuous)
                     .fill(pillFill)

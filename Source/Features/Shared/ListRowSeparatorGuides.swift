@@ -222,16 +222,147 @@ enum CatalogListRowDensity {
         return max(quantityPillSlotMinWidth, labelWidth + quantityPillHorizontalPadding * 2)
     }
 
-    static func quantityPillLiveReservedWidth(forQuantity quantity: Int) -> CGFloat {
+    static func quantityPillLiveReservedWidth(forQuantity quantity: Int, scale: CGFloat = 1) -> CGFloat {
         let digits = max(1, String(quantity).count)
         let labelWidth = quantityPillDigitWidth * CGFloat(digits)
-        return max(quantityPillSlotMinWidth, labelWidth + quantityPillLiveHorizontalPadding * 2)
+        return max(
+            quantityPillSlotMinWidth,
+            labelWidth + quantityPillLiveHorizontalPadding(scale: scale) * 2
+        )
+    }
+
+    static func quantityPillLiveHorizontalPadding(scale: CGFloat) -> CGFloat {
+        quantityPillLiveHorizontalPadding * scale
+    }
+
+    static func quantityPillLiveVerticalPadding(scale: CGFloat) -> CGFloat {
+        quantityPillLiveVerticalPadding(for: .medium) * scale
+    }
+
+    /// Width of each +/- control inside an expanded quantity pill.
+    static let quantityPillStepperSymbolWidth: CGFloat = 26
+    /// Vertical padding inside the live quantity pill capsule (medium baseline).
+    static let quantityPillCapsuleVerticalPadding: CGFloat = 3
+    /// Extra top/bottom padding when the quantity pill is expanded (medium baseline).
+    static let quantityPillCapsuleExpandedVerticalPaddingExtra: CGFloat = 2
+
+    static func quantityPillCapsuleVerticalPadding(isExpanded: Bool, scale: CGFloat) -> CGFloat {
+        let base = quantityPillCapsuleVerticalPadding
+            + (isExpanded ? quantityPillCapsuleExpandedVerticalPaddingExtra : 0)
+        return base * scale
+    }
+
+    /// Horizontal padding on each side of the quantity digit (medium baseline).
+    static let quantityPillNumberHorizontalPadding: CGFloat = 16
+
+    /// Collapsed: scales with text size. Expanded: fixed qty↔stepper gap at medium.
+    static func quantityPillNumberHorizontalPadding(isExpanded: Bool, scale: CGFloat) -> CGFloat {
+        isExpanded ? quantityPillNumberHorizontalPadding : quantityPillNumberHorizontalPadding * scale
+    }
+
+    /// Outer horizontal padding to the left of − and right of + when expanded (medium baseline).
+    static let quantityPillStepperOuterPadding: CGFloat = 6
+
+    static func quantityPillStepperOuterPadding(scale: CGFloat) -> CGFloat {
+        quantityPillStepperOuterPadding * scale
+    }
+    /// Uniform inset around pill content inside the material capsule (legacy helpers).
+    static let quantityPillContentInset: CGFloat = 3
+
+    private static var quantityPillChromeInsetTotal: CGFloat {
+        quantityPillContentInset * 2
+    }
+
+    private static func quantityPillCollapsedHorizontalPaddingTotal(scale: CGFloat) -> CGFloat {
+        quantityPillNumberHorizontalPadding(isExpanded: false, scale: scale) * 2
+    }
+
+    /// Compact rendered width for a collapsed pill.
+    static func quantityPillCollapsedRenderedWidth(
+        forQuantity quantity: Int,
+        usesGlassChrome: Bool,
+        scale: CGFloat = 1
+    ) -> CGFloat {
+        _ = usesGlassChrome
+        let digits = max(1, String(quantity).count)
+        let labelWidth = quantityPillDigitWidth * CGFloat(digits)
+        return labelWidth + quantityPillCollapsedHorizontalPaddingTotal(scale: scale)
+    }
+
+    /// Reserved row gutter / pill width when the stepper is expanded.
+    static func quantityPillExpandedReservedWidth(
+        forQuantity quantity: Int,
+        usesGlassChrome: Bool,
+        scale: CGFloat = 1
+    ) -> CGFloat {
+        _ = usesGlassChrome
+        let digits = max(1, String(quantity).count)
+        let labelWidth = quantityPillDigitWidth * CGFloat(digits)
+        let numberPadding = quantityPillNumberHorizontalPadding(isExpanded: true, scale: scale) * 2
+        let stepperOuter = quantityPillStepperOuterPadding(scale: scale) * 2
+        let steppers = quantityPillStepperSymbolWidth * 2
+        return labelWidth + numberPadding + stepperOuter + steppers
+    }
+
+    static func quantityPillLiveExpandedReservedWidth(
+        forQuantity quantity: Int,
+        scale: CGFloat = 1
+    ) -> CGFloat {
+        let digits = max(1, String(quantity).count)
+        let labelWidth = quantityPillDigitWidth * CGFloat(digits)
+        let chrome = quantityPillLiveHorizontalPadding(scale: scale) * 2
+        let steppers = quantityPillStepperSymbolWidth * 2
+        return max(quantityPillSlotMinWidth, chrome + labelWidth + steppers)
+    }
+
+    static func quantityPillExpandedReservedWidth(
+        forQuantity quantity: Int,
+        usesLivePadding: Bool,
+        scale: CGFloat = 1
+    ) -> CGFloat {
+        if usesLivePadding {
+            return quantityPillLiveExpandedReservedWidth(forQuantity: quantity, scale: scale)
+        }
+        return quantityPillExpandedReservedWidth(
+            forQuantity: quantity,
+            usesGlassChrome: true,
+            scale: scale
+        )
+    }
+
+    static func quantityPillReservedWidthWithContentInset(
+        forQuantity quantity: Int,
+        scale: CGFloat = 1
+    ) -> CGFloat {
+        quantityPillCollapsedRenderedWidth(forQuantity: quantity, usesGlassChrome: true, scale: scale)
+    }
+
+    static func quantityPillLiveReservedWidthWithContentInset(
+        forQuantity quantity: Int,
+        scale: CGFloat = 1
+    ) -> CGFloat {
+        quantityPillLiveReservedWidth(forQuantity: quantity, scale: scale)
     }
 
     /// Intrinsic pill height (label + padding).
     static func quantityPillSlotHeight(for dynamicTypeSize: DynamicTypeSize) -> CGFloat {
         quantityPillMinHeight(for: dynamicTypeSize)
             + quantityPillVerticalPadding(for: dynamicTypeSize) * 2
+    }
+
+    /// UIKit row-tap exclusion width for the expanded quantity pill zone.
+    static func quantityPillRowTapEdgeExclusionWidth(
+        forQuantity quantity: Int,
+        usesGlassChrome: Bool,
+        spacingScale: CGFloat
+    ) -> CGFloat {
+        let pillWidth = quantityPillExpandedReservedWidth(
+            forQuantity: quantity,
+            usesGlassChrome: usesGlassChrome,
+            scale: spacingScale
+        )
+        let rowHorizontalInset = ShoppingListMetrics.homeCatalogItemRowHorizontalInset(scale: spacingScale)
+        return pillWidth + quantityPillHorizontalNudge + rowHorizontalInset + 8
     }
 
     /// Content band inside a Store-style row with vertical `listRowInsets`.

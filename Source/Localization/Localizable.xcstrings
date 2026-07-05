@@ -581,13 +581,13 @@
         }
       }
     },
-    "Congratulations! You have added your first item to your shopping list. Tap 1 to increase quantity. Or tap the row again to remove the item from your shopping list.": {
+    "Congratulations! You have added your first item to your shopping list. Tap the quantity pill, then use plus or minus to adjust quantity. Or tap the row again to remove the item from your shopping list.": {
       "comment": "First shopping item explainer VoiceOver label",
       "localizations": {
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "מזל טוב! הוספת את הפריט הראשון שלך לרשימת הקניות. הקש על 1 כדי להגדיל את הכמות. או הקש שוב על השורה כדי להסיר את הפריט מרשימת הקניות."
+            "value": "מזל טוב! הוספת את הפריט הראשון שלך לרשימת הקניות. הקש על כדור הכמות, ואז השתמש בפלוס או במינוס כדי לשנות את הכמות. או הקש שוב על השורה כדי להסיר את הפריט מרשימת הקניות."
           }
         }
       }
@@ -687,6 +687,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "הקטנת כמות"
+          }
+        }
+      }
+    },
+    "Debug": {
+      "comment": "Debug settings section title",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ניפוי שגיאות"
           }
         }
       }
@@ -968,6 +979,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "הרחבת %@"
+          }
+        }
+      }
+    },
+    "Shows plus and minus buttons to adjust quantity.": {
+      "comment": "Accessibility hint when collapsed quantity pill can expand",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מציג כפתורי פלוס ומינוס לשינוי הכמות."
           }
         }
       }
@@ -1972,6 +1994,17 @@
         }
       }
     },
+    "Reset explainers": {
+      "comment": "Settings button to show welcome and first-item explainers again",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "איפוס הסברים"
+          }
+        }
+      }
+    },
     "Reset library": {
       "comment": "Destructive button to reset library on language change",
       "localizations": {
@@ -2370,18 +2403,6 @@
         }
       }
     },
-    "Tap a row to check it off. Tap the quantity pill to increase count, or tap the row again to remove the item.": {
-      "comment": "App feature description: check off and quantities",
-      "extractionState": "stale",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "הקישו על שורה כדי לסמן. הקישו על כדור הכמות כדי להגדיל, או הקישו שוב על השורה כדי להסיר את הפריט."
-          }
-        }
-      }
-    },
     "Text": {
       "comment": "Shortcuts intent text parameter title",
       "localizations": {
@@ -2515,13 +2536,13 @@
         }
       }
     },
-    "to increase quantity.": {
+    "to adjust quantity.": {
       "comment": "First shopping item explainer suffix after quantity pill",
       "localizations": {
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "כדי להגדיל את הכמות."
+            "value": "כדי לשנות את הכמות."
           }
         }
       }

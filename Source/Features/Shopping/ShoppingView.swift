@@ -854,11 +854,7 @@ struct ShoppingView: View {
         ) {
             ShoppingRowView(
                 entry: entry,
-                item: item,
-                quantitySwipeEnabled: !entry.isChecked,
-                onIncrementQuantity: {
-                    store.incrementUncheckedShoppingQuantity(itemID: item.id, delta: 1, playHaptic: false)
-                }
+                item: item
             )
             .shoppingListItemRowStyle(
                 hebrew: usesManualMirror,

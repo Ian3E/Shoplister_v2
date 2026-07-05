@@ -78,6 +78,8 @@ struct InventoryView: View {
     @State private var homeToolbarSearchPlaceholderPinTask: Task<Void, Never>?
     /// IDs of items currently selected in edit mode.
     @State private var selectedItemIDs: Set<UUID> = []
+    /// Only one Home quantity pill stepper is expanded at a time.
+    @State private var expandedHomeQuantityPillItemID: UUID?
     /// Pinned query after adding an item in Home search — keeps matched results
     /// visible even after homeSearchText is cleared, mirroring pull-to-add behaviour.
     @State private var homeSearchPinnedQuery: String = ""
@@ -416,6 +418,10 @@ struct InventoryView: View {
         itemID: UUID,
         onAddedToShopping: (() -> Void)? = nil
     ) {
+        if expandedHomeQuantityPillItemID == itemID {
+            return
+        }
+        expandedHomeQuantityPillItemID = nil
         if store.shopping.contains(where: { $0.itemID == itemID }) {
             store.removeFromShopping(itemID: itemID)
         } else {
@@ -587,6 +593,7 @@ struct InventoryView: View {
                             item: item,
                             isReorderMode: isReorderMode,
                             showsShoppingStatus: showsShoppingStatus,
+                            expandedQuantityPillItemID: $expandedHomeQuantityPillItemID,
                             enablesLongPressToEdit: true,
                             onSelectToggleShopping: {},
                             onAddedToShopping: onAddedToShopping,
@@ -671,6 +678,7 @@ struct InventoryView: View {
                 .listSectionSpacing(ShoppingListMetrics.interSectionSpacing)
                 .scrollEdgeSoftTopIfAvailable(when: usesHomeToolbarSearch && showsCatalogListRows)
                 .catalogListLayoutDirection()
+                .environment(\.expandedQuantityPillItemID, expandedHomeQuantityPillItemID)
                 .coordinateSpace(name: HomeCatalogListCoordinateSpace.name)
                 .onPreferenceChange(HomeCatalogRowAnchorKey.self) { anchors in
                     rowAnchors = anchors
@@ -777,6 +785,7 @@ struct InventoryView: View {
             showsRowShoppingStatus: showsRowShoppingStatus,
             usesHomePlainListChrome: true,
             usesUIKitContextMenu: false,
+            expandedQuantityPillItemID: $expandedHomeQuantityPillItemID,
             enablesLongPressToEdit: false,
             onSelectToggleShopping: {},
             onAddedToShopping: onAddedToShopping,
@@ -1545,6 +1554,7 @@ private struct InventoryCatalogRow: View {
     @Environment(\.appTheme) private var appTheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.shoppingListSpacingScale) private var spacingScale
 
     private var usesManualMirror: Bool {
         CatalogLayoutMirroring.catalogListUsesManualMirror(for: catalogLanguage)
@@ -1556,11 +1566,14 @@ private struct InventoryCatalogRow: View {
     var showsRowShoppingStatus: Bool = true
     var usesHomePlainListChrome: Bool = false
     var usesUIKitContextMenu: Bool = false
+    var expandedQuantityPillItemID: Binding<UUID?>? = nil
     var enablesLongPressToEdit: Bool = false
     let onSelectToggleShopping: () -> Void
     /// Called after the row adds this item to the shopping list (not when removing or in reorder mode).
     let onAddedToShopping: (() -> Void)?
     let onEdit: () -> Void
+
+    @State private var isQuantityPillExpanded = false
 
     private var isInShopping: Bool {
         store.shopping.contains(where: { $0.itemID == item.id })
@@ -1601,10 +1614,49 @@ private struct InventoryCatalogRow: View {
                     guard enablesLongPressToEdit else { return }
                     onEdit()
                 }
+                .onChange(of: expandedQuantityPillItemID?.wrappedValue) { _, expandedID in
+                    syncQuantityPillExpansion(with: expandedID)
+                }
+                .onChange(of: isInShopping) { _, inShopping in
+                    guard !inShopping, isQuantityPillExpanded else { return }
+                    isQuantityPillExpanded = false
+                }
         }
     }
 
+    private func syncQuantityPillExpansion(with expandedID: UUID?) {
+        let shouldExpand = expandedID == item.id
+        guard isQuantityPillExpanded != shouldExpand else { return }
+        isQuantityPillExpanded = shouldExpand
+    }
+
+    private func syncExpandedQuantityPillListID(isExpanded: Bool) {
+        guard let expandedQuantityPillItemID else { return }
+        if isExpanded {
+            expandedQuantityPillItemID.wrappedValue = item.id
+        } else if expandedQuantityPillItemID.wrappedValue == item.id {
+            expandedQuantityPillItemID.wrappedValue = nil
+        }
+    }
+
+    private var quantityPillExpandedBinding: Binding<Bool> {
+        Binding(
+            get: { isQuantityPillExpanded },
+            set: { newValue in
+                isQuantityPillExpanded = newValue
+                syncExpandedQuantityPillListID(isExpanded: newValue)
+            }
+        )
+    }
+
+    private func collapseExpandedQuantityPillIfNeeded() {
+        guard let expandedQuantityPillItemID,
+              expandedQuantityPillItemID.wrappedValue != nil else { return }
+        expandedQuantityPillItemID.wrappedValue = nil
+    }
+
     private func handleTap() {
+        collapseExpandedQuantityPillIfNeeded()
         if isReorderMode {
             onEdit()
         } else {
@@ -1630,10 +1682,19 @@ private struct InventoryCatalogRow: View {
     private var quantityPillTextGutter: CGFloat {
         guard showsShoppingStatus, showsRowShoppingStatus else { return 0 }
         if isInShopping {
-            if usesHomePlainListChrome {
-                return CatalogListRowDensity.quantityPillReservedWidth(forQuantity: qty)
+            let usesGlassChrome = usesHomePlainListChrome
+            if isQuantityPillExpanded {
+                return CatalogListRowDensity.quantityPillExpandedReservedWidth(
+                    forQuantity: qty,
+                    usesGlassChrome: usesGlassChrome,
+                    scale: spacingScale
+                )
             }
-            return CatalogListRowDensity.quantityPillLiveReservedWidth(forQuantity: qty)
+            return CatalogListRowDensity.quantityPillCollapsedRenderedWidth(
+                forQuantity: qty,
+                usesGlassChrome: usesGlassChrome,
+                scale: spacingScale
+            )
         }
         return CatalogListRowDensity.quantityPillSlotMinWidth
     }
@@ -1692,39 +1753,19 @@ private struct InventoryCatalogRow: View {
 
     @ViewBuilder
     private func quantityPill(qty: Int, itemID: UUID) -> some View {
-        if usesHomePlainListChrome {
-            Button {
+        ExpandableQuantityPill(
+            quantity: qty,
+            style: usesHomePlainListChrome ? .glass : .material,
+            usesLivePadding: !usesHomePlainListChrome,
+            edgeAlignment: usesManualMirror ? .leading : .trailing,
+            isExpanded: quantityPillExpandedBinding,
+            onIncrement: {
                 store.incrementUncheckedShoppingQuantity(itemID: itemID, delta: 1)
-            } label: {
-                Text("\(qty)")
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
-                    .lineLimit(1)
-                    .padding(.horizontal, CatalogListRowDensity.quantityPillHorizontalPadding)
-                    .padding(.vertical, CatalogListRowDensity.quantityPillVerticalPadding(for: dynamicTypeSize))
+            },
+            onDecrement: {
+                store.adjustUncheckedShoppingQuantity(itemID: itemID, delta: -1)
             }
-            .modifier(HomeCatalogQuantityPillGlassStyle())
-            .frame(
-                minWidth: CatalogListRowDensity.quantityPillReservedWidth(forQuantity: qty),
-                alignment: .center
-            )
-            .contentShape(Rectangle())
-            .accessibilityLabel(LocalizedCopy.increaseQuantity)
-        } else {
-            Button {
-                store.incrementUncheckedShoppingQuantity(itemID: itemID, delta: 1)
-            } label: {
-                Text("\(qty)")
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
-                    .lineLimit(1)
-            }
-            .modifier(QuantityPillMaterialStyle())
-            .frame(
-                minWidth: CatalogListRowDensity.quantityPillLiveReservedWidth(forQuantity: qty),
-                alignment: .center
-            )
-            .contentShape(Rectangle())
-            .accessibilityLabel(LocalizedCopy.increaseQuantity)
-        }
+        )
     }
 }
 

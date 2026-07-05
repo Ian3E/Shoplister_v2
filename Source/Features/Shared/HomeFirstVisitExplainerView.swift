@@ -119,7 +119,7 @@ struct HomeFirstVisitExplainerOverlay: View {
     }
 }
 
-/// Non-interactive quantity pill matching Home catalog row chrome.
+/// Non-interactive collapsed quantity pill matching Home catalog row chrome.
 struct HomeCatalogQuantityPillPreview: View {
     @Environment(\.appTheme) private var appTheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize

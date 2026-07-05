@@ -77,6 +77,17 @@ struct AppThemeSelection: Equatable {
     var title: String {
         preset.title
     }
+
+    /// Subdued theme tint for disabled decrease controls at minimum quantity.
+    static let subduedControlOpacity: CGFloat = 0.30
+
+    var subduedControlColor: Color {
+        color.opacity(Self.subduedControlOpacity)
+    }
+
+    var subduedControlUIColor: UIColor {
+        UIColor(color).withAlphaComponent(Self.subduedControlOpacity)
+    }
 }
 
 // MARK: - Color hex helpers

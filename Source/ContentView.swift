@@ -200,6 +200,7 @@ struct ContentView: View {
             } else {
                 commitSettingsTextSizeDraft()
                 commitSettingsThemeDraft()
+                scheduleExplainersAfterSettingsDismissed()
             }
         }
         .sheet(isPresented: $isPresentingNewCatalogItem) {
@@ -354,8 +355,19 @@ struct ContentView: View {
     }
 
     private func markFirstShoppingItemExplainerSeenIfShoppingListAlreadyPopulated() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: AppHomeFirstVisitExplainer.legacyPopulationMigrationKey) else { return }
+        defaults.set(true, forKey: AppHomeFirstVisitExplainer.legacyPopulationMigrationKey)
         guard !store.shopping.isEmpty else { return }
         hasSeenFirstShoppingItemExplainer = true
+    }
+
+    private func scheduleExplainersAfterSettingsDismissed() {
+        Task { @MainActor in
+            await Task.yield()
+            scheduleWelcomeExplainerIfNeeded()
+            scheduleFirstShoppingItemExplainerIfNeeded()
+        }
     }
 
     private func scheduleWelcomeExplainerIfNeeded() {

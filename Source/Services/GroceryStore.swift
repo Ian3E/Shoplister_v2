@@ -426,6 +426,28 @@ final class GroceryStore: ObservableObject {
         syncPublishedFromActiveContentLanguage()
     }
 
+    func adjustUncheckedShoppingQuantity(itemID: UUID, delta: Int, playHaptic: Bool = true) {
+        guard delta != 0 else { return }
+        if currentContentLanguage() == .hebrew,
+           let idx = hebrew.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked })
+        {
+            let newQuantity = hebrew.shopping[idx].quantity + delta
+            guard newQuantity >= 1 else { return }
+            hebrew.shopping[idx].quantity = newQuantity
+        } else if let idx = english.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked }) {
+            let newQuantity = english.shopping[idx].quantity + delta
+            guard newQuantity >= 1 else { return }
+            english.shopping[idx].quantity = newQuantity
+        } else {
+            return
+        }
+        if playHaptic {
+            ShoppingListHaptics.playLight()
+        }
+        saveAllToDisk()
+        syncPublishedFromActiveContentLanguage()
+    }
+
     func shoppingListQuantity(for itemID: UUID) -> Int {
         activeShopping
             .filter { $0.itemID == itemID }

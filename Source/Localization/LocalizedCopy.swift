@@ -86,6 +86,17 @@ enum LocalizedCopy {
         String(localized: "About", comment: "About settings section title")
     }
 
+    static var settingsDebug: String {
+        String(localized: "Debug", comment: "Debug settings section title")
+    }
+
+    static var resetExplainers: String {
+        String(
+            localized: "Reset explainers",
+            comment: "Settings button to show welcome and first-item explainers again"
+        )
+    }
+
     static var appName: String {
         String(localized: "Shoplister", comment: "App name on About screen")
     }
@@ -696,7 +707,7 @@ enum LocalizedCopy {
     }
 
     static var firstShoppingItemExplainerTapQuantitySuffix: String {
-        String(localized: "to increase quantity.", comment: "First shopping item explainer suffix after quantity pill")
+        String(localized: "to adjust quantity.", comment: "First shopping item explainer suffix after quantity pill")
     }
 
     static var firstShoppingItemExplainerRemoveHint: String {
@@ -708,7 +719,7 @@ enum LocalizedCopy {
 
     static var firstShoppingItemExplainerAccessibilityLabel: String {
         String(
-            localized: "Congratulations! You have added your first item to your shopping list. Tap 1 to increase quantity. Or tap the row again to remove the item from your shopping list.",
+            localized: "Congratulations! You have added your first item to your shopping list. Tap the quantity pill, then use plus or minus to adjust quantity. Or tap the row again to remove the item from your shopping list.",
             comment: "First shopping item explainer VoiceOver label"
         )
     }
@@ -1034,6 +1045,13 @@ enum LocalizedCopy {
 
     static var increaseQuantity: String {
         String(localized: "Increase quantity", comment: "Increase quantity accessibility label")
+    }
+
+    static var expandQuantityStepperHint: String {
+        String(
+            localized: "Shows plus and minus buttons to adjust quantity.",
+            comment: "Accessibility hint when collapsed quantity pill can expand"
+        )
     }
 
     static var decreaseQuantity: String {

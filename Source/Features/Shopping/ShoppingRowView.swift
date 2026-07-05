@@ -3,19 +3,16 @@ import UIKit
 
 struct ShoppingRowView: View {
     private static let rowContentSpacing: CGFloat = 12
-    private static let quantityEdgeInset: CGFloat = ShoppingQuantitySwipeMetrics.quantityEdgeInset
+    private static let quantityEdgeInset: CGFloat = ShoppingRowQuantityMetrics.quantityEdgeInset
     private static let uncheckedSymbolName = "app"
     private static let checkedSymbolName = "checkmark.app.fill"
 
     @Environment(\.appContentLanguage) private var catalogLanguage
     @Environment(\.appTheme) private var appTheme
     @Environment(\.layoutDirection) private var layoutDirection
-    @EnvironmentObject private var quantitySwipeState: ShoppingRowQuantitySwipeState
 
     let entry: ShoppingEntry
     let item: GroceryItem
-    var quantitySwipeEnabled: Bool = false
-    var onIncrementQuantity: (() -> Void)?
 
     private var checkmarkFont: Font {
         let pointSize = UIFont.preferredFont(forTextStyle: .body).pointSize * 1.25
@@ -38,22 +35,14 @@ struct ShoppingRowView: View {
         revealsQuantityFromLeading ? .leading : .trailing
     }
 
-    private var isQuantitySwipeActive: Bool {
-        quantitySwipeEnabled && !entry.isChecked && onIncrementQuantity != nil
-    }
-
     private var quantityStaticShift: CGFloat {
-        ShoppingQuantitySwipeMetrics.layoutHorizontalOffset(
-            ShoppingQuantitySwipeMetrics.listQuantityStaticShift(
+        ShoppingRowQuantityMetrics.layoutHorizontalOffset(
+            ShoppingRowQuantityMetrics.listQuantityStaticShift(
                 revealsFromLeading: revealsQuantityFromLeading,
                 layoutDirection: layoutDirection
             ),
             layoutDirection: layoutDirection
         )
-    }
-
-    private var showsQuantitySwipeDigit: Bool {
-        showsQuantity || quantitySwipeState.digitReleaseOffset != nil
     }
 
     var body: some View {
@@ -66,14 +55,6 @@ struct ShoppingRowView: View {
         }
         .listRowFullBleedHitArea()
         .contentShape(Rectangle())
-        .onChange(of: entry.id) { _, _ in
-            quantitySwipeState.reset()
-        }
-        .onChange(of: entry.isChecked) { _, isChecked in
-            if isChecked {
-                quantitySwipeState.reset()
-            }
-        }
     }
 
     /// Mirror of `englishRow`: quantity on the far left, checkmark on the far right.
@@ -114,12 +95,7 @@ struct ShoppingRowView: View {
 
     @ViewBuilder
     private var leadingQuantitySlot: some View {
-        if isQuantitySwipeActive {
-            quantitySwipeColumn(
-                revealsFromLeading: revealsQuantityFromLeading,
-                edgePadding: quantityEdgePadding
-            )
-        } else if showsQuantity {
+        if showsQuantity {
             quantityLabel(entry.quantity)
                 .padding(quantityEdgePadding, Self.quantityEdgeInset)
         }
@@ -127,12 +103,7 @@ struct ShoppingRowView: View {
 
     @ViewBuilder
     private var trailingQuantitySlot: some View {
-        if isQuantitySwipeActive {
-            quantitySwipeColumn(
-                revealsFromLeading: revealsQuantityFromLeading,
-                edgePadding: quantityEdgePadding
-            )
-        } else if showsQuantity {
+        if showsQuantity {
             quantityLabel(entry.quantity)
                 .padding(quantityEdgePadding, Self.quantityEdgeInset)
         }
@@ -148,22 +119,7 @@ struct ShoppingRowView: View {
         Text("\(quantity)")
             .font(ShoppingListChrome.trailingQuantityFont.monospacedDigit())
             .foregroundStyle(appTheme.color)
-            .frame(minWidth: ShoppingQuantitySwipeMetrics.slotMinWidth)
+            .frame(minWidth: ShoppingRowQuantityMetrics.slotMinWidth)
             .offset(x: quantityStaticShift)
-    }
-
-    private func quantitySwipeColumn(
-        revealsFromLeading: Bool,
-        edgePadding: Edge.Set
-    ) -> some View {
-        ShoppingQuantitySwipeColumn(
-            quantity: entry.quantity,
-            showsQuantityDigit: showsQuantitySwipeDigit,
-            revealsFromLeading: revealsFromLeading,
-            rawDragAmount: quantitySwipeState.dragAmount,
-            releaseDigitOffset: quantitySwipeState.digitReleaseOffset,
-            fadingInQuantityDigit: quantitySwipeState.digitFadingIn
-        )
-        .padding(edgePadding, Self.quantityEdgeInset)
     }
 }

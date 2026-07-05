@@ -13,10 +13,6 @@ private enum ShoppingRowContextMenuMetrics {
 /// Hosts the shopping row and attaches a UIKit context menu that can refresh while open.
 @MainActor
 struct ShoppingListRowContextMenuHost<Row: View>: View {
-    @EnvironmentObject private var store: GroceryStore
-    @Environment(\.appContentLanguage) private var catalogLanguage
-    @StateObject private var quantitySwipeState = ShoppingRowQuantitySwipeState()
-
     let entry: ShoppingEntry
     let item: GroceryItem
     let showsPhotoPreview: Bool
@@ -40,34 +36,13 @@ struct ShoppingListRowContextMenuHost<Row: View>: View {
         self.rowBuilder = row
     }
 
-    private var quantitySwipeExclusionWidth: CGFloat {
-        ShoppingQuantitySwipeMetrics.contextMenuQuantityEdgePassThroughWidth
-    }
-
-    private var quantitySwipeOnPhysicalLeadingEdge: Bool {
-        CatalogLayoutMirroring.quantityPillOnPhysicalLeadingEdge(for: catalogLanguage)
-    }
-
-    private var revealsQuantityFromLeading: Bool {
-        quantitySwipeOnPhysicalLeadingEdge
-    }
-
     var body: some View {
         rowBuilder()
-            .environmentObject(quantitySwipeState)
             .overlay {
                 ShoppingRowUIKitContextMenu(
                     entry: entry,
                     item: item,
                     showsPhotoPreview: showsPhotoPreview,
-                    quantitySwipeEnabled: !entry.isChecked,
-                    quantitySwipeOnPhysicalLeadingEdge: quantitySwipeOnPhysicalLeadingEdge,
-                    quantitySwipeExclusionWidth: quantitySwipeExclusionWidth,
-                    revealsQuantityFromLeading: revealsQuantityFromLeading,
-                    quantitySwipeState: quantitySwipeState,
-                    onIncrementQuantity: {
-                        store.incrementUncheckedShoppingQuantity(itemID: item.id, delta: 1, playHaptic: false)
-                    },
                     onTap: onTap,
                     onEdit: onEdit
                 )
@@ -85,12 +60,6 @@ private struct ShoppingRowUIKitContextMenu: UIViewRepresentable {
     let entry: ShoppingEntry
     let item: GroceryItem
     let showsPhotoPreview: Bool
-    let quantitySwipeEnabled: Bool
-    let quantitySwipeOnPhysicalLeadingEdge: Bool
-    let quantitySwipeExclusionWidth: CGFloat
-    let revealsQuantityFromLeading: Bool
-    let quantitySwipeState: ShoppingRowQuantitySwipeState
-    let onIncrementQuantity: () -> Void
     let onTap: () -> Void
     let onEdit: () -> Void
 
@@ -101,7 +70,6 @@ private struct ShoppingRowUIKitContextMenu: UIViewRepresentable {
     func makeUIView(context: Context) -> ListRowContextMenuTouchView {
         let view = ListRowContextMenuTouchView()
         applyTouchRouting(to: view, coordinator: context.coordinator)
-        view.syncQuantitySwipeRecognizer()
 
         let interaction = UIContextMenuInteraction(delegate: context.coordinator)
         view.addInteraction(interaction)
@@ -114,7 +82,6 @@ private struct ShoppingRowUIKitContextMenu: UIViewRepresentable {
     func updateUIView(_ uiView: ListRowContextMenuTouchView, context: Context) {
         context.coordinator.parent = self
         applyTouchRouting(to: uiView, coordinator: context.coordinator)
-        uiView.syncQuantitySwipeRecognizer()
         if !context.coordinator.isMenuVisible {
             context.coordinator.menuQuantity = entry.quantity
         }
@@ -123,30 +90,6 @@ private struct ShoppingRowUIKitContextMenu: UIViewRepresentable {
     private func applyTouchRouting(to view: ListRowContextMenuTouchView, coordinator: Coordinator) {
         view.onTap = { [weak coordinator] in
             coordinator?.parent.onTap()
-        }
-        view.quantitySwipeEnabled = quantitySwipeEnabled
-        view.quantitySwipeOnPhysicalLeadingEdge = quantitySwipeOnPhysicalLeadingEdge
-        view.quantityEdgeExclusionWidth = quantitySwipeExclusionWidth
-        view.revealsQuantityFromLeading = revealsQuantityFromLeading
-        view.onQuantitySwipeDragChanged = { [weak coordinator] amount in
-            guard let coordinator else { return }
-            coordinator.parent.quantitySwipeState.handleDragChanged(
-                amount,
-                isActive: coordinator.parent.quantitySwipeEnabled
-            )
-        }
-        view.onQuantitySwipeDragEnded = { [weak coordinator] reachedThreshold in
-            guard let coordinator else { return }
-            coordinator.parent.quantitySwipeState.handleDragEnded(
-                reachedThreshold: reachedThreshold,
-                isActive: coordinator.parent.quantitySwipeEnabled,
-                entryQuantity: coordinator.parent.entry.quantity,
-                revealsFromLeading: coordinator.parent.revealsQuantityFromLeading,
-                layoutDirection: CatalogLayoutMirroring.catalogLayoutDirection(
-                    for: coordinator.parent.catalogLanguage
-                ),
-                onIncrement: coordinator.parent.onIncrementQuantity
-            )
         }
     }
 
@@ -167,12 +110,6 @@ private struct ShoppingRowUIKitContextMenu: UIViewRepresentable {
             _ interaction: UIContextMenuInteraction,
             configurationForMenuAtLocation location: CGPoint
         ) -> UIContextMenuConfiguration? {
-            if parent.quantitySwipeEnabled,
-               let view = interaction.view as? ListRowContextMenuTouchView,
-               view.isQuantityEdgePoint(location) {
-                return nil
-            }
-
             menuQuantity = parent.entry.quantity
             resetRowPreviewState()
             let showsPhotoPreview = Self.showsPhotoPreview(for: parent)
@@ -323,7 +260,7 @@ private struct ShoppingRowUIKitContextMenu: UIViewRepresentable {
 
         private func quantityInlineMenu() -> UIMenu {
             let themeColor = UIColor(parent.appTheme.color)
-            let minusColor = menuQuantity <= 1 ? UIColor.secondaryLabel : themeColor
+            let minusColor = menuQuantity <= 1 ? parent.appTheme.subduedControlUIColor : themeColor
             var minusAttributes: UIMenuElement.Attributes = .keepsMenuPresented
             if menuQuantity <= 1 {
                 minusAttributes.insert(.disabled)
@@ -453,18 +390,9 @@ final class ListRowContextMenuTouchView: UIView {
     /// Home catalog: pass quantity-pill taps through to SwiftUI beneath the overlay.
     var passesThroughLeadingQuantityEdge = false
     var passesThroughTrailingQuantityEdge = false
-    var quantitySwipeEnabled = false
-    var quantitySwipeOnPhysicalLeadingEdge = false
     var quantityEdgeExclusionWidth: CGFloat = 0
-    var revealsQuantityFromLeading = false
-    var onQuantitySwipeDragChanged: ((CGFloat) -> Void)?
-    var onQuantitySwipeDragEnded: ((Bool) -> Void)?
 
     private let gestureDelegate = ListRowTouchGestureDelegate()
-    private var quantityPanRecognizer: UIPanGestureRecognizer?
-    private var horizontalQuantityDragActive = false
-    private weak var lockedScrollView: UIScrollView?
-    private var scrollWasEnabled = true
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -473,7 +401,7 @@ final class ListRowContextMenuTouchView: UIView {
         autoresizingMask = [.flexibleWidth, .flexibleHeight]
         gestureDelegate.touchView = self
 
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         tap.delegate = gestureDelegate
         addGestureRecognizer(tap)
     }
@@ -483,120 +411,30 @@ final class ListRowContextMenuTouchView: UIView {
         nil
     }
 
-    func isQuantityEdgePoint(_ point: CGPoint) -> Bool {
-        guard quantitySwipeEnabled, quantityEdgeExclusionWidth > 0 else { return false }
-        if quantitySwipeOnPhysicalLeadingEdge {
-            return point.x <= quantityEdgeExclusionWidth
+    /// Home catalog pill zone — UIKit row tap must not compete with SwiftUI stepper buttons.
+    func isQuantityPillPassThroughPoint(_ point: CGPoint) -> Bool {
+        guard quantityEdgeExclusionWidth > 0 else { return false }
+        if passesThroughLeadingQuantityEdge, point.x <= quantityEdgeExclusionWidth {
+            return true
         }
-        return point.x >= bounds.width - quantityEdgeExclusionWidth
+        if passesThroughTrailingQuantityEdge, point.x >= bounds.width - quantityEdgeExclusionWidth {
+            return true
+        }
+        return false
     }
 
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         guard bounds.contains(point) else { return nil }
-        if passesThroughLeadingQuantityEdge, point.x <= quantityEdgeExclusionWidth {
-            return nil
-        }
-        if passesThroughTrailingQuantityEdge, point.x >= bounds.width - quantityEdgeExclusionWidth {
+        if isQuantityPillPassThroughPoint(point) {
             return nil
         }
         return super.hitTest(point, with: event)
     }
 
-    func syncQuantitySwipeRecognizer() {
-        if quantitySwipeEnabled {
-            if quantityPanRecognizer == nil {
-                let pan = UIPanGestureRecognizer(target: self, action: #selector(handleQuantityPan(_:)))
-                pan.cancelsTouchesInView = false
-                pan.delegate = gestureDelegate
-                addGestureRecognizer(pan)
-                quantityPanRecognizer = pan
-            }
-        } else if let quantityPanRecognizer {
-            removeGestureRecognizer(quantityPanRecognizer)
-            self.quantityPanRecognizer = nil
-        }
-    }
-
-    @objc private func handleTap() {
+    @objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
+        let point = recognizer.location(in: self)
+        guard !isQuantityPillPassThroughPoint(point) else { return }
         onTap?()
-    }
-
-    @objc private func handleQuantityPan(_ pan: UIPanGestureRecognizer) {
-        guard quantitySwipeEnabled else { return }
-
-        switch pan.state {
-        case .began, .changed:
-            let translation = pan.translation(in: self)
-            if !horizontalQuantityDragActive {
-                let absX = abs(translation.x)
-                let absY = abs(translation.y)
-                guard max(absX, absY) >= 5 else { return }
-                guard absX > absY * ShoppingQuantitySwipeMetrics.horizontalDominanceRatio else {
-                    return
-                }
-                horizontalQuantityDragActive = true
-                lockScroll()
-            }
-
-            let rawDrag = ShoppingQuantitySwipeMetrics.rawDragAmount(
-                translation: translation,
-                revealsFromLeading: revealsQuantityFromLeading
-            )
-            onQuantitySwipeDragChanged?(rawDrag)
-        case .ended, .cancelled:
-            defer {
-                horizontalQuantityDragActive = false
-                unlockScroll()
-            }
-            guard horizontalQuantityDragActive else {
-                onQuantitySwipeDragEnded?(false)
-                return
-            }
-            let translation = pan.translation(in: self)
-            let rawDrag = ShoppingQuantitySwipeMetrics.rawDragAmount(
-                translation: translation,
-                revealsFromLeading: revealsQuantityFromLeading
-            )
-            onQuantitySwipeDragEnded?(
-                ShoppingQuantitySwipeMetrics.hasReachedThreshold(rawDrag: rawDrag)
-            )
-        default:
-            horizontalQuantityDragActive = false
-            unlockScroll()
-        }
-    }
-
-    private func lockScroll() {
-        guard lockedScrollView == nil,
-              let scrollView = Self.findScrollView(from: self) else {
-            return
-        }
-        scrollWasEnabled = scrollView.isScrollEnabled
-        scrollView.isScrollEnabled = false
-        lockedScrollView = scrollView
-    }
-
-    private func unlockScroll() {
-        guard let scrollView = lockedScrollView else { return }
-        scrollView.isScrollEnabled = scrollWasEnabled
-        lockedScrollView = nil
-    }
-
-    fileprivate static func findScrollView(from view: UIView?) -> UIScrollView? {
-        var current = view
-        while let node = current {
-            if let scrollView = node as? UIScrollView { return scrollView }
-            current = node.superview
-        }
-        return nil
-    }
-
-    fileprivate static func viewIsInsideScrollView(_ view: UIView?) -> Bool {
-        findScrollView(from: view) != nil
-    }
-
-    fileprivate func isQuantityPanRecognizer(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        gestureRecognizer === quantityPanRecognizer
     }
 }
 
@@ -604,44 +442,16 @@ final class ListRowContextMenuTouchView: UIView {
 private final class ListRowTouchGestureDelegate: NSObject, UIGestureRecognizerDelegate {
     weak var touchView: ListRowContextMenuTouchView?
 
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        guard let touchView else { return true }
-        if touchView.isQuantityPanRecognizer(gestureRecognizer) {
-            guard touchView.quantitySwipeEnabled else { return false }
-            let point = gestureRecognizer.location(in: touchView)
-            return touchView.isQuantityEdgePoint(point)
-        }
-        return true
-    }
-
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer,
         shouldReceive touch: UITouch
     ) -> Bool {
         guard let touchView else { return true }
         let point = touch.location(in: touchView)
-        if touchView.isQuantityPanRecognizer(gestureRecognizer) {
-            return touchView.isQuantityEdgePoint(point)
+        if gestureRecognizer is UITapGestureRecognizer,
+           touchView.isQuantityPillPassThroughPoint(point) {
+            return false
         }
-        guard gestureRecognizer is UITapGestureRecognizer, touchView.quantitySwipeEnabled else { return true }
-        return !touchView.isQuantityEdgePoint(point)
-    }
-
-    func gestureRecognizer(
-        _ gestureRecognizer: UIGestureRecognizer,
-        shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer
-    ) -> Bool {
-        guard let touchView, touchView.isQuantityPanRecognizer(gestureRecognizer) else { return false }
-        // Don't defer the quantity pan behind scroll or context-menu long-press.
-        return false
-    }
-
-    func gestureRecognizer(
-        _ gestureRecognizer: UIGestureRecognizer,
-        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
-    ) -> Bool {
-        guard let touchView, touchView.isQuantityPanRecognizer(gestureRecognizer) else { return false }
-        return otherGestureRecognizer.view is UIScrollView
-            || ListRowContextMenuTouchView.viewIsInsideScrollView(otherGestureRecognizer.view)
+        return true
     }
 }

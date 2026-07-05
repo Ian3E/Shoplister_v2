@@ -47,10 +47,78 @@ struct HomeCatalogRowContextMenuHost<Row: View>: View {
     }
 }
 
+/// Row tap routing that passes quantity-pill touches through to SwiftUI (no context menu).
+@MainActor
+struct CatalogListRowTapTouchOverlay: UIViewRepresentable {
+    @EnvironmentObject private var store: GroceryStore
+    @Environment(\.appContentLanguage) private var catalogLanguage
+    @Environment(\.shoppingListSpacingScale) private var spacingScale
+    @Environment(\.expandedQuantityPillItemID) private var expandedQuantityPillItemID
+
+    let item: GroceryItem
+    let usesGlassChrome: Bool
+    let onTap: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    func makeUIView(context: Context) -> ListRowContextMenuTouchView {
+        let view = ListRowContextMenuTouchView()
+        applyTouchRouting(to: view, coordinator: context.coordinator)
+        return view
+    }
+
+    func updateUIView(_ uiView: ListRowContextMenuTouchView, context: Context) {
+        context.coordinator.parent = self
+        applyTouchRouting(to: uiView, coordinator: context.coordinator)
+    }
+
+    private func applyTouchRouting(to view: ListRowContextMenuTouchView, coordinator: Coordinator) {
+        view.onTap = { [weak coordinator] in
+            guard let coordinator else { return }
+            let parent = coordinator.parent
+            if parent.expandedQuantityPillItemID == parent.item.id {
+                return
+            }
+            parent.onTap()
+        }
+
+        let exclusionWidth: CGFloat
+        if store.shopping.contains(where: { $0.itemID == item.id }) {
+            exclusionWidth = CatalogListRowDensity.quantityPillRowTapEdgeExclusionWidth(
+                forQuantity: store.shoppingListQuantity(for: item.id),
+                usesGlassChrome: usesGlassChrome,
+                spacingScale: spacingScale
+            )
+        } else {
+            exclusionWidth = 0
+        }
+
+        let pillOnPhysicalLeadingEdge = CatalogLayoutMirroring.quantityPillOnPhysicalLeadingEdge(
+            for: catalogLanguage
+        )
+        view.passesThroughLeadingQuantityEdge = exclusionWidth > 0 && pillOnPhysicalLeadingEdge
+        view.passesThroughTrailingQuantityEdge = exclusionWidth > 0 && !pillOnPhysicalLeadingEdge
+        view.quantityEdgeExclusionWidth = exclusionWidth
+    }
+
+    @MainActor
+    final class Coordinator {
+        var parent: CatalogListRowTapTouchOverlay
+
+        init(parent: CatalogListRowTapTouchOverlay) {
+            self.parent = parent
+        }
+    }
+}
+
 @MainActor
 private struct HomeCatalogUIKitContextMenu: UIViewRepresentable {
     @EnvironmentObject private var store: GroceryStore
     @Environment(\.appContentLanguage) private var catalogLanguage
+    @Environment(\.shoppingListSpacingScale) private var spacingScale
+    @Environment(\.expandedQuantityPillItemID) private var expandedQuantityPillItemID
 
     let item: GroceryItem
     let isEnabled: Bool
@@ -82,7 +150,12 @@ private struct HomeCatalogUIKitContextMenu: UIViewRepresentable {
 
     private func applyTouchRouting(to view: ListRowContextMenuTouchView, coordinator: Coordinator) {
         view.onTap = { [weak coordinator] in
-            coordinator?.parent.onTap()
+            guard let coordinator else { return }
+            let parent = coordinator.parent
+            if parent.expandedQuantityPillItemID == parent.item.id {
+                return
+            }
+            parent.onTap()
         }
 
         let exclusionWidth = quantityPillEdgeExclusionWidth
@@ -95,11 +168,15 @@ private struct HomeCatalogUIKitContextMenu: UIViewRepresentable {
     }
 
     /// Lets the SwiftUI quantity pill receive taps instead of the row toggle.
+    /// Always reserves expanded width so fast − taps after expand are not clipped while UIKit catches up.
+    /// Includes `homeCatalogItemRowHorizontalInset` because the pill sits inset from the full-bleed cell edge.
     private var quantityPillEdgeExclusionWidth: CGFloat {
-        guard let entry = store.shopping.first(where: { $0.itemID == item.id }) else { return 0 }
-        return CatalogListRowDensity.quantityPillLiveReservedWidth(forQuantity: entry.quantity)
-            + CatalogListRowDensity.quantityPillHorizontalNudge
-            + 6
+        guard store.shopping.contains(where: { $0.itemID == item.id }) else { return 0 }
+        return CatalogListRowDensity.quantityPillRowTapEdgeExclusionWidth(
+            forQuantity: store.shoppingListQuantity(for: item.id),
+            usesGlassChrome: true,
+            spacingScale: spacingScale
+        )
     }
 
     private func applyEnabledState(to view: ListRowContextMenuTouchView, coordinator: Coordinator) {

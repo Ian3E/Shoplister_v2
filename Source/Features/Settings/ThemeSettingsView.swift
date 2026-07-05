@@ -5,12 +5,6 @@ struct ThemeSettingsView: View {
     @Binding var draftThemeRaw: String
     @Binding var draftCustomColorHex: String
 
-    @AppStorage(AppContentLanguage.storageKey) private var catalogLanguageRaw: String = AppContentLanguage.english.rawValue
-
-    private var catalogLanguage: AppContentLanguage {
-        AppContentLanguage(rawValue: catalogLanguageRaw) ?? .english
-    }
-
     private var draftTheme: AppTheme {
         AppTheme(rawValue: draftThemeRaw) ?? .blue
     }
@@ -32,34 +26,50 @@ struct ThemeSettingsView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                themeColorPicker
-                    .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
-                    .listRowBackground(Color(uiColor: .secondarySystemGroupedBackground))
-            }
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                List {
+                    Section {
+                        themeColorPicker
+                            .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+                            .listRowBackground(Color(uiColor: .secondarySystemGroupedBackground))
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .scrollDisabled(true)
+                .frame(height: Self.colorPickerSectionHeight)
 
-            Section {
+                previewHeader
+
                 themeStoreListPreview
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-            } header: {
-                Text(LocalizedCopy.preview)
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(Color(uiColor: .label))
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .textCase(nil)
-                    .padding(.top, 12)
-                    .padding(.bottom, 4)
+                    .frame(
+                        width: geometry.size.width,
+                        height: max(
+                            0,
+                            geometry.size.height
+                                - Self.colorPickerSectionHeight
+                                - Self.previewHeaderHeight
+                        )
+                    )
             }
-            .listSectionMargins(.horizontal, 0)
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+            .background(Color.shoppingListBackground)
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
         .background(Color.shoppingListBackground)
         .navigationTitle(LocalizedCopy.theme)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var previewHeader: some View {
+        Text(LocalizedCopy.preview)
+            .font(.system(size: 17, weight: .bold))
+            .foregroundStyle(Color(uiColor: .label))
+            .frame(maxWidth: .infinity)
+            .textCase(nil)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
+            .frame(height: Self.previewHeaderHeight, alignment: .top)
     }
 
     private var themeColorPicker: some View {
@@ -103,23 +113,32 @@ struct ThemeSettingsView: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// Space below the last preview row for the floating + (Store bottom-bar parity).
-    private static let themePreviewFloatingAddButtonClearance: CGFloat = 150
+    /// Swatch row: 16 + 28 + 16 vertical insets.
+    private static let colorPickerSectionHeight: CGFloat = 60
+    /// Matches prior preview section header spacing.
+    private static let previewHeaderHeight: CGFloat = 40
+    /// Trailing inset for the preview bottom-bar + button.
+    private static let themePreviewTrailingToolbarInset: CGFloat = 20
+    /// Bottom inset within the preview pane — mirrors Store `bottomBar` placement.
+    private static let themePreviewBottomToolbarInset: CGFloat = 10
+    /// Nudge the preview + down to align with the live Store bottom toolbar.
+    private static let themePreviewBottomToolbarOffset: CGFloat = 20
 
     private var themeStoreListPreview: some View {
-        let listHeight = SettingsStoreListPreview.contentHeight(for: .medium, catalogLanguage: catalogLanguage)
+        ZStack(alignment: .bottomTrailing) {
+            Color.shoppingListBackground
 
-        return ZStack(alignment: .bottomTrailing) {
-            SettingsStoreListPreview(textSize: .medium)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            VStack(spacing: 0) {
+                SettingsStoreListPreview(textSize: .medium)
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             SettingsThemePreviewAddButton()
-                .padding(.trailing, 20)
-                .padding(.bottom, 16)
+                .padding(.trailing, Self.themePreviewTrailingToolbarInset)
+                .padding(.bottom, Self.themePreviewBottomToolbarInset)
+                .offset(y: Self.themePreviewBottomToolbarOffset)
         }
-        .frame(height: listHeight + Self.themePreviewFloatingAddButtonClearance)
-        .frame(maxWidth: .infinity)
         .environment(\.appTheme, draftThemeSelection)
         .allowsHitTesting(false)
     }
@@ -131,7 +150,7 @@ private struct SettingsThemePreviewAddButton: View {
         Button(action: {}) {
             Image(systemName: "plus")
                 .font(.system(size: 24, weight: .semibold))
-                .frame(width: 36, height: 36)
+                .frame(width: CatalogToolbarTapChrome.iconTapDiameter, height: CatalogToolbarTapChrome.iconTapDiameter)
                 .contentShape(Circle())
         }
         .buttonStyle(.glassProminent)
