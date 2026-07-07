@@ -383,13 +383,13 @@ final class GroceryStore: ObservableObject {
     func addToShopping(itemID: UUID, quantity: Int, playHaptic: Bool = true) {
         let qty = max(1, quantity)
         if currentContentLanguage() == .hebrew {
-            if let idx = hebrew.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked }) {
+            if let idx = hebrew.shopping.firstIndexForQuantityUpdate(itemID: itemID) {
                 hebrew.shopping[idx].quantity += qty
             } else {
                 hebrew.shopping.append(.init(itemID: itemID, quantity: qty))
             }
         } else {
-            if let idx = english.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked }) {
+            if let idx = english.shopping.firstIndexForQuantityUpdate(itemID: itemID) {
                 english.shopping[idx].quantity += qty
             } else {
                 english.shopping.append(.init(itemID: itemID, quantity: qty))
@@ -406,13 +406,13 @@ final class GroceryStore: ObservableObject {
     func incrementUncheckedShoppingQuantity(itemID: UUID, delta: Int = 1, playHaptic: Bool = true) {
         let d = max(1, delta)
         if currentContentLanguage() == .hebrew {
-            if let idx = hebrew.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked }) {
+            if let idx = hebrew.shopping.firstIndexForQuantityUpdate(itemID: itemID) {
                 hebrew.shopping[idx].quantity += d
             } else {
                 hebrew.shopping.append(.init(itemID: itemID, quantity: d))
             }
         } else {
-            if let idx = english.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked }) {
+            if let idx = english.shopping.firstIndexForQuantityUpdate(itemID: itemID) {
                 english.shopping[idx].quantity += d
             } else {
                 english.shopping.append(.init(itemID: itemID, quantity: d))
@@ -429,12 +429,12 @@ final class GroceryStore: ObservableObject {
     func adjustUncheckedShoppingQuantity(itemID: UUID, delta: Int, playHaptic: Bool = true) {
         guard delta != 0 else { return }
         if currentContentLanguage() == .hebrew,
-           let idx = hebrew.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked })
+           let idx = hebrew.shopping.firstIndexForQuantityUpdate(itemID: itemID)
         {
             let newQuantity = hebrew.shopping[idx].quantity + delta
             guard newQuantity >= 1 else { return }
             hebrew.shopping[idx].quantity = newQuantity
-        } else if let idx = english.shopping.firstIndex(where: { $0.itemID == itemID && !$0.isChecked }) {
+        } else if let idx = english.shopping.firstIndexForQuantityUpdate(itemID: itemID) {
             let newQuantity = english.shopping[idx].quantity + delta
             guard newQuantity >= 1 else { return }
             english.shopping[idx].quantity = newQuantity
@@ -1499,5 +1499,15 @@ final class GroceryStore: ObservableObject {
         saveAllToDisk()
         syncPublishedFromActiveContentLanguage()
         return skippedRecipeRows
+    }
+}
+
+private extension Array where Element == ShoppingEntry {
+    /// Prefers an unchecked line; otherwise updates an existing checked line so Home quantity changes do not duplicate entries.
+    func firstIndexForQuantityUpdate(itemID: UUID) -> Int? {
+        if let idx = firstIndex(where: { $0.itemID == itemID && !$0.isChecked }) {
+            return idx
+        }
+        return firstIndex(where: { $0.itemID == itemID })
     }
 }
