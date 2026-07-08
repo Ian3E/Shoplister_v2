@@ -86,17 +86,6 @@ enum LocalizedCopy {
         String(localized: "About", comment: "About settings section title")
     }
 
-    static var settingsDebug: String {
-        String(localized: "Debug", comment: "Debug settings section title")
-    }
-
-    static var resetExplainers: String {
-        String(
-            localized: "Reset explainers",
-            comment: "Settings button to show welcome and first-item explainers again"
-        )
-    }
-
     static var appName: String {
         String(localized: "Shoplister", comment: "App name on About screen")
     }
@@ -535,14 +524,28 @@ enum LocalizedCopy {
         String(localized: "Shopping list", comment: "Shopping list navigation principal title")
     }
 
-    static var shoppingListEmptyTitle: String {
-        String(localized: "Your shopping list is empty", comment: "Empty shopping list overlay title")
+    static var shoppingListEmptyTitleAllDone: String {
+        String(localized: "All done", comment: "Empty shopping list overlay title")
     }
 
-    static var shoppingListEmptySubtitle: String {
+    static var shoppingListEmptyAddHintLeading: String {
         String(
-            localized: "Pull down to quickly search and add items",
-            comment: "Empty shopping list overlay subtitle"
+            localized: "Tap",
+            comment: "Empty shopping add hint before plus symbol"
+        )
+    }
+
+    static var shoppingListEmptyAddHintTrailing: String {
+        String(
+            localized: "or pull down to add items",
+            comment: "Empty shopping add hint after plus symbol"
+        )
+    }
+
+    static var shoppingListEmptyAddHintAccessibility: String {
+        String(
+            localized: "Tap plus or pull down to add items",
+            comment: "Accessibility label for empty shopping add hint"
         )
     }
 

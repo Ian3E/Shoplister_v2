@@ -33,6 +33,7 @@ struct ShoppingView: View {
     @AppStorage(AppShoppingSortChecked.storageKey) private var sortCheckedShoppingItems: Bool = false
     @AppStorage(AppShoppingHideStoreGroupNames.storageKey) private var hideStoreGroupNames: Bool = false
     @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked: Bool = false
+    @AppStorage(AppShoppingEmptyAddHint.storageKey) private var emptyAddHintCompletedListCount: Int = 0
     @AppStorage(AppTextSize.storageKey) private var textSizeRaw: String = AppTextSize.defaultSize.rawValue
 
     @State private var wasAllVisibleItemsChecked = false
@@ -70,6 +71,8 @@ struct ShoppingView: View {
     @State private var emptyShoppingRevealOpacity: CGFloat = 1
     /// Bumped so a pending fade-in `Task` is dropped when the list gains items again mid-animation.
     @State private var emptyShoppingFadeSession: UInt = 0
+    /// Snapshot so the add hint stays visible on the trip that increments the counter to the hide threshold.
+    @State private var showsEmptyAddHint = true
     /// Mirrors the last `entriesWithItems.isEmpty` we applied (`nil` until first `syncEmptyShoppingFadeFromResolvedRows`).
     @State private var lastResolvedShoppingListWasEmpty: Bool?
 
@@ -760,12 +763,21 @@ struct ShoppingView: View {
         guard let wasEmpty = lastResolvedShoppingListWasEmpty else {
             lastResolvedShoppingListWasEmpty = nowEmpty
             if nowEmpty {
+                showsEmptyAddHint = AppShoppingEmptyAddHint.shouldShow(
+                    completedListCount: emptyAddHintCompletedListCount
+                )
                 emptyShoppingRevealOpacity = 1
             }
             return
         }
 
         if nowEmpty, !wasEmpty {
+            showsEmptyAddHint = AppShoppingEmptyAddHint.shouldShow(
+                completedListCount: emptyAddHintCompletedListCount
+            )
+            if emptyAddHintCompletedListCount < AppShoppingEmptyAddHint.hideAfterCompletedLists {
+                emptyAddHintCompletedListCount += 1
+            }
             beginEmptyShoppingReveal()
         } else if !nowEmpty, wasEmpty {
             emptyShoppingFadeSession &+= 1
@@ -777,19 +789,7 @@ struct ShoppingView: View {
 
     @ViewBuilder
     private var shoppingEmptyStateOverlay: some View {
-        VStack(spacing: 10) {
-            Text(LocalizedCopy.shoppingListEmptyTitle)
-                .font(.title3.weight(.semibold))
-            Text(LocalizedCopy.shoppingListEmptySubtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 28)
-                .padding(.top, 4)
-                .accessibilityLabel(LocalizedCopy.shoppingListEmptySubtitle)
-        }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ShoppingEmptyStateView(showsAddHint: showsEmptyAddHint)
     }
 
     @ViewBuilder
