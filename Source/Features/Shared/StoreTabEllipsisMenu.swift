@@ -48,21 +48,41 @@ struct StoreTabEllipsisMenu: View {
             }
 
             Section {
-                Button {
-                    withAnimation(.snappy) {
-                        store.clearChecked()
+                if store.canUndoClearChecked {
+                    Button {
+                        withAnimation(.snappy) {
+                            store.undoClearChecked()
+                        }
+                    } label: {
+                        Label(LocalizedCopy.undoClearChecked, systemImage: "arrow.uturn.backward")
                     }
-                } label: {
-                    Label(LocalizedCopy.clearChecked, systemImage: "xmark.app")
+                } else {
+                    Button {
+                        withAnimation(.snappy) {
+                            store.clearChecked()
+                        }
+                    } label: {
+                        Label(LocalizedCopy.clearChecked, systemImage: "xmark.app")
+                    }
+                    .disabled(!canClearChecked)
                 }
-                .disabled(!canClearChecked)
 
-                Button(role: .destructive) {
-                    isPresentingClearAllConfirm = true
-                } label: {
-                    Label(LocalizedCopy.clearList, systemImage: "trash")
+                if store.canUndoClearShoppingList {
+                    Button {
+                        withAnimation(.snappy) {
+                            store.undoClearShoppingList()
+                        }
+                    } label: {
+                        Label(LocalizedCopy.undoClearList, systemImage: "arrow.uturn.backward")
+                    }
+                } else {
+                    Button(role: .destructive) {
+                        isPresentingClearAllConfirm = true
+                    } label: {
+                        Label(LocalizedCopy.clearList, systemImage: "trash")
+                    }
+                    .disabled(!hasVisibleLines)
                 }
-                .disabled(!hasVisibleLines)
 
                 Button(action: onShare) {
                     Label(LocalizedCopy.shareList, systemImage: "square.and.arrow.up")

@@ -81,4 +81,22 @@ enum AppTextSize: String, CaseIterable, Identifiable {
         case .extraLarge: return 1.2
         }
     }
+
+    /// Vertical padding inside the glass quantity pill capsule (discrete per text-size step).
+    var quantityPillCapsuleVerticalPadding: CGFloat {
+        switch self {
+        case .extraSmall: return 0
+        case .small: return 1
+        case .medium: return 3
+        case .large: return 4
+        case .extraLarge: return 5
+        }
+    }
+
+    /// Nearest text-size step for a `listSpacingScale` value (e.g. Settings debug preview).
+    static func resolved(fromListSpacingScale scale: CGFloat) -> AppTextSize {
+        allCases.min {
+            abs($0.listSpacingScale - scale) < abs($1.listSpacingScale - scale)
+        } ?? defaultSize
+    }
 }

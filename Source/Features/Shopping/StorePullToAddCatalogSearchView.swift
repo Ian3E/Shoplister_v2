@@ -229,10 +229,6 @@ private struct StorePullToAddCreateItemButtonStyle: ViewModifier {
     }
 }
 
-private enum StorePullToAddCatalogItemRowMetrics {
-    static let quantityPillGutterAnimation = Animation.spring(response: 0.28, dampingFraction: 0.82)
-}
-
 private struct StorePullToAddCatalogItemRow: View {
     @EnvironmentObject private var store: GroceryStore
     @Environment(\.appContentLanguage) private var catalogLanguage
@@ -279,8 +275,8 @@ private struct StorePullToAddCatalogItemRow: View {
                 syncQuantityPillExpansion(with: expandedID)
             }
             .onChange(of: isInShopping) { _, inShopping in
-                guard !inShopping, isQuantityPillExpanded else { return }
-                isQuantityPillExpanded = false
+                guard !inShopping else { return }
+                quantityPillExpandedBinding.wrappedValue = false
             }
     }
 
@@ -314,6 +310,13 @@ private struct StorePullToAddCatalogItemRow: View {
         } else {
             store.addToShopping(itemID: item.id, quantity: 1)
             onAddedToShopping()
+            QuantityPillChromeTiming.expandAfterAdd(
+                itemID: item.id,
+                guardInShopping: { [store] in
+                    store.shopping.contains(where: { $0.itemID == item.id })
+                },
+                setExpandedItemID: { expandedQuantityPillItemID = $0 }
+            )
         }
     }
 
@@ -344,14 +347,19 @@ private struct StorePullToAddCatalogItemRow: View {
         return CatalogListRowDensity.quantityPillSlotMinWidth
     }
 
+    private var rowItemNameFont: Font {
+        isInShopping && isQuantityPillExpanded ? Font.body.weight(.bold) : .body
+    }
+
     private var hebrewRow: some View {
         Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(.body)
+            .font(rowItemNameFont)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
             .multilineTextAlignment(.trailing)
             .foregroundStyle(isInShopping ? appTheme.color : .primary)
             .lineLimit(1)
             .padding(.leading, quantityPillTextGutter)
-            .animation(StorePullToAddCatalogItemRowMetrics.quantityPillGutterAnimation, value: quantityPillTextGutter)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
             .frame(maxWidth: .infinity, alignment: .trailing)
             .overlay(alignment: .leading) {
                 if isInShopping {
@@ -362,12 +370,13 @@ private struct StorePullToAddCatalogItemRow: View {
 
     private var englishRow: some View {
         Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(.body)
+            .font(rowItemNameFont)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
             .multilineTextAlignment(.leading)
             .foregroundStyle(isInShopping ? appTheme.color : .primary)
             .lineLimit(1)
             .padding(.trailing, quantityPillTextGutter)
-            .animation(StorePullToAddCatalogItemRowMetrics.quantityPillGutterAnimation, value: quantityPillTextGutter)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay(alignment: .trailing) {
                 if isInShopping {
@@ -398,6 +407,9 @@ private struct StorePullToAddCatalogItemRow: View {
             },
             onDecrement: {
                 store.adjustUncheckedShoppingQuantity(itemID: itemID, delta: -1)
+            },
+            onRemove: {
+                store.removeFromShopping(itemID: itemID)
             }
         )
     }

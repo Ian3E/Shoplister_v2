@@ -86,6 +86,14 @@ enum LocalizedCopy {
         String(localized: "About", comment: "About settings section title")
     }
 
+    static var settingsDebug: String {
+        String(localized: "Debug", comment: "Debug settings section title")
+    }
+
+    static var resetExplainers: String {
+        String(localized: "Reset explainers", comment: "Settings button to show welcome and first-item explainers again")
+    }
+
     static var appName: String {
         String(localized: "Shoplister", comment: "App name on About screen")
     }
@@ -392,6 +400,17 @@ enum LocalizedCopy {
         )
     }
 
+    static var collapseCompletedSections: String {
+        String(localized: "Collapse completed sections", comment: "Collapse completed sections toggle")
+    }
+
+    static var collapseCompletedSectionsFooter: String {
+        String(
+            localized: "Collapses completed sections by default.",
+            comment: "Footer under collapse completed sections toggle"
+        )
+    }
+
     static var hideSectionNamesFooter: String {
         String(
             localized: "Removes section headers to present a more condensed shopping list.",
@@ -408,7 +427,7 @@ enum LocalizedCopy {
 
     static var shoppingListSectionFooter: String {
         String(
-            localized: "Sort checked items moves checked items to the end of the list. Hide section names removes section headers to present a more condensed list. Confirm before clearing list asks to keep or clear the list after all items are checked.",
+            localized: "Sort checked items moves checked items to the end of the list. Collapse completed sections collapses finished sections by default. Hide section names removes section headers to present a more condensed list. Confirm before clearing list asks to keep or clear the list after all items are checked.",
             comment: "Footer under shopping list settings toggles"
         )
     }
@@ -598,6 +617,40 @@ enum LocalizedCopy {
 
     static var clearChecked: String {
         String(localized: "Clear checked", comment: "Clear checked items menu item")
+    }
+
+    static var undoClearChecked: String {
+        String(localized: "Undo clear checked", comment: "Undo clear checked items menu item")
+    }
+
+    static var undoClearList: String {
+        String(localized: "Undo clear list", comment: "Undo clear shopping list menu item")
+    }
+
+    static var undo: String {
+        String(localized: "Undo", comment: "Undo confirmation button")
+    }
+
+    static var undoClearCheckedConfirmTitle: String {
+        String(localized: "Undo clear checked?", comment: "Shake undo clear checked alert title")
+    }
+
+    static var undoClearCheckedConfirmMessage: String {
+        String(
+            localized: "This will restore the checked items you just cleared.",
+            comment: "Shake undo clear checked alert message"
+        )
+    }
+
+    static var undoClearListConfirmTitle: String {
+        String(localized: "Undo clear list?", comment: "Shake undo clear list alert title")
+    }
+
+    static var undoClearListConfirmMessage: String {
+        String(
+            localized: "This will restore your shopping list to how it was before you cleared it.",
+            comment: "Shake undo clear list alert message"
+        )
     }
 
     static var shareList: String {
@@ -1059,6 +1112,13 @@ enum LocalizedCopy {
 
     static var decreaseQuantity: String {
         String(localized: "Decrease quantity", comment: "Decrease quantity accessibility label")
+    }
+
+    static var removeFromShoppingList: String {
+        String(
+            localized: "Remove from shopping list",
+            comment: "Remove item from shopping list accessibility label"
+        )
     }
 
     static func quantityAccessibility(_ quantity: Int) -> String {

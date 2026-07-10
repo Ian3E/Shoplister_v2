@@ -214,6 +214,8 @@ enum CatalogListRowDensity {
 
     /// Approximate subheadline monospaced digit width for gutter sizing.
     private static let quantityPillDigitWidth: CGFloat = 11
+    /// Approximate title3 monospaced digit width when the pill is expanded.
+    private static let quantityPillExpandedDigitWidth: CGFloat = 12
 
     /// Title gutter and pill column width from digit count (matches pill `minWidth` + padding).
     static func quantityPillReservedWidth(forQuantity quantity: Int) -> CGFloat {
@@ -241,23 +243,50 @@ enum CatalogListRowDensity {
 
     /// Width of each +/- control inside an expanded quantity pill.
     static let quantityPillStepperSymbolWidth: CGFloat = 26
+    /// Larger +/- control width when the pill is expanded.
+    static let quantityPillExpandedStepperSymbolWidth: CGFloat = 36
+
+    static func quantityPillStepperSymbolWidth(isExpanded: Bool) -> CGFloat {
+        isExpanded ? quantityPillExpandedStepperSymbolWidth : quantityPillStepperSymbolWidth
+    }
     /// Vertical padding inside the live quantity pill capsule (medium baseline).
     static let quantityPillCapsuleVerticalPadding: CGFloat = 3
     /// Extra top/bottom padding when the quantity pill is expanded (medium baseline).
-    static let quantityPillCapsuleExpandedVerticalPaddingExtra: CGFloat = 2
+    static let quantityPillCapsuleExpandedVerticalPaddingExtra: CGFloat = 3
 
-    static func quantityPillCapsuleVerticalPadding(isExpanded: Bool, scale: CGFloat) -> CGFloat {
-        let base = quantityPillCapsuleVerticalPadding
-            + (isExpanded ? quantityPillCapsuleExpandedVerticalPaddingExtra : 0)
-        return base * scale
+    /// Discrete vertical padding per text-size step (`listSpacingScale` 0.8…1.2).
+    static func quantityPillCapsuleVerticalPadding(forListSpacingScale scale: CGFloat) -> CGFloat {
+        switch scale {
+        case 0.8: return 0
+        case 0.9: return 1
+        case 1.0: return 3
+        case 1.1: return 4
+        case 1.2: return 5
+        default:
+            if scale < 0.85 { return 0 }
+            if scale < 0.95 { return 1 }
+            if scale < 1.05 { return 3 }
+            if scale < 1.15 { return 4 }
+            return 5
+        }
     }
 
-    /// Horizontal padding on each side of the quantity digit (medium baseline).
-    static let quantityPillNumberHorizontalPadding: CGFloat = 16
+    static func quantityPillCapsuleVerticalPadding(isExpanded: Bool, scale: CGFloat) -> CGFloat {
+        let vertical = quantityPillCapsuleVerticalPadding(forListSpacingScale: scale)
+        let expandedExtra = isExpanded ? quantityPillCapsuleExpandedVerticalPaddingExtra * scale : 0
+        return vertical + expandedExtra
+    }
+
+    /// Horizontal padding on each side of the quantity digit when collapsed (medium baseline).
+    static let quantityPillCollapsedNumberHorizontalPadding: CGFloat = 16
+    /// Horizontal padding on each side of the quantity digit when expanded (medium baseline).
+    static let quantityPillExpandedNumberHorizontalPadding: CGFloat = 18
 
     /// Collapsed: scales with text size. Expanded: fixed qty↔stepper gap at medium.
     static func quantityPillNumberHorizontalPadding(isExpanded: Bool, scale: CGFloat) -> CGFloat {
-        isExpanded ? quantityPillNumberHorizontalPadding : quantityPillNumberHorizontalPadding * scale
+        isExpanded
+            ? quantityPillExpandedNumberHorizontalPadding
+            : quantityPillCollapsedNumberHorizontalPadding * scale
     }
 
     /// Outer horizontal padding to the left of − and right of + when expanded (medium baseline).
@@ -297,10 +326,10 @@ enum CatalogListRowDensity {
     ) -> CGFloat {
         _ = usesGlassChrome
         let digits = max(1, String(quantity).count)
-        let labelWidth = quantityPillDigitWidth * CGFloat(digits)
+        let labelWidth = quantityPillExpandedDigitWidth * CGFloat(digits)
         let numberPadding = quantityPillNumberHorizontalPadding(isExpanded: true, scale: scale) * 2
         let stepperOuter = quantityPillStepperOuterPadding(scale: scale) * 2
-        let steppers = quantityPillStepperSymbolWidth * 2
+        let steppers = quantityPillExpandedStepperSymbolWidth * 2
         return labelWidth + numberPadding + stepperOuter + steppers
     }
 
@@ -309,9 +338,9 @@ enum CatalogListRowDensity {
         scale: CGFloat = 1
     ) -> CGFloat {
         let digits = max(1, String(quantity).count)
-        let labelWidth = quantityPillDigitWidth * CGFloat(digits)
+        let labelWidth = quantityPillExpandedDigitWidth * CGFloat(digits)
         let chrome = quantityPillLiveHorizontalPadding(scale: scale) * 2
-        let steppers = quantityPillStepperSymbolWidth * 2
+        let steppers = quantityPillExpandedStepperSymbolWidth * 2
         return max(quantityPillSlotMinWidth, chrome + labelWidth + steppers)
     }
 

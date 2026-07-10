@@ -38,7 +38,7 @@ private final class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         UserDefaults.standard.register(defaults: [
             AppShoppingBadgeUnchecked.storageKey: false,
-            AppShoppingConfirmClearWhenAllChecked.storageKey: false,
+            AppShoppingConfirmClearWhenAllChecked.storageKey: true,
             AppContentLanguage.storageKey: AppSystemLocale.firstLaunchCatalogLanguageDefault,
         ])
         return true

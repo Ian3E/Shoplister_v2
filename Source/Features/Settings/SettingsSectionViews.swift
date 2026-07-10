@@ -7,8 +7,9 @@ import UniformTypeIdentifiers
 
 struct SettingsGeneralView: View {
     @AppStorage(AppShoppingSortChecked.storageKey) private var sortCheckedShoppingItems: Bool = false
+    @AppStorage(AppShoppingCollapseCompletedSections.storageKey) private var collapseCompletedSections: Bool = false
     @AppStorage(AppShoppingHideStoreGroupNames.storageKey) private var hideStoreGroupNames: Bool = false
-    @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked: Bool = false
+    @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked: Bool = true
     @AppStorage(AppShoppingBadgeUnchecked.storageKey) private var showUncheckedCountAppBadge: Bool = false
 
     var body: some View {
@@ -17,6 +18,12 @@ struct SettingsGeneralView: View {
                 Toggle(LocalizedCopy.sortCheckedItems, isOn: $sortCheckedShoppingItems)
             } footer: {
                 Text(LocalizedCopy.sortCheckedItemsFooter)
+            }
+
+            Section {
+                Toggle(LocalizedCopy.collapseCompletedSections, isOn: $collapseCompletedSections)
+            } footer: {
+                Text(LocalizedCopy.collapseCompletedSectionsFooter)
             }
 
             Section {

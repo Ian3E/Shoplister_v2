@@ -576,6 +576,28 @@
         }
       }
     },
+    "Collapse completed sections" : {
+      "comment" : "Collapse completed sections toggle",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "כיווץ קבוצות שהושלמו"
+          }
+        }
+      }
+    },
+    "Collapses completed sections by default." : {
+      "comment" : "Footer under collapse completed sections toggle",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מכווץ קבוצות שהושלמו כברירת מחדל."
+          }
+        }
+      }
+    },
     "Confirm before clearing list" : {
       "comment" : "Confirm before clearing list toggle",
       "localizations" : {
@@ -699,7 +721,6 @@
     },
     "Debug" : {
       "comment" : "Debug settings section title",
-      "extractionState" : "stale",
       "localizations" : {
         "he" : {
           "stringUnit" : {
@@ -1957,6 +1978,9 @@
         }
       }
     },
+    "Remove from shopping list" : {
+      "comment" : "Remove item from shopping list accessibility label"
+    },
     "Remove item" : {
       "comment" : "Remove item from shopping list context menu",
       "localizations" : {
@@ -2026,7 +2050,6 @@
     },
     "Reset explainers" : {
       "comment" : "Settings button to show welcome and first-item explainers again",
-      "extractionState" : "stale",
       "localizations" : {
         "he" : {
           "stringUnit" : {
@@ -2357,7 +2380,7 @@
         }
       }
     },
-    "Sort checked items moves checked items to the end of the list. Hide section names removes section headers to present a more condensed list. Confirm before clearing list asks to keep or clear the list after all items are checked." : {
+    "Sort checked items moves checked items to the end of the list. Collapse completed sections collapses finished sections by default. Hide section names removes section headers to present a more condensed list. Confirm before clearing list asks to keep or clear the list after all items are checked." : {
       "comment" : "Footer under shopping list settings toggles",
       "localizations" : {
         "he" : {
@@ -2622,6 +2645,12 @@
         }
       }
     },
+    "This will restore the checked items you just cleared." : {
+      "comment" : "Shake undo clear checked alert message"
+    },
+    "This will restore your shopping list to how it was before you cleared it." : {
+      "comment" : "Shake undo clear list alert message"
+    },
     "to adjust quantity." : {
       "comment" : "First shopping item explainer suffix after quantity pill",
       "localizations" : {
@@ -2632,6 +2661,21 @@
           }
         }
       }
+    },
+    "Undo" : {
+      "comment" : "Undo confirmation button"
+    },
+    "Undo clear checked" : {
+      "comment" : "Undo clear checked items menu item"
+    },
+    "Undo clear checked?" : {
+      "comment" : "Shake undo clear checked alert title"
+    },
+    "Undo clear list" : {
+      "comment" : "Undo clear shopping list menu item"
+    },
+    "Undo clear list?" : {
+      "comment" : "Shake undo clear list alert title"
     },
     "Unsupported backup format version %lld." : {
       "comment" : "Backup import error for unsupported format version",

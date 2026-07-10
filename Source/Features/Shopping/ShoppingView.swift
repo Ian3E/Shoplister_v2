@@ -1,5 +1,10 @@
 import SwiftUI
 
+private enum ShoppingListShakeUndoKind {
+    case clearList
+    case clearChecked
+}
+
 struct ShoppingView: View {
     private static let allCheckedClearDialogAnimation: Animation = .spring(
         response: 0.42,
@@ -18,6 +23,18 @@ struct ShoppingView: View {
         })
     }
 
+    private static var shoppingGroupHeaderTitleDimmedColor: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? .quaternaryLabel
+                : UIColor(white: 0.72, alpha: 1)
+        })
+    }
+
+    private static func shoppingGroupHeaderTitleForeground(allItemsChecked: Bool) -> Color {
+        allItemsChecked ? shoppingGroupHeaderTitleDimmedColor : shoppingGroupHeaderTitleColor
+    }
+
     private var catalogTextDynamicTypeSize: DynamicTypeSize {
         AppTextSize.resolved(from: textSizeRaw).dynamicTypeSize
     }
@@ -31,8 +48,9 @@ struct ShoppingView: View {
     @Environment(\.shoppingListSpacingScale) private var listSpacingScale
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @AppStorage(AppShoppingSortChecked.storageKey) private var sortCheckedShoppingItems: Bool = false
+    @AppStorage(AppShoppingCollapseCompletedSections.storageKey) private var collapseCompletedSections: Bool = false
     @AppStorage(AppShoppingHideStoreGroupNames.storageKey) private var hideStoreGroupNames: Bool = false
-    @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked: Bool = false
+    @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked: Bool = true
     @AppStorage(AppShoppingEmptyAddHint.storageKey) private var emptyAddHintCompletedListCount: Int = 0
     @AppStorage(AppTextSize.storageKey) private var textSizeRaw: String = AppTextSize.defaultSize.rawValue
 
@@ -42,6 +60,7 @@ struct ShoppingView: View {
     @State private var isPresentingSaveAsRecipeAlert = false
     @State private var saveAsRecipeName = ""
     @State private var showsListSavedConfirmation = false
+    @State private var shakeUndoToConfirm: ShoppingListShakeUndoKind?
 
     /// Collapsed by explicit user action (tap header, pinch gesture).
     @State private var userCollapsedShoppingGroupIDs: Set<UUID> = []
@@ -225,6 +244,9 @@ struct ShoppingView: View {
 
         withAnimation(.snappy) {
             for tagID in gainedTagIDs {
+                if sortCheckedShoppingItems, tagID == Self.checkedShoppingSectionTagID {
+                    continue
+                }
                 userCollapsedShoppingGroupIDs.remove(tagID)
                 if autoCollapsedShoppingGroupIDs.contains(tagID) {
                     userExpandedShoppingGroupIDs.insert(tagID)
@@ -383,6 +405,17 @@ struct ShoppingView: View {
                 .allowsHitTesting(false)
         }
         .catalogListLayoutDirection()
+    }
+
+    private func handleDeviceShakeUndo() {
+        guard !isStorePullToAddSearchPresented else { return }
+        if store.canUndoClearShoppingList {
+            AppHaptics.impact(.medium)
+            shakeUndoToConfirm = .clearList
+        } else if store.canUndoClearChecked {
+            AppHaptics.impact(.medium)
+            shakeUndoToConfirm = .clearChecked
+        }
     }
 
     private func beginStorePullToAddSearch() {
@@ -572,6 +605,7 @@ struct ShoppingView: View {
         }
             .simultaneousGesture(pinchToggleAllShoppingGroupsGesture)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onDeviceShake(perform: handleDeviceShakeUndo)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(shoppingNavigationBarVisibility, for: .navigationBar)
@@ -663,6 +697,44 @@ struct ShoppingView: View {
                     saveAsRecipeName = ""
                 }
             }
+            .alert(
+                LocalizedCopy.undoClearListConfirmTitle,
+                isPresented: Binding(
+                    get: { shakeUndoToConfirm == .clearList },
+                    set: { if !$0 { shakeUndoToConfirm = nil } }
+                )
+            ) {
+                Button(LocalizedCopy.cancel, role: .cancel) {
+                    shakeUndoToConfirm = nil
+                }
+                Button(LocalizedCopy.undo) {
+                    shakeUndoToConfirm = nil
+                    withAnimation(.snappy) {
+                        store.undoClearShoppingList()
+                    }
+                }
+            } message: {
+                Text(LocalizedCopy.undoClearListConfirmMessage)
+            }
+            .alert(
+                LocalizedCopy.undoClearCheckedConfirmTitle,
+                isPresented: Binding(
+                    get: { shakeUndoToConfirm == .clearChecked },
+                    set: { if !$0 { shakeUndoToConfirm = nil } }
+                )
+            ) {
+                Button(LocalizedCopy.cancel, role: .cancel) {
+                    shakeUndoToConfirm = nil
+                }
+                Button(LocalizedCopy.undo) {
+                    shakeUndoToConfirm = nil
+                    withAnimation(.snappy) {
+                        store.undoClearChecked()
+                    }
+                }
+            } message: {
+                Text(LocalizedCopy.undoClearCheckedConfirmMessage)
+            }
             .onAppear {
                 wasAllVisibleItemsChecked = allVisibleShoppingItemsChecked
                 lastShoppingGroupRowCounts = shoppingGroupRowCounts
@@ -673,6 +745,9 @@ struct ShoppingView: View {
                 expandCollapsedShoppingGroupsThatGainedItems()
                 evaluateAllCheckedClearPrompt()
                 recomputeAutoCollapsedGroups()
+                if lastResolvedShoppingListWasEmpty == true, allVisibleShoppingItemsChecked {
+                    expandAllShoppingGroupsAfterAllCheckedRestore()
+                }
                 syncEmptyShoppingFadeFromResolvedRows()
             }
             .onChange(of: store.catalog) { _, _ in
@@ -685,6 +760,10 @@ struct ShoppingView: View {
                 syncEmptyShoppingFadeFromResolvedRows()
             }
             .onChange(of: sortCheckedShoppingItems) { _, _ in
+                lastShoppingGroupRowCounts = [:]
+                recomputeAutoCollapsedGroups()
+            }
+            .onChange(of: collapseCompletedSections) { _, _ in
                 lastShoppingGroupRowCounts = [:]
                 recomputeAutoCollapsedGroups()
             }
@@ -716,7 +795,8 @@ struct ShoppingView: View {
 
     private func evaluateAllCheckedClearPrompt() {
         let now = allVisibleShoppingItemsChecked
-        if now, !wasAllVisibleItemsChecked {
+        let restoredFromEmpty = lastResolvedShoppingListWasEmpty == true && !entriesWithItems.isEmpty
+        if now, !wasAllVisibleItemsChecked, !restoredFromEmpty {
             if confirmClearWhenAllChecked {
                 withAnimation(Self.allCheckedClearDialogAnimation) {
                     isPresentingAllCheckedClearConfirm = true
@@ -887,7 +967,8 @@ struct ShoppingView: View {
                 title: title,
                 expanded: expanded,
                 collapsed: collapsed,
-                uncheckedCount: uncheckedCount
+                uncheckedCount: uncheckedCount,
+                allItemsChecked: uncheckedCount == 0
             )
         }
         .frame(maxWidth: .infinity, alignment: .top)
@@ -908,8 +989,10 @@ struct ShoppingView: View {
         title: String,
         expanded: Bool,
         collapsed: Bool,
-        uncheckedCount: Int
+        uncheckedCount: Int,
+        allItemsChecked: Bool
     ) -> some View {
+        let titleColor = Self.shoppingGroupHeaderTitleForeground(allItemsChecked: allItemsChecked)
         if usesManualMirror {
             HStack(alignment: .center, spacing: 8) {
                 HStack(alignment: .center, spacing: ShoppingListChrome.countChevronSpacing) {
@@ -921,7 +1004,7 @@ struct ShoppingView: View {
                 Spacer(minLength: 0)
                 Text(title)
                     .font(Self.shoppingGroupHeaderTitleFont)
-                    .foregroundStyle(Self.shoppingGroupHeaderTitleColor)
+                    .foregroundStyle(titleColor)
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -930,7 +1013,7 @@ struct ShoppingView: View {
             HStack(alignment: .center, spacing: 8) {
                 Text(title)
                     .font(Self.shoppingGroupHeaderTitleFont)
-                    .foregroundStyle(Self.shoppingGroupHeaderTitleColor)
+                    .foregroundStyle(titleColor)
                 Spacer(minLength: 0)
                 HStack(alignment: .center, spacing: ShoppingListChrome.countChevronSpacing) {
                     collapsedGroupCountLabel(uncheckedCount, collapsed: collapsed)
@@ -972,6 +1055,29 @@ struct ShoppingView: View {
         }
     }
 
+    /// After undo restores a previously cleared all-checked list, expand every section so rows are visible.
+    private func expandAllShoppingGroupsAfterAllCheckedRestore() {
+        guard allVisibleShoppingItemsChecked else { return }
+
+        withAnimation(.snappy) {
+            if sortCheckedShoppingItems {
+                let checkedSectionID = Self.checkedShoppingSectionTagID
+                userCollapsedShoppingGroupIDs.remove(checkedSectionID)
+                userExpandedShoppingGroupIDs.insert(checkedSectionID)
+                autoCollapsedShoppingGroupIDs.remove(checkedSectionID)
+            } else if !hideStoreGroupNames {
+                let allGroupIDs = Set(grouped.map(\.0.id))
+                userCollapsedShoppingGroupIDs.subtract(allGroupIDs)
+                userExpandedShoppingGroupIDs.formUnion(allGroupIDs)
+                autoCollapsedShoppingGroupIDs.subtract(allGroupIDs)
+            } else {
+                userCollapsedShoppingGroupIDs = []
+                userExpandedShoppingGroupIDs = []
+                autoCollapsedShoppingGroupIDs = []
+            }
+        }
+    }
+
     private func recomputeAutoCollapsedGroups(animated: Bool = true) {
         func applyCollapseState(_ changes: () -> Void) {
             if animated {
@@ -996,21 +1102,56 @@ struct ShoppingView: View {
         }
 
         guard !sortCheckedShoppingItems else {
+            let checkedSectionID = Self.checkedShoppingSectionTagID
+            let hasCheckedRows = entriesWithItems.contains(where: { $0.0.isChecked })
+
+            if !hasCheckedRows {
+                if userCollapsedShoppingGroupIDs.contains(checkedSectionID)
+                    || userExpandedShoppingGroupIDs.contains(checkedSectionID)
+                    || !autoCollapsedShoppingGroupIDs.isEmpty
+                {
+                    applyCollapseState {
+                        userCollapsedShoppingGroupIDs.remove(checkedSectionID)
+                        userExpandedShoppingGroupIDs.remove(checkedSectionID)
+                        autoCollapsedShoppingGroupIDs = []
+                    }
+                }
+                return
+            }
+
+            if collapseCompletedSections {
+                let nextAuto: Set<UUID> = [checkedSectionID]
+                let nextUserExpanded = userExpandedShoppingGroupIDs.intersection(nextAuto)
+                if autoCollapsedShoppingGroupIDs != nextAuto
+                    || userExpandedShoppingGroupIDs != nextUserExpanded
+                {
+                    applyCollapseState {
+                        autoCollapsedShoppingGroupIDs = nextAuto
+                        userExpandedShoppingGroupIDs = nextUserExpanded
+                    }
+                }
+            } else if !autoCollapsedShoppingGroupIDs.isEmpty || !userExpandedShoppingGroupIDs.isEmpty {
+                applyCollapseState {
+                    autoCollapsedShoppingGroupIDs = []
+                    userExpandedShoppingGroupIDs = []
+                }
+            }
+            return
+        }
+
+        userCollapsedShoppingGroupIDs.remove(Self.checkedShoppingSectionTagID)
+        userExpandedShoppingGroupIDs.remove(Self.checkedShoppingSectionTagID)
+
+        guard collapseCompletedSections else {
             if !autoCollapsedShoppingGroupIDs.isEmpty || !userExpandedShoppingGroupIDs.isEmpty {
                 applyCollapseState {
                     autoCollapsedShoppingGroupIDs = []
                     userExpandedShoppingGroupIDs = []
                 }
             }
-            // No checked rows → drop header-collapse prefs so the bottom section is expanded again next time it appears.
-            if !entriesWithItems.contains(where: { $0.0.isChecked }) {
-                userCollapsedShoppingGroupIDs.remove(Self.checkedShoppingSectionTagID)
-                userExpandedShoppingGroupIDs.remove(Self.checkedShoppingSectionTagID)
-            }
             return
         }
-        userCollapsedShoppingGroupIDs.remove(Self.checkedShoppingSectionTagID)
-        userExpandedShoppingGroupIDs.remove(Self.checkedShoppingSectionTagID)
+
         // Collapse any group where every row is checked. If that later becomes un-checked, auto-expand it
         // (unless user explicitly collapsed it).
         let allCheckedGroupIDs: Set<UUID> = Set(

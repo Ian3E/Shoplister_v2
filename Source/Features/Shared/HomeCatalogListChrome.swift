@@ -178,6 +178,7 @@ struct HomeCatalogListItemCell<Row: View>: View {
             rowContent
                 .padding(ShoppingListMetrics.homeCatalogItemRowVerticalContentPadding(scale: spacingScale))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .zIndex(1)
 
             if showsSectionDividerBelow {
                 HomeCatalogListDivider(color: HomeCatalogListDividerChrome.sectionLineColor)

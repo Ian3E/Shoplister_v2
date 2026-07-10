@@ -30,6 +30,11 @@ final class GroceryStore: ObservableObject {
     private var english = V3Bundle.empty
     private var hebrew = V3Bundle.empty
 
+    private var undoClearListSnapshot: [ShoppingEntry]?
+    private var undoClearCheckedSnapshot: [ShoppingEntry]?
+    @Published private(set) var canUndoClearShoppingList = false
+    @Published private(set) var canUndoClearChecked = false
+
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
@@ -73,6 +78,7 @@ final class GroceryStore: ObservableObject {
     // MARK: - User switches catalog language in Settings (UserDefaults) — re-bind active arrays.
 
     func applyContentLanguageFromUserDefaults() {
+        invalidateShoppingListUndo()
         syncPublishedFromActiveContentLanguage()
         ShareExtensionAppGroupSupport.mirrorCatalogLanguagePreferenceToSuite()
         _ = ShareExtensionAppGroupSupport.mergePendingShoppingOpsFromAppGroup(into: self)
@@ -381,6 +387,7 @@ final class GroceryStore: ObservableObject {
     // MARK: - Shopping
 
     func addToShopping(itemID: UUID, quantity: Int, playHaptic: Bool = true) {
+        invalidateShoppingListUndo()
         let qty = max(1, quantity)
         if currentContentLanguage() == .hebrew {
             if let idx = hebrew.shopping.firstIndexForQuantityUpdate(itemID: itemID) {
@@ -404,6 +411,7 @@ final class GroceryStore: ObservableObject {
     }
 
     func incrementUncheckedShoppingQuantity(itemID: UUID, delta: Int = 1, playHaptic: Bool = true) {
+        invalidateShoppingListUndo()
         let d = max(1, delta)
         if currentContentLanguage() == .hebrew {
             if let idx = hebrew.shopping.firstIndexForQuantityUpdate(itemID: itemID) {
@@ -428,6 +436,7 @@ final class GroceryStore: ObservableObject {
 
     func adjustUncheckedShoppingQuantity(itemID: UUID, delta: Int, playHaptic: Bool = true) {
         guard delta != 0 else { return }
+        invalidateShoppingListUndo()
         if currentContentLanguage() == .hebrew,
            let idx = hebrew.shopping.firstIndexForQuantityUpdate(itemID: itemID)
         {
@@ -456,6 +465,7 @@ final class GroceryStore: ObservableObject {
     }
 
     func toggleChecked(entryID: UUID) {
+        invalidateShoppingListUndo()
         if currentContentLanguage() == .hebrew,
            let idx = hebrew.shopping.firstIndex(where: { $0.id == entryID })
         {
@@ -470,6 +480,7 @@ final class GroceryStore: ObservableObject {
     }
 
     func setQuantity(entryID: UUID, quantity: Int) {
+        invalidateShoppingListUndo()
         if currentContentLanguage() == .hebrew,
            let idx = hebrew.shopping.firstIndex(where: { $0.id == entryID })
         {
@@ -483,6 +494,7 @@ final class GroceryStore: ObservableObject {
 
     func adjustShoppingEntryQuantity(entryID: UUID, delta: Int, playHaptic: Bool = true) {
         guard delta != 0 else { return }
+        invalidateShoppingListUndo()
         if currentContentLanguage() == .hebrew,
            let idx = hebrew.shopping.firstIndex(where: { $0.id == entryID })
         {
@@ -504,6 +516,7 @@ final class GroceryStore: ObservableObject {
     }
 
     func removeEntry(entryID: UUID) {
+        invalidateShoppingListUndo()
         if currentContentLanguage() == .hebrew {
             if hebrew.shopping.contains(where: { $0.id == entryID }) {
                 hebrew.shopping.removeAll { $0.id == entryID }
@@ -518,6 +531,7 @@ final class GroceryStore: ObservableObject {
     }
 
     func removeFromShopping(itemID: UUID) {
+        invalidateShoppingListUndo()
         if currentContentLanguage() == .hebrew {
             if hebrew.shopping.contains(where: { $0.itemID == itemID }) {
                 hebrew.shopping.removeAll { $0.itemID == itemID }
@@ -532,33 +546,81 @@ final class GroceryStore: ObservableObject {
     }
 
     func clearChecked() {
+        let checkedSnapshot = activeShopping.filter(\.isChecked)
+        guard !checkedSnapshot.isEmpty else { return }
+        captureUndoClearChecked(checkedSnapshot)
         if currentContentLanguage() == .hebrew {
-            let n = hebrew.shopping.filter(\.isChecked).count
             hebrew.shopping.removeAll { $0.isChecked }
-            if n > 0 { ShoppingListHaptics.playLight() }
+            ShoppingListHaptics.playLight()
         } else {
-            let n = english.shopping.filter(\.isChecked).count
             english.shopping.removeAll { $0.isChecked }
-            if n > 0 { ShoppingListHaptics.playLight() }
+            ShoppingListHaptics.playLight()
         }
         saveAllToDisk()
         syncPublishedFromActiveContentLanguage()
     }
 
     func clearShoppingList() {
+        guard !activeShopping.isEmpty else { return }
+        captureUndoClearList(activeShopping)
         if currentContentLanguage() == .hebrew {
-            if !hebrew.shopping.isEmpty {
-                hebrew.shopping.removeAll()
-                ShoppingListHaptics.playLight()
-            }
+            hebrew.shopping.removeAll()
+            ShoppingListHaptics.playLight()
         } else {
-            if !english.shopping.isEmpty {
-                english.shopping.removeAll()
-                ShoppingListHaptics.playLight()
-            }
+            english.shopping.removeAll()
+            ShoppingListHaptics.playLight()
         }
         saveAllToDisk()
         syncPublishedFromActiveContentLanguage()
+    }
+
+    func undoClearShoppingList() {
+        guard let snapshot = undoClearListSnapshot else { return }
+        invalidateShoppingListUndo()
+        if currentContentLanguage() == .hebrew {
+            hebrew.shopping = snapshot
+        } else {
+            english.shopping = snapshot
+        }
+        sortShoppingInPlace()
+        ShoppingListHaptics.playLight()
+        saveAllToDisk()
+        syncPublishedFromActiveContentLanguage()
+    }
+
+    func undoClearChecked() {
+        guard let snapshot = undoClearCheckedSnapshot else { return }
+        invalidateShoppingListUndo()
+        if currentContentLanguage() == .hebrew {
+            hebrew.shopping.append(contentsOf: snapshot)
+        } else {
+            english.shopping.append(contentsOf: snapshot)
+        }
+        sortShoppingInPlace()
+        ShoppingListHaptics.playLight()
+        saveAllToDisk()
+        syncPublishedFromActiveContentLanguage()
+    }
+
+    private func captureUndoClearList(_ snapshot: [ShoppingEntry]) {
+        undoClearListSnapshot = snapshot
+        undoClearCheckedSnapshot = nil
+        canUndoClearShoppingList = true
+        canUndoClearChecked = false
+    }
+
+    private func captureUndoClearChecked(_ snapshot: [ShoppingEntry]) {
+        undoClearCheckedSnapshot = snapshot
+        undoClearListSnapshot = nil
+        canUndoClearChecked = true
+        canUndoClearShoppingList = false
+    }
+
+    private func invalidateShoppingListUndo() {
+        undoClearListSnapshot = nil
+        undoClearCheckedSnapshot = nil
+        canUndoClearShoppingList = false
+        canUndoClearChecked = false
     }
 
     func resetLibraryToInitialSeed() {

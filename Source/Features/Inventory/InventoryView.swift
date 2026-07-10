@@ -427,6 +427,13 @@ struct InventoryView: View {
         } else {
             store.addToShopping(itemID: itemID, quantity: 1)
             onAddedToShopping?()
+            QuantityPillChromeTiming.expandAfterAdd(
+                itemID: itemID,
+                guardInShopping: { [store] in
+                    store.shopping.contains(where: { $0.itemID == itemID })
+                },
+                setExpandedItemID: { expandedHomeQuantityPillItemID = $0 }
+            )
         }
     }
 
@@ -1618,8 +1625,8 @@ private struct InventoryCatalogRow: View {
                     syncQuantityPillExpansion(with: expandedID)
                 }
                 .onChange(of: isInShopping) { _, inShopping in
-                    guard !inShopping, isQuantityPillExpanded else { return }
-                    isQuantityPillExpanded = false
+                    guard !inShopping else { return }
+                    quantityPillExpandedBinding.wrappedValue = false
                 }
         }
     }
@@ -1655,6 +1662,18 @@ private struct InventoryCatalogRow: View {
         expandedQuantityPillItemID.wrappedValue = nil
     }
 
+    private func scheduleExpandQuantityPillAfterAdd() {
+        guard let expandedQuantityPillItemID else { return }
+        let itemID = item.id
+        QuantityPillChromeTiming.expandAfterAdd(
+            itemID: itemID,
+            guardInShopping: { [store] in
+                store.shopping.contains(where: { $0.itemID == itemID })
+            },
+            setExpandedItemID: { expandedQuantityPillItemID.wrappedValue = $0 }
+        )
+    }
+
     private func handleTap() {
         collapseExpandedQuantityPillIfNeeded()
         if isReorderMode {
@@ -1665,6 +1684,7 @@ private struct InventoryCatalogRow: View {
             } else {
                 store.addToShopping(itemID: item.id, quantity: 1)
                 onAddedToShopping?()
+                scheduleExpandQuantityPillAfterAdd()
             }
             onSelectToggleShopping()
         }
@@ -1699,15 +1719,20 @@ private struct InventoryCatalogRow: View {
         return CatalogListRowDensity.quantityPillSlotMinWidth
     }
 
+    private var rowItemNameFont: Font {
+        showsInShopping && isQuantityPillExpanded ? Font.body.weight(.bold) : .body
+    }
+
     private var hebrewRow: some View {
         Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(.body)
+            .font(rowItemNameFont)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
             .multilineTextAlignment(.trailing)
             .foregroundStyle(showsInShopping ? appTheme.color : .primary)
             .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: showsRowShoppingStatus)
             .lineLimit(1)
             .padding(.leading, quantityPillTextGutter)
-            .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: quantityPillTextGutter)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
             .frame(maxWidth: .infinity, alignment: .trailing)
             .overlay(alignment: .leading) {
                 if showsShoppingStatus {
@@ -1718,13 +1743,14 @@ private struct InventoryCatalogRow: View {
 
     private var englishRow: some View {
         Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(.body)
+            .font(rowItemNameFont)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
             .multilineTextAlignment(.leading)
             .foregroundStyle(showsInShopping ? appTheme.color : .primary)
             .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: showsRowShoppingStatus)
             .lineLimit(1)
             .padding(.trailing, quantityPillTextGutter)
-            .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: quantityPillTextGutter)
+            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay(alignment: .trailing) {
                 if showsShoppingStatus {
@@ -1764,6 +1790,9 @@ private struct InventoryCatalogRow: View {
             },
             onDecrement: {
                 store.adjustUncheckedShoppingQuantity(itemID: itemID, delta: -1)
+            },
+            onRemove: {
+                store.removeFromShopping(itemID: itemID)
             }
         )
     }
