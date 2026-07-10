@@ -58,8 +58,10 @@ struct ShoppingView: View {
     @State private var isPresentingAllCheckedClearConfirm = false
     @State private var isPresentingClearAllConfirm = false
     @State private var isPresentingSaveAsRecipeAlert = false
-    @State private var saveAsRecipeName = ""
-    @State private var showsListSavedConfirmation = false
+    @State private var showsStoreGlassToast = false
+    @State private var storeGlassToastMessage = ""
+    @State private var storeGlassToastSymbol = "book.pages"
+    @State private var storeGlassToastSession: UInt = 0
     @State private var shakeUndoToConfirm: ShoppingListShakeUndoKind?
 
     /// Collapsed by explicit user action (tap header, pinch gesture).
@@ -541,9 +543,7 @@ struct ShoppingView: View {
             Task { @MainActor in
                 // Let the scroll view's rubber-band spring complete before shrinking the content.
                 try? await Task.sleep(for: .milliseconds(300))
-                withAnimation(.snappy) {
-                    store.clearChecked()
-                }
+                clearCheckedAndShowToast()
             }
         }
         pullToClearReachedThreshold = false
@@ -592,11 +592,14 @@ struct ShoppingView: View {
                     .ignoresSafeArea(.keyboard, edges: .bottom)
             }
 
-            if showsListSavedConfirmation {
+            if showsStoreGlassToast {
                 VStack {
                     Spacer()
-                    ListSavedGlassConfirmation(message: LocalizedCopy.listSaved)
-                        .offset(y: 60)
+                    StoreGlassToastConfirmation(
+                        message: storeGlassToastMessage,
+                        systemImage: storeGlassToastSymbol
+                    )
+                    .offset(y: 60)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .allowsHitTesting(false)
@@ -637,9 +640,9 @@ struct ShoppingView: View {
                         onManageStoreSections: onManageStoreSections,
                         onShare: onShare,
                         onSaveAsRecipe: {
-                            saveAsRecipeName = ""
                             isPresentingSaveAsRecipeAlert = true
-                        }
+                        },
+                        onClearChecked: clearCheckedAndShowToast
                     )
                 }
             }
@@ -686,16 +689,11 @@ struct ShoppingView: View {
             } message: {
                 Text(LocalizedCopy.clearShoppingListMessage)
             }
-            .alert(LocalizedCopy.saveList, isPresented: $isPresentingSaveAsRecipeAlert) {
-                TextField(LocalizedCopy.listName, text: $saveAsRecipeName)
-                    .textInputAutocapitalization(.words)
-                Button(LocalizedCopy.create) {
-                    confirmSavedListFromStore()
-                }
-                .keyboardShortcut(.defaultAction)
-                Button(LocalizedCopy.cancel, role: .cancel) {
-                    saveAsRecipeName = ""
-                }
+            .background {
+                SaveShoppingListAsRecipeAlert(
+                    isPresented: $isPresentingSaveAsRecipeAlert,
+                    onConfirm: confirmSavedListFromStore(name:)
+                )
             }
             .alert(
                 LocalizedCopy.undoClearListConfirmTitle,
@@ -778,19 +776,37 @@ struct ShoppingView: View {
             }
     }
 
-    private func confirmSavedListFromStore() {
-        let saved = store.createRecipeFromUncheckedShoppingList(name: saveAsRecipeName) != nil
-        saveAsRecipeName = ""
-        guard saved else { return }
+    private func clearCheckedAndShowToast() {
+        withAnimation(.snappy) {
+            store.clearChecked()
+        }
+        showStoreGlassToast(
+            message: LocalizedCopy.clearChecked,
+            systemImage: "xmark.app"
+        )
+    }
+
+    private func showStoreGlassToast(message: String, systemImage: String) {
+        storeGlassToastMessage = message
+        storeGlassToastSymbol = systemImage
+        storeGlassToastSession &+= 1
+        let session = storeGlassToastSession
         withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
-            showsListSavedConfirmation = true
+            showsStoreGlassToast = true
         }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(1.2))
+            guard session == storeGlassToastSession else { return }
             withAnimation(.spring(response: 0.82, dampingFraction: 0.88)) {
-                showsListSavedConfirmation = false
+                showsStoreGlassToast = false
             }
         }
+    }
+
+    private func confirmSavedListFromStore(name: String) {
+        let saved = store.createRecipeFromUncheckedShoppingList(name: name) != nil
+        guard saved else { return }
+        showStoreGlassToast(message: LocalizedCopy.listSaved, systemImage: "book.pages")
     }
 
     private func evaluateAllCheckedClearPrompt() {
@@ -1227,13 +1243,14 @@ private extension View {
     }
 }
 
-/// Brief centered glass confirmation after saving a list.
-private struct ListSavedGlassConfirmation: View {
+/// Brief centered glass confirmation toast (list saved, checked cleared, etc.).
+private struct StoreGlassToastConfirmation: View {
     let message: String
+    let systemImage: String
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "book.pages")
+            Image(systemName: systemImage)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(Color(uiColor: .label))
                 .symbolRenderingMode(.hierarchical)
@@ -1303,6 +1320,35 @@ private struct PullToClearScrollHostAtBottomModifier: ViewModifier {
         } action: { _, atBottom in
             state = atBottom
         }
+    }
+}
+
+/// Owns alert text state so keystrokes do not re-render `ShoppingView` (which dismisses the field).
+private struct SaveShoppingListAsRecipeAlert: View {
+    @Binding var isPresented: Bool
+    let onConfirm: (String) -> Void
+
+    @State private var name = ""
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .onChange(of: isPresented) { _, presented in
+                if presented {
+                    name = ""
+                }
+            }
+            .alert(LocalizedCopy.saveList, isPresented: $isPresented) {
+                TextField(LocalizedCopy.listName, text: $name)
+                    .textInputAutocapitalization(.words)
+                Button(LocalizedCopy.create) {
+                    onConfirm(name)
+                }
+                .keyboardShortcut(.defaultAction)
+                Button(LocalizedCopy.cancel, role: .cancel) {
+                    name = ""
+                }
+            }
     }
 }
 

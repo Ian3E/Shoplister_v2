@@ -34,6 +34,7 @@ struct StoreTabEllipsisMenu: View {
     let onManageStoreSections: () -> Void
     let onShare: () -> Void
     let onSaveAsRecipe: () -> Void
+    let onClearChecked: () -> Void
 
     private var canClearChecked: Bool {
         hasVisibleLines && hasCheckedLines
@@ -57,11 +58,7 @@ struct StoreTabEllipsisMenu: View {
                         Label(LocalizedCopy.undoClearChecked, systemImage: "arrow.uturn.backward")
                     }
                 } else {
-                    Button {
-                        withAnimation(.snappy) {
-                            store.clearChecked()
-                        }
-                    } label: {
+                    Button(action: onClearChecked) {
                         Label(LocalizedCopy.clearChecked, systemImage: "xmark.app")
                     }
                     .disabled(!canClearChecked)

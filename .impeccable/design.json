@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-10T19:15:00.000Z",
+  "title": "Design System: Shoplister",
+  "extensions": {
+    "colorMeta": {
+      "accent-default": {
+        "role": "primary",
+        "displayName": "Shoplister Blue",
+        "canonical": "oklch(62% 0.21 254)",
+        "tonalRamp": ["#001A33", "#003366", "#004F99", "#0066CC", "#007AFF", "#3395FF", "#66AFFF", "#99CAFF", "#CCE4FF", "#E5F2FF"]
+      },
+      "surface-list": {
+        "role": "neutral",
+        "displayName": "List Surface",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": ["#000000", "#1A1A1A", "#333333", "#666666", "#999999", "#B3B3B3", "#CCCCCC", "#E6E6E6", "#F5F5F5", "#FFFFFF"]
+      },
+      "section-title": {
+        "role": "neutral",
+        "displayName": "Section Title",
+        "canonical": "oklch(35% 0 0)",
+        "tonalRamp": ["#0D0D0D", "#1A1A1A", "#262626", "#333333", "#474747", "#666666", "#808080", "#999999", "#B3B3B3", "#CCCCCC"]
+      },
+      "section-title-dimmed": {
+        "role": "neutral",
+        "displayName": "Section Title (completed)",
+        "canonical": "oklch(78% 0 0)",
+        "tonalRamp": ["#2E2E2E", "#454545", "#5C5C5C", "#737373", "#8A8A8A", "#A1A1A1", "#B8B8B8", "#CFCFCF", "#E6E6E6", "#F5F5F5"]
+      },
+      "divider": {
+        "role": "neutral",
+        "displayName": "Group Divider",
+        "canonical": "oklch(88% 0 0)",
+        "tonalRamp": ["#1A1A1A", "#333333", "#4D4D4D", "#666666", "#808080", "#999999", "#B3B3B3", "#CCCCCC", "#D6D6D6", "#EBEBEB"]
+      }
+    },
+    "typographyMeta": {
+      "group-header": {
+        "displayName": "Group Header",
+        "purpose": "Home/Store section titles — title3 heavy."
+      },
+      "row-title": {
+        "displayName": "Row Title",
+        "purpose": "Catalog and shopping item names — body, bold when pill expanded."
+      },
+      "row-quantity": {
+        "displayName": "Row Quantity",
+        "purpose": "Store trailing quantity — body bold monospaced digits."
+      }
+    },
+    "shadows": [
+      {
+        "name": "quantity-pill",
+        "value": "0 1.5px 2.5px rgba(0, 0, 0, 0.1)",
+        "purpose": "Resting shadow on Home quantity pill capsule (light mode)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "pill-expand-collapse",
+        "value": "spring(response: 0.28, dampingFraction: 0.82)",
+        "purpose": "Quantity pill expand/collapse and matching row gutter animation."
+      },
+      {
+        "name": "list-mutation",
+        "value": "Animation.snappy",
+        "purpose": "Check-off, clear, undo, and section collapse list updates."
+      },
+      {
+        "name": "tap-pulse",
+        "value": "spring(response: 0.22, dampingFraction: 0.62) peak scale 1.1",
+        "purpose": "Pill +/- tap feedback; not used on remove-at-qty-1."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "text-xs",
+        "value": "listSpacingScale 0.8"
+      },
+      {
+        "name": "text-md",
+        "value": "listSpacingScale 1.0"
+      },
+      {
+        "name": "text-xl",
+        "value": "listSpacingScale 1.2"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Store Group Header",
+      "kind": "nav",
+      "refersTo": "group-header",
+      "description": "Collapsible store section title with chevron and optional unchecked count.",
+      "html": "<button class=\"ds-group-header\" type=\"button\"><span class=\"ds-group-header__title\">Produce</span><span class=\"ds-group-header__chevron\">⌄</span></button>",
+      "css": ".ds-group-header { display: flex; align-items: center; gap: 8px; width: 100%; padding: 0 16px 6px; border: none; background: transparent; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; font-size: 20px; font-weight: 800; color: #474747; text-align: left; min-height: 44px; } .ds-group-header:hover { opacity: 0.85; } .ds-group-header:focus-visible { outline: 2px solid #007AFF; outline-offset: 2px; } .ds-group-header--dimmed { color: #B8B8B8; } .ds-group-header__chevron { font-size: 20px; opacity: 0.7; }"
+    },
+    {
+      "name": "Quantity Pill (collapsed)",
+      "kind": "custom",
+      "refersTo": "quantity-pill",
+      "description": "Home/Store expandable quantity control — collapsed state.",
+      "html": "<button class=\"ds-qty-pill\" type=\"button\" aria-label=\"Quantity 2\">2</button>",
+      "css": ".ds-qty-pill { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: #007AFF; background: #FFFFFF; border: 1px solid rgba(255,255,255,0.95); border-radius: 9999px; padding: 6px 16px; min-width: 44px; min-height: 32px; box-shadow: 0 1.5px 2.5px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); } .ds-qty-pill:hover { transform: scale(1.02); } .ds-qty-pill:focus-visible { outline: 2px solid #007AFF; outline-offset: 2px; }"
+    },
+    {
+      "name": "Shopping List Row",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "Plain list row with checkbox and item name.",
+      "html": "<div class=\"ds-list-row\"><span class=\"ds-list-row__check\" aria-hidden=\"true\">○</span><span class=\"ds-list-row__title\">Milk</span></div>",
+      "css": ".ds-list-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; min-height: 44px; background: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; font-size: 17px; color: #000000; } .ds-list-row__check { color: #007AFF; font-size: 22px; width: 22px; text-align: center; } .ds-list-row__title { flex: 1; }"
+    },
+    {
+      "name": "Toolbar Done",
+      "kind": "button",
+      "refersTo": "toolbar-button",
+      "description": "Settings sheet trailing Done control.",
+      "html": "<button class=\"ds-btn-done\" type=\"button\">Done</button>",
+      "css": ".ds-btn-done { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; font-size: 17px; font-weight: 600; color: #007AFF; background: transparent; border: none; padding: 8px 12px; min-height: 44px; cursor: pointer; } .ds-btn-done:hover { opacity: 0.7; } .ds-btn-done:focus-visible { outline: 2px solid #007AFF; outline-offset: 2px; }"
+    },
+    {
+      "name": "Home Section Tab (active)",
+      "kind": "chip",
+      "refersTo": "group-header",
+      "description": "Active section in Home horizontal title bar.",
+      "html": "<button class=\"ds-section-tab ds-section-tab--active\" type=\"button\">Pantry</button>",
+      "css": ".ds-section-tab { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; font-size: 20px; font-weight: 800; background: transparent; border: none; padding: 10px 0; cursor: pointer; color: #C7C7CC; min-height: 44px; } .ds-section-tab--active { color: #000000; } .ds-section-tab:hover { opacity: 0.85; } .ds-section-tab:focus-visible { outline: 2px solid #007AFF; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Native Aisle",
+    "overview": "Shoplister looks and behaves like a first-party iOS utility: plain lists, system navigation, semantic labels, and a single user-chosen accent that marks interactive quantity and selection chrome—not decorative marketing color. Depth comes from separators, label hierarchy, and one restrained shadow on the quantity pill—not layered cards or glassmorphism for its own sake.",
+    "keyCharacteristics": [
+      "Semantic surfaces adapt to light, dark, and increased contrast",
+      "One accent voice on controls and quantities only",
+      "List-first layout with shared title3.heavy group headers",
+      "Quiet completion via dimmed all-checked section titles",
+      "Motion with restraint; Reduce Motion honored"
+    ],
+    "rules": [
+      {
+        "name": "The One Tint Rule",
+        "body": "The accent color appears on controls and quantities, not on list backgrounds or section fills.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic Label Rule",
+        "body": "Prefer UIColor label hierarchy over hard-coded grays except where store headers are tuned for light-mode legibility.",
+        "section": "colors"
+      },
+      {
+        "name": "The Dynamic Type Rule",
+        "body": "Row height and spacing scale via AppTextSize.listSpacingScale (0.8–1.2).",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat List Rule",
+        "body": "No card containers for standard catalog or shopping rows.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Resting Shadow Rule",
+        "body": "Shadows appear on the quantity pill capsule only.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use system semantic colors and Dynamic Type for all new screens.",
+      "Do apply the user accent tint only to interactive emphasis.",
+      "Do dim completed store section titles when every row is checked.",
+      "Do mirror layout for Hebrew RTL.",
+      "Do keep minimum 44×44pt tap targets."
+    ],
+    "donts": [
+      "Don't use generic SaaS dashboards, card-heavy admin UIs, or marketing landing-page patterns inside the app shell.",
+      "Don't port web navigation or non-system controls.",
+      "Don't use AI-default visual tropes: cream/sand backgrounds, gradient text, decorative glassmorphism, identical card grids, uppercase tracked eyebrows.",
+      "Don't use over-animation or bounce-heavy motion that fights iOS transitions.",
+      "Don't clutter the Store list—checking items and quantities stay primary.",
+      "Don't splash accent color across full-screen backgrounds."
+    ]
+  }
+}
