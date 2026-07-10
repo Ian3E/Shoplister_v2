@@ -71,6 +71,9 @@
 		AA0000760000000000000076 /* ShoppingEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000076 /* ShoppingEmptyStateView.swift */; };
 		AA0000770000000000000077 /* QuantityPillLayoutMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000077 /* QuantityPillLayoutMetrics.swift */; };
 		AA0000790000000000000079 /* DeviceShakeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000079 /* DeviceShakeDetector.swift */; };
+		AA00007A000000000000007A /* AppStoreGesturesExplainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000007A /* AppStoreGesturesExplainer.swift */; };
+		AA00007B000000000000007B /* StoreGesturesExplainerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000007B /* StoreGesturesExplainerOverlay.swift */; };
+		AA00007C000000000000007C /* AppHomeCatalogVisit.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000101000000000000007C /* AppHomeCatalogVisit.swift */; };
 		AA0000550000000000000055 /* ShoppingRowQuickActionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000055 /* ShoppingRowQuickActionsMenu.swift */; };
 		AA0000560000000000000056 /* HomeCatalogRowContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000056 /* HomeCatalogRowContextMenu.swift */; };
 		AA0000570000000000000057 /* CatalogMoveNewSectionPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001010000000000000057 /* CatalogMoveNewSectionPrompt.swift */; };
@@ -176,6 +179,9 @@
 		AA0001010000000000000076 /* ShoppingEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingEmptyStateView.swift; sourceTree = "<group>"; };
 		AA0001010000000000000077 /* QuantityPillLayoutMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuantityPillLayoutMetrics.swift; sourceTree = "<group>"; };
 		AA0001010000000000000079 /* DeviceShakeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceShakeDetector.swift; sourceTree = "<group>"; };
+		AA000101000000000000007A /* AppStoreGesturesExplainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreGesturesExplainer.swift; sourceTree = "<group>"; };
+		AA000101000000000000007B /* StoreGesturesExplainerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreGesturesExplainerOverlay.swift; sourceTree = "<group>"; };
+		AA000101000000000000007C /* AppHomeCatalogVisit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHomeCatalogVisit.swift; sourceTree = "<group>"; };
 		AA0001010000000000000055 /* ShoppingRowQuickActionsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingRowQuickActionsMenu.swift; sourceTree = "<group>"; };
 		AA0001010000000000000056 /* HomeCatalogRowContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCatalogRowContextMenu.swift; sourceTree = "<group>"; };
 		AA0001010000000000000057 /* CatalogMoveNewSectionPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogMoveNewSectionPrompt.swift; sourceTree = "<group>"; };
@@ -339,6 +345,7 @@
 				AA0001020000000000000106 /* HomeCatalogListChrome.swift */,
 				AA0001020000000000000108 /* HomeFirstVisitExplainerView.swift */,
 				AA000102000000000000010A /* WelcomeExplainerOverlay.swift */,
+				AA000101000000000000007B /* StoreGesturesExplainerOverlay.swift */,
 				AA0001010000000000000054 /* QuantityPillMaterialStyle.swift */,
 				AA0001010000000000000074 /* ExpandableQuantityPill.swift */,
 				AA0001010000000000000077 /* QuantityPillLayoutMetrics.swift */,
@@ -410,6 +417,8 @@
 				AA0001010000000000000044 /* AppShoppingBadgeUnchecked.swift */,
 				AA0001020000000000000107 /* AppHomeFirstVisitExplainer.swift */,
 				AA0001020000000000000109 /* AppWelcomeExplainer.swift */,
+				AA000101000000000000007A /* AppStoreGesturesExplainer.swift */,
+				AA000101000000000000007C /* AppHomeCatalogVisit.swift */,
 				AA0001010000000000000014 /* AppContentLanguage.swift */,
 				AA0001010000000000000015 /* CatalogContentLocalization.swift */,
 				AA0001010000000000000047 /* CatalogSearchNormalization.swift */,
@@ -601,6 +610,9 @@
 				AA0000690000000000000069 /* HomeFirstVisitExplainerView.swift in Sources */,
 				AA00006A000000000000006A /* AppWelcomeExplainer.swift in Sources */,
 				AA00006B000000000000006B /* WelcomeExplainerOverlay.swift in Sources */,
+				AA00007A000000000000007A /* AppStoreGesturesExplainer.swift in Sources */,
+				AA00007B000000000000007B /* StoreGesturesExplainerOverlay.swift in Sources */,
+				AA00007C000000000000007C /* AppHomeCatalogVisit.swift in Sources */,
 				AA00006C000000000000006C /* SettingsSectionViews.swift in Sources */,
 				AA00006D000000000000006D /* SettingsAppFeaturesView.swift in Sources */,
 				AA00006E000000000000006E /* AppFeaturesCatalog.swift in Sources */,

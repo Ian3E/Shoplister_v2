@@ -274,9 +274,16 @@ struct ShoppingView: View {
         )
     }
 
-    /// Keep the bar visible when empty so Settings stays reachable; clear + principal hide when empty.
+    /// Keep the bar visible when empty so Settings stays reachable.
     private var shoppingNavigationBarVisibility: Visibility {
         .visible
+    }
+
+    private var storeNavigationPrincipalSubtitle: String {
+        if entriesWithItems.isEmpty {
+            return LocalizedCopy.noItems
+        }
+        return storeRemainingItemsSubtitle
     }
 
     @Binding var isStorePullToAddSearchPresented: Bool
@@ -406,6 +413,7 @@ struct ShoppingView: View {
                 .frame(height: Self.bottomFloatingBarClearance)
                 .allowsHitTesting(false)
         }
+        .accessibilityHint(LocalizedCopy.shoppingListGesturesAccessibilityHint)
         .catalogListLayoutDirection()
     }
 
@@ -613,18 +621,20 @@ struct ShoppingView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(shoppingNavigationBarVisibility, for: .navigationBar)
             .toolbar {
-                if !entriesWithItems.isEmpty, !isStorePullToAddSearchPresented {
+                if !isStorePullToAddSearchPresented {
                     ToolbarItem(placement: .principal) {
                         VStack(spacing: 2) {
                             Text(LocalizedCopy.shoppingListTitle)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color(uiColor: .label))
-                            Text(storeRemainingItemsSubtitle)
+                            Text(storeNavigationPrincipalSubtitle)
                                 .font(.footnote.weight(.regular))
                                 .foregroundStyle(.secondary)
                         }
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel(LocalizedCopy.shoppingListAccessibilityLabel(subtitle: storeRemainingItemsSubtitle))
+                        .accessibilityLabel(
+                            LocalizedCopy.shoppingListAccessibilityLabel(subtitle: storeNavigationPrincipalSubtitle)
+                        )
                     }
                 }
                 ToolbarItem(placement: .topBarLeading) {

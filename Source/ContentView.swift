@@ -37,6 +37,8 @@ struct ContentView: View {
     @AppStorage(AppTheme.customColorStorageKey) private var customColorHex: String = AppTheme.defaultCustomColorHex
     @AppStorage(AppHomeFirstVisitExplainer.storageKey) private var hasSeenFirstShoppingItemExplainer = false
     @AppStorage(AppWelcomeExplainer.storageKey) private var hasSeenWelcomeExplainer = false
+    @AppStorage(AppStoreGesturesExplainer.storageKey) private var hasSeenStoreGesturesExplainer = false
+    @AppStorage(AppHomeCatalogVisit.storageKey) private var hasVisitedHomeCatalog = false
     @AppStorage(AppShoppingSortChecked.storageKey) private var sortCheckedShoppingItems: Bool = false
     /// Text size draft while Settings is open; committed in the sheet `onDismiss` handler only.
     @State private var settingsTextSizeDraft: String = AppTextSize.defaultSize.rawValue
@@ -45,6 +47,7 @@ struct ContentView: View {
     @State private var settingsThemeCustomDraft: String = AppTheme.defaultCustomColorHex
     @State private var firstShoppingItemExplainerTask: Task<Void, Never>?
     @State private var welcomeExplainerTask: Task<Void, Never>?
+    @State private var storeGesturesExplainerTask: Task<Void, Never>?
 
     /// At least one unchecked line with a resolved catalog item (same as what share text would include).
     private var canShareShoppingList: Bool {
@@ -139,9 +142,15 @@ struct ContentView: View {
             markFirstShoppingItemExplainerSeenIfShoppingListAlreadyPopulated()
             scheduleWelcomeExplainerIfNeeded()
         }
-        .onChange(of: navigationPath.count) { _, count in
-            guard count == 0 else { return }
+        .onChange(of: navigationPath.count) { oldCount, newCount in
+            if newCount > 0 {
+                hasVisitedHomeCatalog = true
+            }
+            guard newCount == 0 else { return }
             resetHomeCatalogSessionState()
+            if oldCount > 0 {
+                scheduleStoreGesturesExplainerIfNeeded()
+            }
         }
         .onChange(of: isInventoryReorderMode) { _, active in
             if !active {
@@ -351,6 +360,11 @@ struct ContentView: View {
                 hasSeenFirstShoppingItemExplainer = true
                 fullWindowOverlay.dismiss(animated: false)
             }
+        case .storeGesturesExplainer:
+            StoreGesturesExplainerOverlay {
+                hasSeenStoreGesturesExplainer = true
+                fullWindowOverlay.dismiss(animated: false)
+            }
         }
     }
 
@@ -367,6 +381,7 @@ struct ContentView: View {
             await Task.yield()
             scheduleWelcomeExplainerIfNeeded()
             scheduleFirstShoppingItemExplainerIfNeeded()
+            scheduleStoreGesturesExplainerIfNeeded()
         }
     }
 
@@ -393,6 +408,26 @@ struct ContentView: View {
             guard !store.shopping.isEmpty else { return }
             guard fullWindowOverlay.kind == nil else { return }
             fullWindowOverlay.presentFirstShoppingItemExplainer()
+        }
+    }
+
+    private func scheduleStoreGesturesExplainerIfNeeded() {
+        guard !hasSeenStoreGesturesExplainer else { return }
+        guard hasVisitedHomeCatalog else { return }
+        guard !isHomeCatalogPresented else { return }
+        guard !isPresentingSettings else { return }
+        guard !isStorePullToAddSearchPresented else { return }
+        storeGesturesExplainerTask?.cancel()
+        storeGesturesExplainerTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.5))
+            guard !Task.isCancelled else { return }
+            guard !hasSeenStoreGesturesExplainer else { return }
+            guard hasVisitedHomeCatalog else { return }
+            guard !isHomeCatalogPresented else { return }
+            guard !isPresentingSettings else { return }
+            guard !isStorePullToAddSearchPresented else { return }
+            guard fullWindowOverlay.kind == nil else { return }
+            fullWindowOverlay.presentStoreGesturesExplainer()
         }
     }
 

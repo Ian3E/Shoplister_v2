@@ -68,6 +68,20 @@ struct AppFeatureCatalogEntry: Identifiable {
                 description: LocalizedCopy.appFeaturePullUpClearCheckedDescription
             ),
             AppFeatureCatalogEntry(
+                id: "pinchSections",
+                section: .shoppingList,
+                systemImage: "arrow.up.left.and.arrow.down.right",
+                title: LocalizedCopy.appFeaturePinchSectionsTitle,
+                description: LocalizedCopy.appFeaturePinchSectionsDescription
+            ),
+            AppFeatureCatalogEntry(
+                id: "shakeUndo",
+                section: .shoppingList,
+                systemImage: "arrow.uturn.backward.circle",
+                title: LocalizedCopy.appFeatureShakeUndoTitle,
+                description: LocalizedCopy.appFeatureShakeUndoDescription
+            ),
+            AppFeatureCatalogEntry(
                 id: "shareList",
                 section: .shoppingList,
                 systemImage: "square.and.arrow.up",

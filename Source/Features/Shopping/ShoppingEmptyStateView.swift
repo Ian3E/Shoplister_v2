@@ -31,18 +31,25 @@ struct ShoppingEmptyStateView: View {
     }
 
     private var addHintFooter: some View {
-        HStack(spacing: 0) {
-            Text(LocalizedCopy.shoppingListEmptyAddHintLeading)
-            Text(" ")
-            Image(systemName: "plus.circle.fill")
-                .foregroundStyle(appTheme.color)
-                .imageScale(.medium)
-            Text(" ")
-            Text(LocalizedCopy.shoppingListEmptyAddHintTrailing)
+        VStack(spacing: 16) {
+            libraryAddHintBlock
+            Text(LocalizedCopy.shoppingListEmptyAddHintPullDownLine)
         }
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
+    }
+
+    private var libraryAddHintBlock: some View {
+        VStack(spacing: 6) {
+            (Text(LocalizedCopy.shoppingListEmptyAddHintTapPrefix + " ")
+                + Text(Image(systemName: "plus.circle.fill"))
+                    .foregroundStyle(appTheme.color)
+                + Text(" " + LocalizedCopy.shoppingListEmptyAddHintLibraryPrefix))
+                .multilineTextAlignment(.center)
+            Text(LocalizedCopy.shoppingListEmptyAddHintLibrarySuffix)
+                .multilineTextAlignment(.center)
+        }
     }
 
     private var accessibilityLabelText: String {

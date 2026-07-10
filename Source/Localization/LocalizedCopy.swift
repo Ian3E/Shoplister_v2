@@ -91,7 +91,10 @@ enum LocalizedCopy {
     }
 
     static var resetExplainers: String {
-        String(localized: "Reset explainers", comment: "Settings button to show welcome and first-item explainers again")
+        String(
+            localized: "Reset explainers",
+            comment: "Debug settings button to replay coach marks and reset the empty-store add hint counter"
+        )
     }
 
     static var appName: String {
@@ -188,6 +191,28 @@ enum LocalizedCopy {
         String(
             localized: "Pull up from the bottom of the list to clear all checked items in one gesture.",
             comment: "App feature description: pull up to clear checked"
+        )
+    }
+
+    static var appFeaturePinchSectionsTitle: String {
+        String(localized: "Pinch to collapse", comment: "App feature title: pinch to collapse store sections")
+    }
+
+    static var appFeaturePinchSectionsDescription: String {
+        String(
+            localized: "Pinch in on the list to collapse every store section; pinch out to expand them all.",
+            comment: "App feature description: pinch to collapse store sections"
+        )
+    }
+
+    static var appFeatureShakeUndoTitle: String {
+        String(localized: "Shake to undo", comment: "App feature title: shake to undo a recent clear")
+    }
+
+    static var appFeatureShakeUndoDescription: String {
+        String(
+            localized: "After clearing checked items or the whole list, shake your device to undo. You can also use Undo in the menu.",
+            comment: "App feature description: shake to undo a recent clear"
         )
     }
 
@@ -547,24 +572,56 @@ enum LocalizedCopy {
         String(localized: "All done", comment: "Empty shopping list overlay title")
     }
 
-    static var shoppingListEmptyAddHintLeading: String {
+    static var shoppingListEmptyAddHintTapPrefix: String {
         String(
             localized: "Tap",
             comment: "Empty shopping add hint before plus symbol"
         )
     }
 
-    static var shoppingListEmptyAddHintTrailing: String {
+    static var shoppingListEmptyAddHintLibraryPrefix: String {
         String(
-            localized: "or pull down to add items",
-            comment: "Empty shopping add hint after plus symbol"
+            localized: "to view your complete item library",
+            comment: "Empty shopping add hint after plus symbol, wraps before next line"
+        )
+    }
+
+    static var shoppingListEmptyAddHintLibrarySuffix: String {
+        String(
+            localized: "and add items to your shopping list",
+            comment: "Empty shopping add hint, second part of library line"
+        )
+    }
+
+    static var shoppingListEmptyAddHintPullDownLine: String {
+        String(
+            localized: "Pull down to quickly search and add items",
+            comment: "Empty shopping add hint, second line"
         )
     }
 
     static var shoppingListEmptyAddHintAccessibility: String {
         String(
-            localized: "Tap plus or pull down to add items",
+            localized: "Tap plus to view your complete item library and add items to your shopping list. Pull down to quickly search and add items.",
             comment: "Accessibility label for empty shopping add hint"
+        )
+    }
+
+    static var shoppingListGesturesAccessibilityHint: String {
+        String(
+            localized: "Pull down at the top to add items. Pull up at the bottom to clear checked items. Pinch to collapse or expand all sections. Shake to undo a recent clear.",
+            comment: "VoiceOver hint for shopping list gesture shortcuts"
+        )
+    }
+
+    static var storeGesturesExplainerTitle: String {
+        String(localized: "Shopping list gestures", comment: "Store gestures coach overlay title")
+    }
+
+    static var storeGesturesExplainerAccessibilityLabel: String {
+        String(
+            localized: "Shopping list gestures. Pull down to add items. Pull up to clear checked items. Long press a row to adjust quantity. Shake to undo a recent clear.",
+            comment: "Store gestures coach overlay VoiceOver label"
         )
     }
 

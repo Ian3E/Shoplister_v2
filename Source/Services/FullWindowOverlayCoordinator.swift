@@ -8,6 +8,7 @@ final class FullWindowOverlayCoordinator: ObservableObject {
         case shoppingPhotoPreview(itemID: UUID)
         case welcomeExplainer
         case firstShoppingItemExplainer
+        case storeGesturesExplainer
     }
 
     /// Published so `InventoryView` can open the editor / delete alert after the overlay dismisses.
@@ -34,6 +35,10 @@ final class FullWindowOverlayCoordinator: ObservableObject {
 
     func presentFirstShoppingItemExplainer() {
         kind = .firstShoppingItemExplainer
+    }
+
+    func presentStoreGesturesExplainer() {
+        kind = .storeGesturesExplainer
     }
 
     func dismiss(animated: Bool = true) {

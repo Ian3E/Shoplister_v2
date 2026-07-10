@@ -271,6 +271,32 @@ struct SettingsDeviceView: View {
     }
 }
 
+// MARK: - Debug
+
+struct SettingsDebugView: View {
+    @AppStorage(AppWelcomeExplainer.storageKey) private var hasSeenWelcomeExplainer = false
+    @AppStorage(AppHomeFirstVisitExplainer.storageKey) private var hasSeenFirstShoppingItemExplainer = false
+    @AppStorage(AppStoreGesturesExplainer.storageKey) private var hasSeenStoreGesturesExplainer = false
+    @AppStorage(AppHomeCatalogVisit.storageKey) private var hasVisitedHomeCatalog = false
+    @AppStorage(AppShoppingEmptyAddHint.storageKey) private var emptyAddHintCompletedListCount: Int = 0
+
+    var body: some View {
+        List {
+            Section {
+                Button(LocalizedCopy.resetExplainers) {
+                    hasSeenWelcomeExplainer = false
+                    hasSeenFirstShoppingItemExplainer = false
+                    hasSeenStoreGesturesExplainer = false
+                    hasVisitedHomeCatalog = false
+                    emptyAddHintCompletedListCount = 0
+                }
+            }
+        }
+        .navigationTitle(LocalizedCopy.settingsDebug)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 // MARK: - About
 
 struct SettingsAboutView: View {
