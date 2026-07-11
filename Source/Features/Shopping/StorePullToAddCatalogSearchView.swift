@@ -17,6 +17,9 @@ struct StorePullToAddCatalogSearchView: View {
     @Binding var isSearchPresented: Bool
     @Binding var searchText: String
     @Binding var pinnedSearchQuery: String
+    /// Stable identity for the searchable chrome, owned by `ShoppingView` and regenerated only
+    /// when a pull-to-add session begins, so adds do not churn the search field's identity.
+    var searchChromeID: UUID
     var onPresentNewItem: (String) -> Void
 
     @State private var expandedPullToAddQuantityPillItemID: UUID?
@@ -89,13 +92,14 @@ struct StorePullToAddCatalogSearchView: View {
                     catalogResultsList
                 }
             }
+            .id(searchChromeID)
             .searchable(
                 text: $searchText,
                 isPresented: $isSearchPresented,
                 placement: .toolbar,
                 prompt: "Search or create item"
             )
-            .searchPresentationToolbarBehavior(.automatic)
+            .searchPresentationToolbarBehavior(.avoidHidingContent)
             .modifier(StorePullToAddSearchSubmitModifier(onSubmit: handleSearchSubmit))
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 Color.clear
@@ -189,9 +193,10 @@ struct StorePullToAddCatalogSearchView: View {
 
             VStack(spacing: 16) {
                 Text(LocalizedCopy.noMatchingItemsFound)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color(uiColor: .label))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+
                 Button(LocalizedCopy.createItem) {
                     handleSearchSubmit()
                 }

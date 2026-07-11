@@ -42,14 +42,16 @@ struct ShoppingEmptyStateView: View {
 
     private var libraryAddHintBlock: some View {
         VStack(spacing: 6) {
-            (Text(LocalizedCopy.shoppingListEmptyAddHintTapPrefix + " ")
-                + Text(Image(systemName: "plus.circle.fill"))
-                    .foregroundStyle(appTheme.color)
-                + Text(" " + LocalizedCopy.shoppingListEmptyAddHintLibraryPrefix))
+            Text("\(LocalizedCopy.shoppingListEmptyAddHintTapPrefix) \(plusIconHintText) \(LocalizedCopy.shoppingListEmptyAddHintLibraryPrefix)")
                 .multilineTextAlignment(.center)
             Text(LocalizedCopy.shoppingListEmptyAddHintLibrarySuffix)
                 .multilineTextAlignment(.center)
         }
+    }
+
+    private var plusIconHintText: Text {
+        Text(Image(systemName: "plus.circle.fill"))
+            .foregroundStyle(appTheme.color)
     }
 
     private var accessibilityLabelText: String {

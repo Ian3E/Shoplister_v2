@@ -5,6 +5,7 @@ struct StoreGesturesExplainerOverlay: View {
 
     @State private var isVisible = false
     @State private var dismissTask: Task<Void, Never>?
+    @State private var measuredContentHeight: CGFloat = 0
 
     private let cardHorizontalInset: CGFloat = 16
     private let cardMaxWidth: CGFloat = 340
@@ -12,6 +13,7 @@ struct StoreGesturesExplainerOverlay: View {
     private let cardCornerRadius: CGFloat = 34
     private static let fadeAnimation = Animation.easeInOut(duration: 0.25)
     private static let fadeOutDuration: Duration = .milliseconds(250)
+    private static let scrollMaxHeight: CGFloat = 420
 
     private var gestureTips: [(systemImage: String, title: String, detail: String)] {
         [
@@ -84,9 +86,19 @@ struct StoreGesturesExplainerOverlay: View {
                 .padding(.horizontal, cardHorizontalInset)
                 .padding(.top, cardTextVerticalInset)
                 .padding(.bottom, cardTextVerticalInset)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .preference(key: ContentHeightKey.self, value: proxy.size.height)
+                    }
+                }
             }
             .scrollBounceBehavior(.basedOnSize)
-            .frame(maxHeight: 420)
+            // Cap at the max, but hug the content when it's shorter so there's no dead space above Done.
+            .frame(maxHeight: measuredContentHeight == 0
+                ? Self.scrollMaxHeight
+                : min(measuredContentHeight, Self.scrollMaxHeight))
+            .onPreferenceChange(ContentHeightKey.self) { measuredContentHeight = $0 }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(LocalizedCopy.storeGesturesExplainerAccessibilityLabel)
             .accessibilityAddTraits(.isModal)
@@ -141,5 +153,12 @@ struct StoreGesturesExplainerOverlay: View {
             guard !Task.isCancelled else { return }
             onDone()
         }
+    }
+}
+
+private struct ContentHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }

@@ -4,6 +4,7 @@ import UIKit
 
 private enum AppRoute: Hashable {
     case homeCatalog
+    case storePullToAdd
 }
 
 struct ContentView: View {
@@ -26,10 +27,14 @@ struct ContentView: View {
     @State private var isHomeToolbarSearchPresented = false
     /// Home search field text (lifted here so New Item sheet can clear it after save).
     @State private var homeInventorySearchText = ""
-    /// Store pull-to-add: in-place catalog search (stays on the shopping list).
+    /// Store pull-to-add: catalog search presented as its own pushed destination so its search field
+    /// lives in a toolbar fully isolated from the shopping-dependent Store nav bar.
     @State private var isStorePullToAddSearchPresented = false
     @State private var storePullToAddSearchText = ""
     @State private var storePullToAddPinnedSearchQuery = ""
+    /// Stable identity for the pushed pull-to-add search chrome; regenerated only when a session begins,
+    /// mirroring Home's `homeToolbarSearchChromeID`, so adds cannot churn the searchable field.
+    @State private var storePullToAddSearchChromeID = UUID()
     /// True only when presenting **New Item** after Store pull-to-add; add saved item to shopping list.
     @State private var newItemAddToShoppingAfterSave = false
     @AppStorage(AppTextSize.storageKey) private var textSizeRaw: String = AppTextSize.defaultSize.rawValue
@@ -65,13 +70,7 @@ struct ContentView: View {
                 ShoppingView(
                     canShareShoppingList: canShareShoppingList,
                     isStorePullToAddSearchPresented: $isStorePullToAddSearchPresented,
-                    storePullToAddSearchText: $storePullToAddSearchText,
-                    storePullToAddPinnedSearchQuery: $storePullToAddPinnedSearchQuery,
-                    onPresentNewItemFromPullToAdd: { name in
-                        newItemAddToShoppingAfterSave = true
-                        newItemPrefillName = name
-                        isPresentingNewCatalogItem = true
-                    },
+                    onBeginPullToAddSearch: beginStorePullToAddSearch,
                     showsFloatingOpenHomeButton: !isHomeCatalogPresented,
                     onShare: {
                         let text = ShoppingListShareText.buildPlainText(
@@ -85,8 +84,13 @@ struct ContentView: View {
                     onManageStoreSections: { editGroupsSheetKind = .shopping },
                     onOpenHome: openHomeForBrowse
                 )
-                .navigationDestination(for: AppRoute.self) { _ in
-                    homeCatalogScreen
+                .navigationDestination(for: AppRoute.self) { route in
+                    switch route {
+                    case .homeCatalog:
+                        homeCatalogScreen
+                    case .storePullToAdd:
+                        storePullToAddScreen
+                    }
                 }
             }
             .catalogGroupedChromeBackdrop()
@@ -136,6 +140,26 @@ struct ContentView: View {
         .enablesNavigationInteractivePopGesture(isEnabled: !isInventoryReorderMode)
     }
 
+    /// Pull-to-add search as a pushed destination. Its own hosting controller/nav bar isolates the
+    /// `.searchable` field from `ShoppingView`'s shopping-dependent toolbar, so adds never drop the
+    /// keyboard. Presenting and dismissing are instant cuts (no push/pop slide).
+    private var storePullToAddScreen: some View {
+        StorePullToAddDestination(
+            isSearchPresented: $isStorePullToAddSearchPresented,
+            searchText: $storePullToAddSearchText,
+            pinnedSearchQuery: $storePullToAddPinnedSearchQuery,
+            searchChromeID: storePullToAddSearchChromeID,
+            onPresentNewItem: { name in
+                newItemAddToShoppingAfterSave = true
+                newItemPrefillName = name
+                isPresentingNewCatalogItem = true
+            },
+            onEndSearch: endStorePullToAddSearch
+        )
+        .navigationBarBackButtonHidden(true)
+        .enablesNavigationInteractivePopGesture()
+    }
+
     var body: some View {
         mainChromeZStack
         .onAppear {
@@ -143,7 +167,7 @@ struct ContentView: View {
             scheduleWelcomeExplainerIfNeeded()
         }
         .onChange(of: navigationPath.count) { oldCount, newCount in
-            if newCount > 0 {
+            if newCount > 0, !isStorePullToAddSearchPresented {
                 hasVisitedHomeCatalog = true
             }
             guard newCount == 0 else { return }
@@ -301,12 +325,38 @@ struct ContentView: View {
         customColorHex = settingsThemeCustomDraft
     }
 
-    /// Pull-to-add: instant Home presentation and return to Store (avoids search / tab-bar animation glitches).
+    /// Pull-to-add: instant presentation and return to Store (avoids the push/pop slide).
     private func withoutNavigationAnimation(_ updates: () -> Void) {
         var transaction = Transaction()
         transaction.animation = nil
         transaction.disablesAnimations = true
         withTransaction(transaction, updates)
+    }
+
+    /// Pushes pull-to-add search as its own destination with an isolated toolbar.
+    /// Presents instantly (no push slide) with search already active so the keyboard animates up
+    /// immediately instead of waiting for the navigation transition to settle.
+    private func beginStorePullToAddSearch() {
+        guard navigationPath.isEmpty else { return }
+        storePullToAddSearchText = ""
+        storePullToAddPinnedSearchQuery = ""
+        storePullToAddSearchChromeID = UUID()
+        isStorePullToAddSearchPresented = true
+        withoutNavigationAnimation {
+            navigationPath.append(AppRoute.storePullToAdd)
+        }
+    }
+
+    /// Dismisses pull-to-add search with an instant cut (no push/pop slide), matching the present.
+    /// `UIView.performWithoutAnimation` hard-disables UIKit animations so the navigation bar doesn't
+    /// slide/recenter its title when the Store re-lays-out on pop.
+    private func endStorePullToAddSearch() {
+        guard !navigationPath.isEmpty else { return }
+        UIView.performWithoutAnimation {
+            withoutNavigationAnimation {
+                navigationPath.removeLast()
+            }
+        }
     }
 
     private func openHomeForBrowse() {
@@ -577,5 +627,42 @@ private struct NavigationInteractivePopEnabler: UIViewControllerRepresentable {
 private extension View {
     func enablesNavigationInteractivePopGesture(isEnabled: Bool = true) -> some View {
         background(NavigationInteractivePopEnabler(isEnabled: isEnabled))
+    }
+}
+
+// MARK: - Pull-to-add pushed destination
+
+/// Pushed pull-to-add search screen. It owns a navigation bar with no `store.shopping`-dependent items,
+/// so the `.searchable` field it hosts is never torn down when an add mutates `store.shopping` — the
+/// keyboard stays up across adds, matching Home. Ending search (Cancel) or swiping back pops the screen.
+private struct StorePullToAddDestination: View {
+    @Binding var isSearchPresented: Bool
+    @Binding var searchText: String
+    @Binding var pinnedSearchQuery: String
+    let searchChromeID: UUID
+    let onPresentNewItem: (String) -> Void
+    /// Pops the destination without the default push/pop slide, matching the instant present.
+    let onEndSearch: () -> Void
+
+    var body: some View {
+        StorePullToAddCatalogSearchView(
+            isSearchPresented: $isSearchPresented,
+            searchText: $searchText,
+            pinnedSearchQuery: $pinnedSearchQuery,
+            searchChromeID: searchChromeID,
+            onPresentNewItem: onPresentNewItem
+        )
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: isSearchPresented) { _, presented in
+            if !presented {
+                onEndSearch()
+            }
+        }
+        .onDisappear {
+            isSearchPresented = false
+            searchText = ""
+            pinnedSearchQuery = ""
+        }
     }
 }

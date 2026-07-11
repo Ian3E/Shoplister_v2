@@ -287,9 +287,10 @@ struct ShoppingView: View {
     }
 
     @Binding var isStorePullToAddSearchPresented: Bool
-    @Binding var storePullToAddSearchText: String
-    @Binding var storePullToAddPinnedSearchQuery: String
-    var onPresentNewItemFromPullToAdd: (String) -> Void
+
+    /// Requests the pull-to-add search session; the parent pushes it as its own isolated destination
+    /// so the shopping-dependent Store toolbar can never tear down the search field on adds.
+    var onBeginPullToAddSearch: () -> Void
     var onOpenHome: (() -> Void)?
     var showsFloatingOpenHomeButton: Bool
     let canShareShoppingList: Bool
@@ -300,9 +301,7 @@ struct ShoppingView: View {
     init(
         canShareShoppingList: Bool,
         isStorePullToAddSearchPresented: Binding<Bool>,
-        storePullToAddSearchText: Binding<String>,
-        storePullToAddPinnedSearchQuery: Binding<String>,
-        onPresentNewItemFromPullToAdd: @escaping (String) -> Void,
+        onBeginPullToAddSearch: @escaping () -> Void,
         showsFloatingOpenHomeButton: Bool = true,
         onShare: @escaping () -> Void,
         onSettings: @escaping () -> Void,
@@ -311,9 +310,7 @@ struct ShoppingView: View {
     ) {
         self.canShareShoppingList = canShareShoppingList
         _isStorePullToAddSearchPresented = isStorePullToAddSearchPresented
-        _storePullToAddSearchText = storePullToAddSearchText
-        _storePullToAddPinnedSearchQuery = storePullToAddPinnedSearchQuery
-        self.onPresentNewItemFromPullToAdd = onPresentNewItemFromPullToAdd
+        self.onBeginPullToAddSearch = onBeginPullToAddSearch
         self.showsFloatingOpenHomeButton = showsFloatingOpenHomeButton
         self.onShare = onShare
         self.onSettings = onSettings
@@ -430,9 +427,7 @@ struct ShoppingView: View {
 
     private func beginStorePullToAddSearch() {
         guard showsFloatingOpenHomeButton else { return }
-        storePullToAddSearchText = ""
-        storePullToAddPinnedSearchQuery = ""
-        isStorePullToAddSearchPresented = true
+        onBeginPullToAddSearch()
     }
 
     @ViewBuilder
@@ -575,21 +570,10 @@ struct ShoppingView: View {
                 .allowsHitTesting(false)
 
             GeometryReader { proxy in
-                Group {
-                    if isStorePullToAddSearchPresented {
-                        StorePullToAddCatalogSearchView(
-                            isSearchPresented: $isStorePullToAddSearchPresented,
-                            searchText: $storePullToAddSearchText,
-                            pinnedSearchQuery: $storePullToAddPinnedSearchQuery,
-                            onPresentNewItem: onPresentNewItemFromPullToAdd
-                        )
-                    } else {
-                        shoppingStoreList(listMinHeight: proxy.size.height)
-                    }
-                }
-                .modifier(StorePullToAddKeyboardSafeAreaModifier(
-                    respectsKeyboard: isStorePullToAddSearchPresented
-                ))
+                shoppingStoreList(listMinHeight: proxy.size.height)
+                    .modifier(StorePullToAddKeyboardSafeAreaModifier(
+                        respectsKeyboard: false
+                    ))
             }
 
             if entriesWithItems.isEmpty {
@@ -621,21 +605,19 @@ struct ShoppingView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(shoppingNavigationBarVisibility, for: .navigationBar)
             .toolbar {
-                if !isStorePullToAddSearchPresented {
-                    ToolbarItem(placement: .principal) {
-                        VStack(spacing: 2) {
-                            Text(LocalizedCopy.shoppingListTitle)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(uiColor: .label))
-                            Text(storeNavigationPrincipalSubtitle)
-                                .font(.footnote.weight(.regular))
-                                .foregroundStyle(.secondary)
-                        }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel(
-                            LocalizedCopy.shoppingListAccessibilityLabel(subtitle: storeNavigationPrincipalSubtitle)
-                        )
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 2) {
+                        Text(LocalizedCopy.shoppingListTitle)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color(uiColor: .label))
+                        Text(storeNavigationPrincipalSubtitle)
+                            .font(.footnote.weight(.regular))
+                            .foregroundStyle(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(
+                        LocalizedCopy.shoppingListAccessibilityLabel(subtitle: storeNavigationPrincipalSubtitle)
+                    )
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     StoreSettingsToolbarButton(action: onSettings)
