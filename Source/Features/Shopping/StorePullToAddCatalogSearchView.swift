@@ -112,6 +112,13 @@ struct StorePullToAddCatalogSearchView: View {
                     .transition(.identity)
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(LocalizedCopy.addItem)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color(uiColor: .label))
+            }
+        }
         .onChange(of: searchText) { _, newValue in
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty {

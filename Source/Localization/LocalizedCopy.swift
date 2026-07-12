@@ -778,7 +778,7 @@ enum LocalizedCopy {
 
     static var welcomeExplainerItemSections: String {
         String(
-            localized: "Each item in Shoplister has a\n**Home section** (where you keep it) and a\n**Store section** (where you buy it).",
+            localized: "Each item in Shoplister has a\n**Home section** (where you keep it)\n**Store section** (where you buy it).",
             comment: "Fresh-install welcome explainer home and store section line"
         )
     }
@@ -799,7 +799,7 @@ enum LocalizedCopy {
 
     static var welcomeExplainerAccessibilityLabel: String {
         String(
-            localized: "Welcome to Shoplister! Each item in Shoplister has a Home section (where you keep it) and a Store section (where you buy it). Your shopping list is organized by Store sections. Your item library is organized by Home sections.",
+            localized: "Welcome to Shoplister! Each item in Shoplister has a Home section (where you keep it) Store section (where you buy it). Your shopping list is organized by Store sections. Your item library is organized by Home sections.",
             comment: "Fresh-install welcome explainer VoiceOver label"
         )
     }

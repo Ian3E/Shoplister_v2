@@ -914,13 +914,13 @@
         }
       }
     },
-    "Each item in Shoplister has a\n**Home section** (where you keep it) and a\n**Store section** (where you buy it)." : {
+    "Each item in Shoplister has a\n**Home section** (where you keep it)\n**Store section** (where you buy it)." : {
       "comment" : "Fresh-install welcome explainer home and store section line",
       "localizations" : {
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "לכל פריט בשופליסטר יש\n**קבוצת בית** (איפה שומרים אותו)\n**וקבוצת סופר** (איפה קונים אותו)."
+            "value" : "לכל פריט בשופליסטר יש\n**קבוצת בית** (איפה שומרים אותו)\n**קבוצת סופר** (איפה קונים אותו)."
           }
         }
       }
@@ -2760,13 +2760,13 @@
         }
       }
     },
-    "Welcome to Shoplister! Each item in Shoplister has a Home section (where you keep it) and a Store section (where you buy it). Your shopping list is organized by Store sections. Your item library is organized by Home sections." : {
+    "Welcome to Shoplister! Each item in Shoplister has a Home section (where you keep it) Store section (where you buy it). Your shopping list is organized by Store sections. Your item library is organized by Home sections." : {
       "comment" : "Fresh-install welcome explainer VoiceOver label",
       "localizations" : {
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ברוכים הבאים לשופליסטר! לכל פריט בשופליסטר יש קבוצת בית (איפה שומרים אותו) וקבוצת סופר (איפה קונים אותו). רשימת הקניות מסודרת לפי קבוצות סופר. ספריית הפריטים מסודרת לפי קבוצות בית."
+            "value" : "ברוכים הבאים לשופליסטר! לכל פריט בשופליסטר יש קבוצת בית (איפה שומרים אותו) קבוצת סופר (איפה קונים אותו). רשימת הקניות מסודרת לפי קבוצות סופר. ספריית הפריטים מסודרת לפי קבוצות בית."
           }
         }
       }

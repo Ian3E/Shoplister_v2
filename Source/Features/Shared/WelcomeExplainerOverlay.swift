@@ -5,6 +5,7 @@ struct WelcomeExplainerOverlay: View {
 
     @State private var isVisible = false
     @State private var dismissTask: Task<Void, Never>?
+    @State private var measuredContentHeight: CGFloat = 0
 
     private let cardHorizontalInset: CGFloat = 16
     private let cardMaxWidth: CGFloat = 340
@@ -12,6 +13,27 @@ struct WelcomeExplainerOverlay: View {
     private let cardCornerRadius: CGFloat = 34
     private static let fadeAnimation = Animation.easeInOut(duration: 0.25)
     private static let fadeOutDuration: Duration = .milliseconds(250)
+    private static let scrollMaxHeight: CGFloat = 420
+
+    private var welcomeTips: [(systemImage: String, detail: String, usesMarkdown: Bool)] {
+        [
+            (
+                "mappin.and.ellipse",
+                LocalizedCopy.welcomeExplainerItemSections,
+                true
+            ),
+            (
+                "storefront.fill",
+                LocalizedCopy.welcomeExplainerShoppingListGrouping,
+                false
+            ),
+            (
+                "house.fill",
+                LocalizedCopy.welcomeExplainerHomeLibraryGrouping,
+                false
+            ),
+        ]
+    }
 
     var body: some View {
         ZStack {
@@ -36,36 +58,41 @@ struct WelcomeExplainerOverlay: View {
 
     private var cardContent: some View {
         VStack(spacing: 0) {
-            VStack(alignment: .center, spacing: 20) {
-                Text(LocalizedCopy.welcomeExplainerTitle)
-                    .font(.system(size: 18, weight: .bold))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Group {
-                    welcomeExplainerBodyText(LocalizedCopy.welcomeExplainerItemSections)
+            ScrollView {
+                VStack(alignment: .center, spacing: 16) {
+                    Text(LocalizedCopy.welcomeExplainerTitle)
+                        .font(.system(size: 18, weight: .bold))
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text(LocalizedCopy.welcomeExplainerShoppingListGrouping)
-                        .font(.body)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(LocalizedCopy.welcomeExplainerHomeLibraryGrouping)
-                        .font(.body)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: 14) {
+                        ForEach(Array(welcomeTips.enumerated()), id: \.offset) { _, tip in
+                            welcomeTipRow(
+                                systemImage: tip.systemImage,
+                                detail: tip.detail,
+                                usesMarkdown: tip.usesMarkdown
+                            )
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .foregroundStyle(Color(uiColor: .label))
+                .padding(.horizontal, cardHorizontalInset)
+                .padding(.top, cardTextVerticalInset)
+                .padding(.bottom, cardTextVerticalInset)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .preference(key: WelcomeContentHeightKey.self, value: proxy.size.height)
+                    }
                 }
             }
-            .foregroundStyle(Color(uiColor: .label))
-            .padding(.horizontal, cardHorizontalInset)
-            .padding(.top, cardTextVerticalInset)
-            .padding(.bottom, cardTextVerticalInset)
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxHeight: measuredContentHeight == 0
+                ? Self.scrollMaxHeight
+                : min(measuredContentHeight, Self.scrollMaxHeight))
+            .onPreferenceChange(WelcomeContentHeightKey.self) { measuredContentHeight = $0 }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(LocalizedCopy.welcomeExplainerAccessibilityLabel)
             .accessibilityAddTraits(.isModal)
@@ -88,6 +115,28 @@ struct WelcomeExplainerOverlay: View {
                 .fill(.clear)
                 .glassEffect(.regular, in: RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
         }
+    }
+
+    private func welcomeTipRow(systemImage: String, detail: String, usesMarkdown: Bool) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 24, alignment: .center)
+                .accessibilityHidden(true)
+
+            Group {
+                if usesMarkdown {
+                    welcomeExplainerBodyText(detail)
+                } else {
+                    Text(detail)
+                }
+            }
+            .font(.body)
+            .foregroundStyle(Color(uiColor: .label))
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private func welcomeExplainerBodyText(_ localized: String) -> Text {
@@ -119,5 +168,12 @@ struct WelcomeExplainerOverlay: View {
             guard !Task.isCancelled else { return }
             onDone()
         }
+    }
+}
+
+private struct WelcomeContentHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
