@@ -5,11 +5,12 @@ struct ShoppingEmptyStateView: View {
     var showsAddHint: Bool = true
 
     @Environment(\.appTheme) private var appTheme
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyStateIconSize: CGFloat = 48
 
     var body: some View {
         VStack(spacing: 0) {
             Image(systemName: "checkmark.app.fill")
-                .font(.system(size: 48, weight: .regular))
+                .font(.system(size: emptyStateIconSize, weight: .regular))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(appTheme.color)
                 .padding(.bottom, 12)

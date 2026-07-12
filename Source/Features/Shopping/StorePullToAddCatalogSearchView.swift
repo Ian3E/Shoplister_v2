@@ -5,13 +5,15 @@ struct StorePullToAddCatalogSearchView: View {
     private static let bottomFloatingBarClearance: CGFloat = 86
     /// Space below the no-match placeholder so it stays above the toolbar search field.
     private static let toolbarSearchFieldClearance: CGFloat = 56
-    /// Principal header hidden during pull-to-add search — reserve its height for vertical centering.
+    /// Reserve nav/search chrome height for the no-match placeholder band.
     private static let toolbarSearchCollapsedTopChromeClearance: CGFloat = 100
+    private static let regularWidthClassListMaxWidth: CGFloat = 640
 
     @EnvironmentObject private var store: GroceryStore
     @Environment(\.appContentLanguage) private var catalogLanguage
     @Environment(\.shoppingListSpacingScale) private var listSpacingScale
     @Environment(\.dismissSearch) private var dismissSearch
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage(AppTextSize.storageKey) private var textSizeRaw: String = AppTextSize.defaultSize.rawValue
 
     @Binding var isSearchPresented: Bool
@@ -97,7 +99,7 @@ struct StorePullToAddCatalogSearchView: View {
                 text: $searchText,
                 isPresented: $isSearchPresented,
                 placement: .toolbar,
-                prompt: "Search or create item"
+                prompt: LocalizedCopy.searchOrCreateItem
             )
             .searchPresentationToolbarBehavior(.avoidHidingContent)
             .modifier(StorePullToAddSearchSubmitModifier(onSubmit: handleSearchSubmit))
@@ -112,11 +114,14 @@ struct StorePullToAddCatalogSearchView: View {
                     .transition(.identity)
             }
         }
+        .frame(maxWidth: horizontalSizeClass == .regular ? Self.regularWidthClassListMaxWidth : .infinity)
+        .frame(maxWidth: .infinity)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(LocalizedCopy.addItem)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color(uiColor: .label))
+                    .accessibilityAddTraits(.isHeader)
             }
         }
         .onChange(of: searchText) { _, newValue in
@@ -193,10 +198,8 @@ struct StorePullToAddCatalogSearchView: View {
 
     @ViewBuilder
     private var noMatchesPlaceholder: some View {
-        GeometryReader { geometry in
-            let topInset = geometry.safeAreaInsets.top + Self.toolbarSearchCollapsedTopChromeClearance
-            let bottomInset = geometry.safeAreaInsets.bottom + Self.toolbarSearchFieldClearance
-            let bandHeight = max(0, geometry.size.height - topInset - bottomInset)
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
 
             VStack(spacing: 16) {
                 Text(LocalizedCopy.noMatchingItemsFound)
@@ -211,11 +214,12 @@ struct StorePullToAddCatalogSearchView: View {
                 .modifier(StorePullToAddCreateItemButtonStyle())
             }
             .padding(.horizontal, 28)
-            .frame(width: geometry.size.width, height: bandHeight, alignment: .center)
-            .position(x: geometry.size.width / 2, y: topInset + bandHeight / 2 - 100)
-            // Suppress the implicit animation that fires when the keyboard changes geometry.size.height.
-            .animation(nil, value: geometry.size.height)
+
+            Spacer(minLength: 0)
         }
+        .padding(.top, Self.toolbarSearchCollapsedTopChromeClearance)
+        .padding(.bottom, Self.toolbarSearchFieldClearance)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .contain)
     }
 }
@@ -290,6 +294,15 @@ private struct StorePullToAddCatalogItemRow: View {
                 guard !inShopping else { return }
                 quantityPillExpandedBinding.wrappedValue = false
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                LocalizedCopy.pullToAddCatalogRowAccessibilityLabel(
+                    name: item.displayName(appContentLanguage: catalogLanguage),
+                    isInShopping: isInShopping,
+                    quantity: qty
+                )
+            )
+            .accessibilityAddTraits(.isButton)
     }
 
     private func syncQuantityPillExpansion(with expandedID: UUID?) {

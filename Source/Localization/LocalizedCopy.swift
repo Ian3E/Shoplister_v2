@@ -1185,6 +1185,72 @@ enum LocalizedCopy {
         )
     }
 
+    static func shoppingListRowAccessibilityLabel(
+        name: String,
+        isChecked: Bool,
+        quantity: Int
+    ) -> String {
+        if isChecked {
+            return String(
+                format: String(
+                    localized: "%@, checked",
+                    comment: "Shopping list row accessibility label when item is checked; %@ is item name"
+                ),
+                name
+            )
+        }
+        if quantity > 1 {
+            return String(
+                format: String(
+                    localized: "%@, unchecked, quantity %lld",
+                    comment: "Shopping list row accessibility label with quantity; %@ is item name"
+                ),
+                name,
+                quantity
+            )
+        }
+        return String(
+            format: String(
+                localized: "%@, unchecked",
+                comment: "Shopping list row accessibility label when item is unchecked; %@ is item name"
+            ),
+            name
+        )
+    }
+
+    static func pullToAddCatalogRowAccessibilityLabel(
+        name: String,
+        isInShopping: Bool,
+        quantity: Int
+    ) -> String {
+        if isInShopping {
+            if quantity > 1 {
+                return String(
+                    format: String(
+                        localized: "%@, on shopping list, quantity %lld",
+                        comment: "Pull-to-add catalog row accessibility label when item is on list with quantity; %@ is item name"
+                    ),
+                    name,
+                    quantity
+                )
+            }
+            return String(
+                format: String(
+                    localized: "%@, on shopping list",
+                    comment: "Pull-to-add catalog row accessibility label when item is on list; %@ is item name"
+                ),
+                name
+            )
+        }
+        return String(
+            format: String(
+                localized: "%@, not on shopping list",
+                comment: "Pull-to-add catalog row accessibility label when item is not on list; %@ is item name"
+            ),
+            name
+        )
+    }
+
     static var clearCheckedItemsAccessibility: String {
         String(localized: "Clear checked items", comment: "Pull to clear checked items accessibility label")
     }

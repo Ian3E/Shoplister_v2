@@ -13,6 +13,8 @@ struct ShoppingView: View {
     private static let emptyShoppingRevealAnimation = Animation.easeOut(duration: 0.48)
     /// List bottom inset when the open-home control lives in the bottom toolbar (system lays out bar inset).
     private static let bottomFloatingBarClearance: CGFloat = 0
+    /// Readable list width on iPad and other regular horizontal size classes.
+    private static let regularWidthClassListMaxWidth: CGFloat = 640
 
     private static let shoppingGroupHeaderTitleFont: Font = .title3.weight(.heavy)
     private static var shoppingGroupHeaderTitleColor: Color {
@@ -47,6 +49,7 @@ struct ShoppingView: View {
     @Environment(\.appTheme) private var appTheme
     @Environment(\.shoppingListSpacingScale) private var listSpacingScale
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage(AppShoppingSortChecked.storageKey) private var sortCheckedShoppingItems: Bool = false
     @AppStorage(AppShoppingCollapseCompletedSections.storageKey) private var collapseCompletedSections: Bool = false
     @AppStorage(AppShoppingHideStoreGroupNames.storageKey) private var hideStoreGroupNames: Bool = false
@@ -430,6 +433,14 @@ struct ShoppingView: View {
         onBeginPullToAddSearch()
     }
 
+    private var pullToAddChromeScale: CGFloat {
+        accessibilityReduceMotion ? 1 : (1 + Self.pullRevealProgress(dragAmount: pullToAddDragAmount))
+    }
+
+    private var pullToClearChromeScale: CGFloat {
+        accessibilityReduceMotion ? 1 : (1 + Self.pullRevealProgress(dragAmount: pullToClearDragAmount))
+    }
+
     @ViewBuilder
     private var pullToAddChromeOverlay: some View {
         if !isStorePullToAddSearchPresented, showsPullToAddChrome {
@@ -438,11 +449,11 @@ struct ShoppingView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(pullToAddReachedThreshold ? appTheme.color : Color.secondary)
                 .opacity(progress)
-                .scaleEffect(1 + progress)
-                .animation(.easeOut(duration: 0.12), value: pullToAddReachedThreshold)
+                .scaleEffect(pullToAddChromeScale)
+                .animation(accessibilityReduceMotion ? nil : .easeOut(duration: 0.12), value: pullToAddReachedThreshold)
                 .padding(.top, 6)
                 .allowsHitTesting(false)
-                .accessibilityLabel(LocalizedCopy.addItem)
+                .accessibilityHidden(true)
         }
     }
 
@@ -454,11 +465,11 @@ struct ShoppingView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(pullToClearReachedThreshold ? Color.primary : Color.secondary)
                 .opacity(progress)
-                .scaleEffect(1 + progress)
-                .animation(.easeOut(duration: 0.12), value: pullToClearReachedThreshold)
+                .scaleEffect(pullToClearChromeScale)
+                .animation(accessibilityReduceMotion ? nil : .easeOut(duration: 0.12), value: pullToClearReachedThreshold)
                 .padding(.bottom, 6)
                 .allowsHitTesting(false)
-                .accessibilityLabel(LocalizedCopy.clearCheckedItemsAccessibility)
+                .accessibilityHidden(true)
         }
     }
 
@@ -551,8 +562,12 @@ struct ShoppingView: View {
         }
         pullToClearReachedThreshold = false
         pullToClearThresholdHapticFired = false
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+        if accessibilityReduceMotion {
             pullToClearDragAmount = 0
+        } else {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                pullToClearDragAmount = 0
+            }
         }
         pullToClearLatchSet = false
         pullToClearBeganWithListAtBottom = false
@@ -587,10 +602,14 @@ struct ShoppingView: View {
             if showsStoreGlassToast {
                 VStack {
                     Spacer()
-                    StoreGlassToastConfirmation(
-                        message: storeGlassToastMessage,
-                        systemImage: storeGlassToastSymbol
-                    )
+                    HStack {
+                        Spacer(minLength: 0)
+                        StoreGlassToastConfirmation(
+                            message: storeGlassToastMessage,
+                            systemImage: storeGlassToastSymbol
+                        )
+                        Spacer(minLength: 0)
+                    }
                     .offset(y: 60)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -598,6 +617,8 @@ struct ShoppingView: View {
                 .zIndex(1)
             }
         }
+            .frame(maxWidth: horizontalSizeClass == .regular ? Self.regularWidthClassListMaxWidth : .infinity)
+            .frame(maxWidth: .infinity)
             .simultaneousGesture(pinchToggleAllShoppingGroupsGesture)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onDeviceShake(perform: handleDeviceShakeUndo)
@@ -953,9 +974,22 @@ struct ShoppingView: View {
                 gapBelow: dividerGapBelow
             )
             .contentShape(Rectangle())
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                LocalizedCopy.shoppingListRowAccessibilityLabel(
+                    name: item.displayName(appContentLanguage: catalogLanguage),
+                    isChecked: entry.isChecked,
+                    quantity: entry.quantity
+                )
+            )
+            .accessibilityAddTraits(.isButton)
             .accessibilityAction(named: LocalizedCopy.increaseQuantity) {
                 guard !entry.isChecked else { return }
                 store.incrementUncheckedShoppingQuantity(itemID: item.id, delta: 1)
+            }
+            .accessibilityAction(named: LocalizedCopy.decreaseQuantity) {
+                guard !entry.isChecked, entry.quantity > 1 else { return }
+                store.adjustUncheckedShoppingQuantity(itemID: item.id, delta: -1)
             }
         }
     }
@@ -1207,7 +1241,7 @@ struct ShoppingView: View {
                         : (edgeChevron == .leading ? 90 : -90)
                 )
             )
-            .animation(.snappy, value: expanded)
+            .animation(accessibilityReduceMotion ? nil : .snappy, value: expanded)
     }
 
 }
@@ -1241,7 +1275,7 @@ private struct StoreGlassToastConfirmation: View {
     let systemImage: String
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             Image(systemName: systemImage)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(Color(uiColor: .label))
@@ -1252,11 +1286,16 @@ private struct StoreGlassToastConfirmation: View {
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(Color(uiColor: .label))
                 .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 16)
-        .frame(width: 160)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .padding(20)
+        .fixedSize(horizontal: true, vertical: true)
+        .background {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(.clear)
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        }
     }
 }
 
