@@ -12,6 +12,8 @@ struct NewItemView: View {
     private let addToShoppingAfterSave: Bool
     /// Called after a successful Save (not when cancelling).
     private let onSaved: (() -> Void)?
+    /// Called when Cancel is tapped, before the sheet dismisses.
+    private let onCancel: (() -> Void)?
 
     @State private var name: String = ""
     @State private var inventoryTagID: UUID?
@@ -31,10 +33,16 @@ struct NewItemView: View {
         UIImagePickerController.isSourceTypeAvailable(.camera)
     }
 
-    init(prefillName: String? = nil, addToShoppingAfterSave: Bool = false, onSaved: (() -> Void)? = nil) {
+    init(
+        prefillName: String? = nil,
+        addToShoppingAfterSave: Bool = false,
+        onSaved: (() -> Void)? = nil,
+        onCancel: (() -> Void)? = nil
+    ) {
         self.prefillName = prefillName
         self.addToShoppingAfterSave = addToShoppingAfterSave
         self.onSaved = onSaved
+        self.onCancel = onCancel
     }
 
     var body: some View {
@@ -101,7 +109,10 @@ struct NewItemView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button(LocalizedCopy.cancel) { dismiss() }
+                Button(LocalizedCopy.cancel) {
+                    onCancel?()
+                    dismiss()
+                }
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button(LocalizedCopy.save) {

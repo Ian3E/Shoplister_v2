@@ -68,22 +68,46 @@ struct RecipesListView: View {
                 List {
                     Section {
                         ForEach(sortedRecipes) { recipe in
+                            let itemCountText = LocalizedCopy.itemCount(recipe.lines.count)
+                            // Keep the same `if isEditing` branch shape as before so List edit-mode
+                            // chrome can animate; only the trailing count is new inside each branch.
                             if isEditing, showsRecipeNameFields {
-                                TextField(
-                                    LocalizedCopy.recipeName,
-                                    text: recipeNameBinding(for: recipe)
-                                )
-                                .textFieldStyle(.plain)
-                                .foregroundStyle(.primary)
-                            } else {
-                                Text(recipe.name)
+                                HStack(spacing: 12) {
+                                    TextField(
+                                        LocalizedCopy.recipeName,
+                                        text: recipeNameBinding(for: recipe)
+                                    )
+                                    .textFieldStyle(.plain)
                                     .foregroundStyle(.primary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        guard !isEditing else { return }
-                                        recipeToApply = recipe
-                                    }
+
+                                    Text(itemCountText)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.tertiary)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                        .accessibilityHidden(true)
+                                }
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("\(recipe.name), \(itemCountText)")
+                            } else {
+                                HStack(spacing: 12) {
+                                    Text(recipe.name)
+                                        .foregroundStyle(.primary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                                    Text(itemCountText)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.tertiary)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                        .accessibilityHidden(true)
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    guard !isEditing else { return }
+                                    recipeToApply = recipe
+                                }
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("\(recipe.name), \(itemCountText)")
+                                .accessibilityAddTraits(.isButton)
                             }
                         }
                         .onMove(perform: store.moveRecipes)

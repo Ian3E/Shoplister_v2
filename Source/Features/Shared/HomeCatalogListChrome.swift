@@ -32,7 +32,7 @@ struct HomeCatalogListDivider: View {
 // MARK: - Section title bar
 
 struct HomeCatalogSectionTitleBar: View {
-    @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.appContentLanguage) private var catalogLanguage
     @Environment(\.shoppingListSpacingScale) private var spacingScale
 
     let sections: [(id: UUID, title: String)]
@@ -44,9 +44,13 @@ struct HomeCatalogSectionTitleBar: View {
     private var titleSpacing: CGFloat { 26 * spacingScale }
     private var titleVerticalPadding: CGFloat { 10 * spacingScale }
 
-    /// Horizontal `ScrollView` scroll anchors are physical; RTL catalog pins to the trailing edge.
-    private var activeTitlePinAnchor: UnitPoint {
-        layoutDirection == .rightToLeft ? .trailing : .leading
+    /// Pin the active title to the reading-start edge. With `.catalogListLayoutDirection()`,
+    /// `.leading` is left for English library and right for Hebrew — including when the phone
+    /// language is English (system LTR) but the library is Hebrew.
+    private var activeTitlePinAnchor: UnitPoint { .leading }
+
+    private var catalogLayoutDirection: LayoutDirection {
+        CatalogLayoutMirroring.catalogLayoutDirection(for: catalogLanguage)
     }
 
     var body: some View {
@@ -71,7 +75,9 @@ struct HomeCatalogSectionTitleBar: View {
                     }
                 }
                 .padding(.vertical, titleVerticalPadding)
+                .environment(\.layoutDirection, catalogLayoutDirection)
             }
+            .environment(\.layoutDirection, catalogLayoutDirection)
             .contentMargins(.horizontal, titleBarHorizontalInset, for: .scrollContent)
             .clipped()
             .onChange(of: activeSectionID) { _, sectionID in
@@ -85,6 +91,7 @@ struct HomeCatalogSectionTitleBar: View {
                 proxy.scrollTo(sectionID, anchor: activeTitlePinAnchor)
             }
         }
+        .environment(\.layoutDirection, catalogLayoutDirection)
     }
 
     private func titleColor(for sectionID: UUID) -> Color {

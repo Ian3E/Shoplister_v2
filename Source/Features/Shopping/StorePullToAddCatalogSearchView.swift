@@ -23,6 +23,8 @@ struct StorePullToAddCatalogSearchView: View {
     /// when a pull-to-add session begins, so adds do not churn the search field's identity.
     var searchChromeID: UUID
     var onPresentNewItem: (String) -> Void
+    /// Pops pull-to-add back to Store (Cancel + return/search submit).
+    var onEndSearch: () -> Void
 
     @State private var expandedPullToAddQuantityPillItemID: UUID?
 
@@ -67,6 +69,26 @@ struct StorePullToAddCatalogSearchView: View {
 
     private var showsCatalogListRows: Bool {
         !toolbarSearchEmptyQueryActive && !toolbarSearchNoMatches
+    }
+
+    /// Mirrors Home search: blank when the field is empty, match count while querying, no-match copy when empty.
+    private var principalSubtitleText: String {
+        guard activeFilterQuery != nil else { return "" }
+        if catalogItemsForList.isEmpty {
+            return LocalizedCopy.noMatchingItemsFound
+        }
+        return LocalizedCopy.searchItemsFound(catalogItemsForList.count)
+    }
+
+    private var principalAccessibilityLabel: String {
+        let subtitle = principalSubtitleText
+        if subtitle.isEmpty {
+            return LocalizedCopy.addItem
+        }
+        if catalogItemsForList.isEmpty {
+            return "\(LocalizedCopy.addItem), \(subtitle)"
+        }
+        return "\(LocalizedCopy.addItem), \(LocalizedCopy.searchItemsFoundAccessibilityLabel(catalogItemsForList.count))"
     }
 
     private var catalogTextDynamicTypeSize: DynamicTypeSize {
@@ -118,10 +140,17 @@ struct StorePullToAddCatalogSearchView: View {
         .frame(maxWidth: .infinity)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(LocalizedCopy.addItem)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color(uiColor: .label))
-                    .accessibilityAddTraits(.isHeader)
+                VStack(spacing: 2) {
+                    Text(LocalizedCopy.addItem)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(uiColor: .label))
+                    Text(principalSubtitleText)
+                        .font(.footnote.weight(.regular))
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(principalAccessibilityLabel)
+                .accessibilityAddTraits(.isHeader)
             }
         }
         .onChange(of: searchText) { _, newValue in
@@ -179,8 +208,13 @@ struct StorePullToAddCatalogSearchView: View {
             return
         }
         if let match = catalogItemMatchingSearchTermExactly(trimmed) {
-            store.addToShopping(itemID: match.id, quantity: 1)
+            let itemID = match.id
             dismissStorePullToAddSearch()
+            // Add on the next turn so the navigation pop can commit first. Mutating shopping in
+            // the same turn as `navigationPath.removeLast()` was leaving pull-to-add on screen.
+            DispatchQueue.main.async {
+                store.addToShopping(itemID: itemID, quantity: 1)
+            }
             return
         }
         onPresentNewItem(trimmed)
@@ -190,6 +224,12 @@ struct StorePullToAddCatalogSearchView: View {
         searchText = ""
         pinnedSearchQuery = ""
         isSearchPresented = false
+        // Pop now (Cancel/`onChange` may also fire) and again next turn as a safety net —
+        // search `onSubmit` + binding writes can drop a same-turn `NavigationPath` update.
+        onEndSearch()
+        DispatchQueue.main.async {
+            onEndSearch()
+        }
         Task { @MainActor in
             await Task.yield()
             dismissSearch()
@@ -201,18 +241,11 @@ struct StorePullToAddCatalogSearchView: View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
 
-            VStack(spacing: 16) {
-                Text(LocalizedCopy.noMatchingItemsFound)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-
-                Button(LocalizedCopy.createItem) {
-                    handleSearchSubmit()
-                }
-                .font(.body)
-                .modifier(StorePullToAddCreateItemButtonStyle())
+            Button(LocalizedCopy.createItem) {
+                handleSearchSubmit()
             }
+            .font(.body)
+            .modifier(StorePullToAddCreateItemButtonStyle())
             .padding(.horizontal, 28)
 
             Spacer(minLength: 0)

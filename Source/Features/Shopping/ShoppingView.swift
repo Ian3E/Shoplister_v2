@@ -639,6 +639,9 @@ struct ShoppingView: View {
                     .accessibilityLabel(
                         LocalizedCopy.shoppingListAccessibilityLabel(subtitle: storeNavigationPrincipalSubtitle)
                     )
+                    // Suppress SwiftUI principal animation when pull-to-add Cancel (X) dismisses
+                    // system search and the Store title reappears under the fade-in.
+                    .transaction { $0.animation = nil }
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     StoreSettingsToolbarButton(action: onSettings)

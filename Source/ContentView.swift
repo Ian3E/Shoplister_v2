@@ -142,7 +142,7 @@ struct ContentView: View {
 
     /// Pull-to-add search as a pushed destination. Its own hosting controller/nav bar isolates the
     /// `.searchable` field from `ShoppingView`'s shopping-dependent toolbar, so adds never drop the
-    /// keyboard. Presenting and dismissing are instant cuts (no push/pop slide).
+    /// keyboard. Present is an instant cut; dismiss fades back to Store.
     private var storePullToAddScreen: some View {
         StorePullToAddDestination(
             isSearchPresented: $isStorePullToAddSearchPresented,
@@ -241,12 +241,10 @@ struct ContentView: View {
                 NewItemView(
                     prefillName: newItemPrefillName,
                     addToShoppingAfterSave: newItemAddToShoppingAfterSave,
-                    onSaved: {
-                        homeInventorySearchText = ""
-                        storePullToAddSearchText = ""
-                        storePullToAddPinnedSearchQuery = ""
-                        isStorePullToAddSearchPresented = false
-                    }
+                    onSaved: restoreStoreAfterPullToAddNewItemIfNeeded,
+                    onCancel: newItemAddToShoppingAfterSave
+                        ? restoreStoreAfterPullToAddNewItemIfNeeded
+                        : nil
                 )
                     .environmentObject(store)
             }
@@ -347,16 +345,27 @@ struct ContentView: View {
         }
     }
 
-    /// Dismisses pull-to-add search with an instant cut (no push/pop slide), matching the present.
-    /// `UIView.performWithoutAnimation` hard-disables UIKit animations so the navigation bar doesn't
-    /// slide/recenter its title when the Store re-lays-out on pop.
+    /// Dismisses pull-to-add with an instant pop-out, then fades Store (title + subtitle) in.
+    /// The pop itself stays under opacity 0 so the nav bar never slides/recenters mid-transition.
     private func endStorePullToAddSearch() {
         guard !navigationPath.isEmpty else { return }
-        UIView.performWithoutAnimation {
+        StorePullToAddPopFade.perform {
+            // Clear the whole path (pull-to-add is only ever pushed from an empty Store root).
+            // Assigning a fresh path is more reliable than `removeLast` during search `onSubmit`.
             withoutNavigationAnimation {
-                navigationPath.removeLast()
+                guard !navigationPath.isEmpty else { return }
+                navigationPath = NavigationPath()
             }
         }
+    }
+
+    /// Same restore used after pull-to-add → Create Item → Save (and Cancel).
+    private func restoreStoreAfterPullToAddNewItemIfNeeded() {
+        homeInventorySearchText = ""
+        storePullToAddSearchText = ""
+        storePullToAddPinnedSearchQuery = ""
+        isStorePullToAddSearchPresented = false
+        endStorePullToAddSearch()
     }
 
     private func openHomeForBrowse() {
@@ -630,6 +639,138 @@ private extension View {
     }
 }
 
+// MARK: - Pull-to-add pop crossfade
+
+/// Instant pop out of pull-to-add, then fade Store (title + subtitle) in.
+/// Keeps the pushed-destination model (keyboard stays up across adds) while avoiding a mid-crossfade
+/// title swap where "Add item" lingered and the Store subtitle popped in late.
+///
+/// Cancel (X) dismisses system search *before* this runs, which can leave a nav-bar titleView
+/// slide in flight. We strip those animations and settle layout under opacity 0 before fading in
+/// so Cancel matches the Return-key path (fade only, no slide).
+private enum StorePullToAddPopFade {
+    private static var isPerforming = false
+
+    static func perform(
+        fadeInDuration: CFTimeInterval = 0.22,
+        pop: @escaping () -> Void
+    ) {
+        guard !isPerforming else {
+            // A fade may already be in flight (e.g. `onChange` + direct `onEndSearch`). Still
+            // run `pop` so an exact-match submit cannot get stuck with search collapsed on
+            // the pull-to-add destination. The caller's / closure's path guards prevent a double-pop.
+            pop()
+            return
+        }
+        guard let navigationController = primaryNavigationController() else {
+            pop()
+            return
+        }
+
+        if UIAccessibility.isReduceMotionEnabled {
+            pop()
+            return
+        }
+
+        isPerforming = true
+        let view = navigationController.view!
+        let navigationBar = navigationController.navigationBar
+        let backdrop = insertBackdropIfNeeded(behind: view)
+        let animationsWereEnabled = UIView.areAnimationsEnabled
+
+        // Pop *before* disabling UIView animations — `NavigationPath` updates inside
+        // `setAnimationsEnabled(false)` can be dropped during search submit.
+        view.alpha = 0
+        pop()
+        view.alpha = 0
+
+        UIView.setAnimationsEnabled(false)
+        UIView.performWithoutAnimation {
+            settleNavigationChrome(view: view, navigationBar: navigationBar)
+        }
+
+        DispatchQueue.main.async {
+            // Catch toolbar updates SwiftUI schedules after the pop on the next turn.
+            UIView.setAnimationsEnabled(false)
+            UIView.performWithoutAnimation {
+                view.alpha = 0
+                settleNavigationChrome(view: view, navigationBar: navigationBar)
+            }
+            UIView.setAnimationsEnabled(animationsWereEnabled)
+
+            guard view.window != nil else {
+                backdrop?.removeFromSuperview()
+                isPerforming = false
+                return
+            }
+
+            view.alpha = 0
+            UIView.animate(
+                withDuration: fadeInDuration,
+                delay: 0,
+                options: [.curveEaseInOut]
+            ) {
+                view.alpha = 1
+            } completion: { _ in
+                view.alpha = 1
+                backdrop?.removeFromSuperview()
+                isPerforming = false
+            }
+        }
+    }
+
+    /// Kill in-flight nav-bar / titleView animations and force the final layout under opacity 0.
+    private static func settleNavigationChrome(view: UIView, navigationBar: UINavigationBar) {
+        navigationBar.layer.removeAllAnimations()
+        view.layer.removeAllAnimations()
+        removeAnimations(in: navigationBar)
+        navigationBar.layoutIfNeeded()
+        view.layoutIfNeeded()
+    }
+
+    private static func removeAnimations(in view: UIView) {
+        view.layer.removeAllAnimations()
+        for subview in view.subviews {
+            removeAnimations(in: subview)
+        }
+    }
+
+    /// Opaque plate behind the nav while `alpha == 0`, matching Store's list background so the
+    /// instant pop-out doesn't flash whatever sits under the stack before Store fades in.
+    private static func insertBackdropIfNeeded(behind view: UIView) -> UIView? {
+        guard let host = view.superview else { return nil }
+        let backdrop = UIView(frame: view.convert(view.bounds, to: host))
+        backdrop.backgroundColor = .systemBackground
+        backdrop.isUserInteractionEnabled = false
+        host.insertSubview(backdrop, belowSubview: view)
+        return backdrop
+    }
+
+    /// The main content navigation controller (ContentView's `NavigationStack`), ignoring any
+    /// presented sheets so we never fade a modal's own navigation controller by mistake.
+    private static func primaryNavigationController() -> UINavigationController? {
+        let windowScene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+            ?? UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = windowScene?.windows.first { $0.isKeyWindow } ?? windowScene?.windows.first
+        return firstNavigationController(in: window?.rootViewController)
+    }
+
+    private static func firstNavigationController(in viewController: UIViewController?) -> UINavigationController? {
+        guard let viewController else { return nil }
+        if let navigationController = viewController as? UINavigationController {
+            return navigationController
+        }
+        for child in viewController.children {
+            if let found = firstNavigationController(in: child) {
+                return found
+            }
+        }
+        return nil
+    }
+}
+
 // MARK: - Pull-to-add pushed destination
 
 /// Pushed pull-to-add search screen. It owns a navigation bar with no `store.shopping`-dependent items,
@@ -641,7 +782,7 @@ private struct StorePullToAddDestination: View {
     @Binding var pinnedSearchQuery: String
     let searchChromeID: UUID
     let onPresentNewItem: (String) -> Void
-    /// Pops the destination without the default push/pop slide, matching the instant present.
+    /// Pops with a sequenced fade to Store (see `StorePullToAddPopFade`); present stays instant.
     let onEndSearch: () -> Void
 
     var body: some View {
@@ -650,11 +791,14 @@ private struct StorePullToAddDestination: View {
             searchText: $searchText,
             pinnedSearchQuery: $pinnedSearchQuery,
             searchChromeID: searchChromeID,
-            onPresentNewItem: onPresentNewItem
+            onPresentNewItem: onPresentNewItem,
+            onEndSearch: onEndSearch
         )
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: isSearchPresented) { _, presented in
+            // Cancel / system dismissal. Submit path also calls `onEndSearch` directly;
+            // `endStorePullToAddSearch` is idempotent while the path is already empty / fading.
             if !presented {
                 onEndSearch()
             }

@@ -90,6 +90,8 @@ struct GroupTagEditorSheet: View {
         let usesManualMirror = CatalogLayoutMirroring.catalogListUsesManualMirror(for: catalogLanguage)
         let displayTitle = tag.displayTitle(appContentLanguage: catalogLanguage)
         TextField(LocalizedCopy.sectionName, text: titleBinding(for: tag))
+            .font(CatalogGroupHeaderChrome.titleFont)
+            .foregroundStyle(CatalogGroupHeaderChrome.titleColor)
             .textInputAutocapitalization(.words)
             .submitLabel(.done)
             .focused($focusedTagID, equals: tag.id)
