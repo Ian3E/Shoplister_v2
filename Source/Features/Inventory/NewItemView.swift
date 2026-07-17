@@ -22,7 +22,7 @@ struct NewItemView: View {
     @State private var pendingImage: UIImage?
     @State private var photoPickerItem: PhotosPickerItem?
     @State private var isCameraPresented = false
-    @State private var isInternetSearchPresented = false
+    @FocusState private var isNameFocused: Bool
 
     private var isValid: Bool {
         let hasName = !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -31,6 +31,12 @@ struct NewItemView: View {
 
     private var cameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
+    }
+
+    /// Focus the name field on blank open; skip when search already prefilled the name.
+    private var shouldFocusNameOnAppear: Bool {
+        let trimmedPrefill = prefillName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmedPrefill.isEmpty
     }
 
     init(
@@ -51,9 +57,10 @@ struct NewItemView: View {
                 TextField(LocalizedCopy.nameField, text: $name)
                     .textInputAutocapitalization(.words)
                     .multilineTextAlignment(catalogLanguage == .hebrew ? .trailing : .leading)
+                    .focused($isNameFocused)
             }
 
-            Section(LocalizedCopy.sectionsHeader) {
+            Section {
                 CatalogItemSectionPicker(
                     label: LocalizedCopy.homeSectionLabel,
                     kind: .inventory,
@@ -71,6 +78,10 @@ struct NewItemView: View {
                         set: { shoppingTagID = $0 }
                     )
                 )
+            } header: {
+                Text(LocalizedCopy.sectionsHeader)
+            } footer: {
+                Text(LocalizedCopy.itemSectionsFormFooter)
             }
 
             Section(LocalizedCopy.photo) {
@@ -140,6 +151,11 @@ struct NewItemView: View {
             if shoppingTagID == nil { shoppingTagID = store.defaultShoppingTagID }
             if let prefillName, name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 name = prefillName
+            }
+            guard shouldFocusNameOnAppear else { return }
+            Task { @MainActor in
+                await Task.yield()
+                isNameFocused = true
             }
         }
         .onChange(of: photoPickerItem) { _, newItem in

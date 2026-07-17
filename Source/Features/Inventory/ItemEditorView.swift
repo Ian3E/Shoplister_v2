@@ -44,7 +44,7 @@ struct ItemEditorView: View {
                     .multilineTextAlignment(catalogLanguage == .hebrew ? .trailing : .leading)
             }
 
-            Section(LocalizedCopy.sectionsHeader) {
+            Section {
                 CatalogItemSectionPicker(
                     label: LocalizedCopy.homeSectionLabel,
                     kind: .inventory,
@@ -56,6 +56,10 @@ struct ItemEditorView: View {
                     kind: .shopping,
                     selection: $draft.shoppingTagID
                 )
+            } header: {
+                Text(LocalizedCopy.sectionsHeader)
+            } footer: {
+                Text(LocalizedCopy.itemSectionsFormFooter)
             }
 
             Section(LocalizedCopy.photo) {

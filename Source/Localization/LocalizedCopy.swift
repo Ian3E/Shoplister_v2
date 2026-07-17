@@ -931,6 +931,14 @@ enum LocalizedCopy {
         String(localized: "Sections", comment: "Sections form section header")
     }
 
+    /// New Item / Edit Item form footer for the Sections group (Home + Store pickers).
+    static var itemSectionsFormFooter: String {
+        String(
+            localized: "Home is where you keep it. Store is where you buy it.",
+            comment: "Form footer explaining Home vs Store section pickers"
+        )
+    }
+
     static var homeSectionLabel: String {
         String(localized: "Home", comment: "Home section picker label")
     }

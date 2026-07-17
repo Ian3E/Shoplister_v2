@@ -2927,6 +2927,17 @@
           }
         }
       }
+    },
+    "Home is where you keep it. Store is where you buy it." : {
+      "comment" : "Form footer explaining Home vs Store section pickers",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "בית זה איפה ששומרים. סופר זה איפה שקונים."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
