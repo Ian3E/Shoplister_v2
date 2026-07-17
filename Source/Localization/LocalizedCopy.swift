@@ -86,17 +86,6 @@ enum LocalizedCopy {
         String(localized: "About", comment: "About settings section title")
     }
 
-    static var settingsDebug: String {
-        String(localized: "Debug", comment: "Debug settings section title")
-    }
-
-    static var resetExplainers: String {
-        String(
-            localized: "Reset explainers",
-            comment: "Debug settings button to replay coach marks and reset the empty-store add hint counter"
-        )
-    }
-
     static var appName: String {
         String(localized: "Shoplister", comment: "App name on About screen")
     }
@@ -730,6 +719,10 @@ enum LocalizedCopy {
 
     static var homeLibrary: String {
         String(localized: "Item library", comment: "Home catalog navigation principal title")
+    }
+
+    static var searchLibrary: String {
+        String(localized: "Search items", comment: "Home catalog navigation principal title while searching")
     }
 
     static var editLibrary: String {

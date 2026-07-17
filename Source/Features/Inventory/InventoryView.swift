@@ -16,6 +16,12 @@ struct InventoryView: View {
     private static let homeEditModeChromeDelayMs = HomeCatalogEditModeTiming.chromeDelayMs
     /// Extra space below the no-match band on Home (below section title bar).
     private static let toolbarSearchNoMatchesVerticalOffset: CGFloat = 25
+    /// Absorbs taps that miss the Liquid Glass search control (visual chrome is taller than its hit target).
+    /// Top aligns with content layout bottom (top of search chrome); height reaches the screen bottom.
+    private static let toolbarSearchHitThroughBlockerHeight: CGFloat = 100
+    /// Content layout bottom sits just above the bottom-toolbar search chrome — shift the blocker down onto it.
+    /// Keep equal to height so the top edge stays put while the band extends to the screen bottom.
+    private static let toolbarSearchHitThroughBlockerOffsetY: CGFloat = toolbarSearchHitThroughBlockerHeight
     @EnvironmentObject private var store: GroceryStore
     @Environment(\.appContentLanguage) private var catalogLanguage
     @Environment(\.appTheme) private var appTheme
@@ -181,43 +187,32 @@ struct InventoryView: View {
         showsHomeMainTabToolbarControls
     }
 
-    /// Principal header: browse shows title + count; active search shows subheader only.
+    /// Principal header: browse shows title + count; active search shows "Search items" (+ match count when querying).
     private var showsHomeCatalogPrincipalToolbar: Bool {
         guard showsHomeMainTabToolbarControls, !store.catalog.isEmpty else { return false }
-        if usesHomeToolbarSearch, isHomeToolbarSearchPresented {
-            return !activeHomeSearchQuery.isEmpty
-        }
         return true
     }
 
-    private var showsHomeCatalogPrincipalTitle: Bool {
-        !(usesHomeToolbarSearch && isHomeToolbarSearchPresented)
+    private var homeCatalogPrincipalIsSearchMode: Bool {
+        usesHomeToolbarSearch && isHomeToolbarSearchPresented
     }
 
-    private var homeCatalogPrincipalIsSearchOnly: Bool {
-        usesHomeToolbarSearch
-            && isHomeToolbarSearchPresented
-            && !activeHomeSearchQuery.isEmpty
-    }
-
-    private var homeCatalogPrincipalSubtitleText: String {
-        if usesHomeToolbarSearch, isHomeToolbarSearchPresented {
-            guard !activeHomeSearchQuery.isEmpty else { return "" }
-            if catalogItemsForList.isEmpty {
-                return LocalizedCopy.noMatchingItemsFound
-            }
-            return LocalizedCopy.searchItemsFound(catalogItemsForList.count)
+    private var homeCatalogPrincipalSearchSubtitleText: String {
+        guard !activeHomeSearchQuery.isEmpty else { return "" }
+        if catalogItemsForList.isEmpty {
+            return LocalizedCopy.noMatchingItemsFound
         }
-        return LocalizedCopy.itemsInLibrary(store.catalog.count)
+        return LocalizedCopy.searchItemsFound(catalogItemsForList.count)
     }
 
     private var homeCatalogPrincipalAccessibilityLabel: String {
-        if homeCatalogPrincipalIsSearchOnly {
-            let subtitle = homeCatalogPrincipalSubtitleText
+        if homeCatalogPrincipalIsSearchMode {
+            let subtitle = homeCatalogPrincipalSearchSubtitleText
+            guard !subtitle.isEmpty else { return LocalizedCopy.searchLibrary }
             if catalogItemsForList.isEmpty {
-                return subtitle
+                return "\(LocalizedCopy.searchLibrary), \(subtitle)"
             }
-            return LocalizedCopy.searchItemsFoundAccessibilityLabel(catalogItemsForList.count)
+            return "\(LocalizedCopy.searchLibrary), \(LocalizedCopy.searchItemsFoundAccessibilityLabel(catalogItemsForList.count))"
         }
         return LocalizedCopy.homeLibraryAccessibilityLabel(
             title: LocalizedCopy.homeLibrary,
@@ -941,6 +936,23 @@ struct InventoryView: View {
                 toolbarSearchNoMatchesPlaceholder
             }
         }
+        // Home list scrolls under the bottom search bar (`bottomReservedHeight: 0`). Liquid Glass
+        // chrome is taller than UISearchBar’s hit target, so edge taps would reach rows behind.
+        // The content layout bottom is *above* the toolbar search — offset down onto the chrome.
+        .overlay(alignment: .bottom) {
+            if usesHomeToolbarSearch, isHomeToolbarSearchChromeActive {
+                Color.clear
+                    .frame(height: Self.toolbarSearchHitThroughBlockerHeight)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        HomeToolbarSearchCacheCleaner.focusToolbarSearchField()
+                    }
+                    .accessibilityHidden(true)
+                    .offset(y: Self.toolbarSearchHitThroughBlockerOffsetY)
+                    .ignoresSafeArea(edges: .bottom)
+            }
+        }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { homeCatalogBottomToolbarContent }
@@ -969,18 +981,32 @@ struct InventoryView: View {
         .toolbar {
             if usesHomeToolbarSearch, hidesNavigationBar, showsHomeCatalogPrincipalToolbar {
                 ToolbarItem(placement: .principal) {
-                    VStack(spacing: 2) {
-                        if showsHomeCatalogPrincipalTitle {
-                            Text(LocalizedCopy.homeLibrary)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(uiColor: .label))
-                        }
-                        Text(homeCatalogPrincipalSubtitleText)
-                            .font(.footnote.weight(.regular))
-                            .foregroundStyle(Color.secondary)
+                    // Crossfade search ↔ browse chrome. searchable dismiss otherwise slides the
+                    // principal text; remapping that animation to a short ease keeps a clean fade.
+                    ZStack {
+                        HomeCatalogPrincipalHeader(
+                            title: LocalizedCopy.homeLibrary,
+                            subtitle: LocalizedCopy.itemsInLibrary(store.catalog.count),
+                            subtitleVisible: true
+                        )
+                        .opacity(homeCatalogPrincipalIsSearchMode ? 0 : 1)
+
+                        HomeCatalogPrincipalHeader(
+                            title: LocalizedCopy.searchLibrary,
+                            subtitle: homeCatalogPrincipalSearchSubtitleText,
+                            subtitleVisible: !homeCatalogPrincipalSearchSubtitleText.isEmpty
+                        )
+                        .opacity(homeCatalogPrincipalIsSearchMode ? 1 : 0)
                     }
-                    .accessibilityElement(children: .combine)
+                    .animation(.easeInOut(duration: 0.22), value: homeCatalogPrincipalIsSearchMode)
+                    .transaction { transaction in
+                        if transaction.animation != nil {
+                            transaction.animation = .easeInOut(duration: 0.22)
+                        }
+                    }
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(homeCatalogPrincipalAccessibilityLabel)
+                    .accessibilityAddTraits(.isHeader)
                 }
             }
             if showsHomeBackToolbar, !showsHomeEditToolbarChrome, let onBackToStore {
@@ -1117,6 +1143,17 @@ enum HomeToolbarSearchCacheCleaner {
         }
     }
 
+    /// Focuses the bottom-toolbar search field when a tap misses its Liquid Glass hit target.
+    static func focusToolbarSearchField() {
+        guard let window = keyWindow else { return }
+        for searchBar in allDescendants(ofType: UISearchBar.self, in: window) {
+            let field = searchBar.searchTextField
+            guard field.window != nil else { continue }
+            field.becomeFirstResponder()
+            return
+        }
+    }
+
     private static var keyWindow: UIWindow? {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
@@ -1195,6 +1232,26 @@ private struct HomeSearchReturnSubmitModifier: ViewModifier {
             }
         } else {
             content
+        }
+    }
+}
+
+/// Two-line Home principal (title + optional subtitle). Subtitle row stays reserved when blank
+/// so the title stays on the top line (same as pull-to-add).
+private struct HomeCatalogPrincipalHeader: View {
+    let title: String
+    let subtitle: String
+    var subtitleVisible: Bool
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(uiColor: .label))
+            Text(subtitleVisible ? subtitle : " ")
+                .font(.footnote.weight(.regular))
+                .foregroundStyle(Color.secondary)
+                .opacity(subtitleVisible ? 1 : 0)
         }
     }
 }

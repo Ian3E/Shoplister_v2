@@ -811,17 +811,6 @@
         }
       }
     },
-    "Debug" : {
-      "comment" : "Debug settings section title",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ניפוי שגיאות"
-          }
-        }
-      }
-    },
     "Decrease quantity" : {
       "comment" : "Decrease quantity accessibility label",
       "localizations" : {
@@ -2149,17 +2138,6 @@
         }
       }
     },
-    "Reset explainers" : {
-      "comment" : "Debug settings button to replay coach marks and reset the empty-store add hint counter",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "איפוס הסברים"
-          }
-        }
-      }
-    },
     "Reset library" : {
       "comment" : "Destructive button to reset library on language change",
       "localizations" : {
@@ -2257,6 +2235,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "חיפוש"
+          }
+        }
+      }
+    },
+    "Search items" : {
+      "comment" : "Home catalog navigation principal title while searching",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "חיפוש פריטים"
           }
         }
       }
