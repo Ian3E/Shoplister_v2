@@ -294,8 +294,8 @@ struct ShoppingView: View {
     /// Requests the pull-to-add search session; the parent pushes it as its own isolated destination
     /// so the shopping-dependent Store toolbar can never tear down the search field on adds.
     var onBeginPullToAddSearch: () -> Void
-    var onOpenHome: (() -> Void)?
-    var showsFloatingOpenHomeButton: Bool
+    var onAddItem: (() -> Void)?
+    var showsAddItemButton: Bool
     let canShareShoppingList: Bool
     let onShare: () -> Void
     let onSettings: () -> Void
@@ -305,20 +305,20 @@ struct ShoppingView: View {
         canShareShoppingList: Bool,
         isStorePullToAddSearchPresented: Binding<Bool>,
         onBeginPullToAddSearch: @escaping () -> Void,
-        showsFloatingOpenHomeButton: Bool = true,
+        showsAddItemButton: Bool = true,
         onShare: @escaping () -> Void,
         onSettings: @escaping () -> Void,
         onManageStoreSections: @escaping () -> Void,
-        onOpenHome: (() -> Void)? = nil
+        onAddItem: (() -> Void)? = nil
     ) {
         self.canShareShoppingList = canShareShoppingList
         _isStorePullToAddSearchPresented = isStorePullToAddSearchPresented
         self.onBeginPullToAddSearch = onBeginPullToAddSearch
-        self.showsFloatingOpenHomeButton = showsFloatingOpenHomeButton
+        self.showsAddItemButton = showsAddItemButton
         self.onShare = onShare
         self.onSettings = onSettings
         self.onManageStoreSections = onManageStoreSections
-        self.onOpenHome = onOpenHome
+        self.onAddItem = onAddItem
     }
 
     private var showsPullToAddChrome: Bool {
@@ -429,7 +429,7 @@ struct ShoppingView: View {
     }
 
     private func beginStorePullToAddSearch() {
-        guard showsFloatingOpenHomeButton else { return }
+        guard showsAddItemButton else { return }
         onBeginPullToAddSearch()
     }
 
@@ -663,10 +663,10 @@ struct ShoppingView: View {
                 }
             }
             .toolbar {
-                if showsFloatingOpenHomeButton, let onOpenHome {
+                if showsAddItemButton, let onAddItem {
                     ToolbarSpacer(.flexible, placement: .bottomBar)
                     ToolbarItem(placement: .bottomBar) {
-                        StoreOpenHomeToolbarButton(action: onOpenHome)
+                        StoreAddItemToolbarButton(action: onAddItem)
                             .id(appTheme.id)
                     }
                 }
@@ -1302,8 +1302,8 @@ private struct StoreGlassToastConfirmation: View {
     }
 }
 
-/// Store bottom bar: opens Home catalog (browse). Pull-to-add on the list is separate.
-private struct StoreOpenHomeToolbarButton: View {
+/// Store bottom bar: opens pull-to-add so items can be added to the shopping list.
+private struct StoreAddItemToolbarButton: View {
     let action: () -> Void
 
     var body: some View {
@@ -1318,7 +1318,7 @@ private struct StoreOpenHomeToolbarButton: View {
         .clipShape(Circle())
         .appThemeTint()
         .appThemeIdentity()
-        .accessibilityLabel(LocalizedCopy.openHomeLibrary)
+        .accessibilityLabel(LocalizedCopy.addItem)
     }
 }
 
