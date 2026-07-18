@@ -7,6 +7,14 @@ private enum AppRoute: Hashable {
     case storePullToAdd
 }
 
+/// EXPERIMENT (experiment/store-home-tabs): root TabView with centered List + Library tabs.
+/// Pull-to-add is a Settings-style sheet from the List tab (gesture or trailing "+").
+/// Toggle `ContentView.useTabsExperiment`.
+private enum TabSelection: Hashable {
+    case store
+    case home
+}
+
 struct ContentView: View {
     @EnvironmentObject private var store: GroceryStore
     @EnvironmentObject private var fullWindowOverlay: FullWindowOverlayCoordinator
@@ -37,6 +45,12 @@ struct ContentView: View {
     @State private var storePullToAddSearchChromeID = UUID()
     /// True only when presenting **New Item** after Store pull-to-add; add saved item to shopping list.
     @State private var newItemAddToShoppingAfterSave = false
+    /// EXPERIMENT: flip to `false` to fall back to the pushed-destination navigation model.
+    private let useTabsExperiment = true
+    /// EXPERIMENT: selected root tab (Store / Home).
+    @State private var selectedTab: TabSelection = .store
+    /// EXPERIMENT: pull-to-add as a modal sheet (Settings-style), not a Store-stack push.
+    @State private var isPresentingPullToAddSheet = false
     @AppStorage(AppTextSize.storageKey) private var textSizeRaw: String = AppTextSize.defaultSize.rawValue
     @AppStorage(AppTheme.storageKey) private var themeRaw: String = AppTheme.blue.rawValue
     @AppStorage(AppTheme.customColorStorageKey) private var customColorHex: String = AppTheme.defaultCustomColorHex
@@ -105,6 +119,167 @@ struct ContentView: View {
         }
     }
 
+    // MARK: - EXPERIMENT: TabView root
+
+    @ViewBuilder
+    private var tabChrome: some View {
+        ZStack(alignment: .bottomLeading) {
+            TabView(selection: $selectedTab) {
+                Tab(LocalizedCopy.tabList, systemImage: "checklist", value: TabSelection.store) {
+                    NavigationStack {
+                        ShoppingView(
+                            canShareShoppingList: canShareShoppingList,
+                            isStorePullToAddSearchPresented: $isStorePullToAddSearchPresented,
+                            onBeginPullToAddSearch: beginStoreTabPullToAdd,
+                            showsFloatingOpenHomeButton: !isPresentingPullToAddSheet,
+                            onShare: presentShoppingListShare,
+                            onSettings: { isPresentingSettings = true },
+                            onManageStoreSections: { editGroupsSheetKind = .shopping },
+                            // Trailing "+" opens pull-to-add instead of Home (Home has its own tab).
+                            onOpenHome: beginStoreTabPullToAdd
+                        )
+                    }
+                }
+
+                Tab(LocalizedCopy.tabLibrary, systemImage: "books.vertical", value: TabSelection.home) {
+                    NavigationStack {
+                        homeCatalogTabScreen
+                    }
+                }
+            }
+            .catalogGroupedChromeBackdrop()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if let kind = fullWindowOverlay.kind {
+                fullWindowOverlayContent(kind: kind)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .zIndex(200)
+            }
+        }
+        .sheet(isPresented: $isPresentingPullToAddSheet) {
+            storeTabPullToAddSheet
+        }
+        .onChange(of: isPresentingPullToAddSheet) { _, presented in
+            if !presented {
+                isStorePullToAddSearchPresented = false
+                storePullToAddSearchText = ""
+                storePullToAddPinnedSearchQuery = ""
+                if newItemAddToShoppingAfterSave {
+                    isPresentingNewCatalogItem = false
+                }
+                scheduleFirstShoppingItemExplainerIfNeeded()
+                scheduleStoreGesturesExplainerIfNeeded()
+            }
+        }
+    }
+
+    /// Home tab: same catalog UI, but rooted (no back chevron) and returning to Store via tab switch.
+    /// Saved lists moves to the freed top leading slot; search collapses to a bottom trailing button.
+    private var homeCatalogTabScreen: some View {
+        InventoryView(
+            isReorderMode: $isInventoryReorderMode,
+            usesHomeToolbarSearch: true,
+            isHomeToolbarSearchPresented: $isHomeToolbarSearchPresented,
+            homeSearchText: $homeInventorySearchText,
+            minimizesToolbarSearch: true,
+            showsRecipesInTopBarLeading: true,
+            bottomReservedHeight: 0,
+            ignoresSafeArea: false,
+            showsShoppingStatus: true,
+            onPresentNewItemFromSearch: { name in
+                newItemAddToShoppingAfterSave = false
+                newItemPrefillName = name
+                homeInventorySearchText = ""
+                isHomeToolbarSearchPresented = false
+                isPresentingNewCatalogItem = true
+            },
+            onToolbarAddItem: {
+                newItemPrefillName = nil
+                newItemAddToShoppingAfterSave = false
+                isPresentingNewCatalogItem = true
+            },
+            onToolbarSelectGroupsKind: { editGroupsSheetKind = $0 },
+            onBackToStore: nil,
+            onReturnToStoreAfterRecipeApply: { selectedTab = .store },
+            onEditItem: { item in
+                inventoryCatalogEditorItem = item
+            },
+            onDeleteItem: { item in
+                inventoryCatalogDeleteConfirmationItem = item
+            }
+        )
+        .navigationBarBackButtonHidden(true)
+        .enablesNavigationInteractivePopGesture(isEnabled: !isInventoryReorderMode)
+    }
+
+    /// EXPERIMENT: pull-to-add as a sheet with Done (same chrome pattern as Settings).
+    /// New Item is nested here so it can present over the sheet.
+    /// Focused glass search field (not `.searchable`) so the keyboard rises with the sheet;
+    /// sticky UIKit field refuses resign on row taps so the keyboard stays up across adds.
+    private var storeTabPullToAddSheet: some View {
+        NavigationStack {
+            StorePullToAddCatalogSearchView(
+                isSearchPresented: $isStorePullToAddSearchPresented,
+                searchText: $storePullToAddSearchText,
+                pinnedSearchQuery: $storePullToAddPinnedSearchQuery,
+                searchChromeID: storePullToAddSearchChromeID,
+                onPresentNewItem: { name in
+                    newItemAddToShoppingAfterSave = true
+                    newItemPrefillName = name
+                    isPresentingNewCatalogItem = true
+                },
+                onEndSearch: endStoreTabPullToAdd,
+                usesFocusedSearchField: true
+            )
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .environmentObject(store)
+        .sheet(isPresented: Binding(
+            get: { isPresentingNewCatalogItem && isPresentingPullToAddSheet },
+            set: { isPresentingNewCatalogItem = $0 }
+        )) {
+            NavigationStack {
+                NewItemView(
+                    prefillName: newItemPrefillName,
+                    addToShoppingAfterSave: true,
+                    onSaved: restoreStoreAfterPullToAddNewItemIfNeeded,
+                    onCancel: restoreStoreAfterPullToAddNewItemIfNeeded
+                )
+                .environmentObject(store)
+            }
+        }
+    }
+
+    private func presentShoppingListShare() {
+        let text = ShoppingListShareText.buildPlainText(
+            store: store,
+            catalogLanguage: catalogLanguage,
+            sortCheckedShoppingItems: sortCheckedShoppingItems
+        )
+        ShoppingListSharePresentation.presentPlainText(text)
+    }
+
+    /// EXPERIMENT: presents pull-to-add as a sheet (pull gesture or trailing "+" button).
+    private func beginStoreTabPullToAdd() {
+        guard !isPresentingPullToAddSheet else { return }
+        storePullToAddSearchText = ""
+        storePullToAddPinnedSearchQuery = ""
+        storePullToAddSearchChromeID = UUID()
+        isStorePullToAddSearchPresented = true
+        isPresentingPullToAddSheet = true
+    }
+
+    /// EXPERIMENT: dismisses the pull-to-add sheet (Done, empty Return, or search Cancel).
+    private func endStoreTabPullToAdd() {
+        guard isPresentingPullToAddSheet else { return }
+        isStorePullToAddSearchPresented = false
+        storePullToAddSearchText = ""
+        storePullToAddPinnedSearchQuery = ""
+        isPresentingPullToAddSheet = false
+    }
+
     private var homeCatalogScreen: some View {
         InventoryView(
             isReorderMode: $isInventoryReorderMode,
@@ -161,7 +336,19 @@ struct ContentView: View {
     }
 
     var body: some View {
-        mainChromeZStack
+        Group {
+            if useTabsExperiment {
+                tabChrome
+            } else {
+                mainChromeZStack
+            }
+        }
+        .onChange(of: selectedTab) { _, current in
+            guard useTabsExperiment else { return }
+            if current == .home {
+                hasVisitedHomeCatalog = true
+            }
+        }
         .onAppear {
             markFirstShoppingItemExplainerSeenIfShoppingListAlreadyPopulated()
             scheduleWelcomeExplainerIfNeeded()
@@ -236,7 +423,10 @@ struct ContentView: View {
                 scheduleExplainersAfterSettingsDismissed()
             }
         }
-        .sheet(isPresented: $isPresentingNewCatalogItem) {
+        .sheet(isPresented: Binding(
+            get: { isPresentingNewCatalogItem && !(useTabsExperiment && isPresentingPullToAddSheet) },
+            set: { isPresentingNewCatalogItem = $0 }
+        )) {
             NavigationStack {
                 NewItemView(
                     prefillName: newItemPrefillName,
@@ -304,6 +494,7 @@ struct ContentView: View {
             let count = note.userInfo?[ShareExtensionAppGroupSupport.mergedOpCountUserInfoKey] as? Int ?? 0
             guard count > 0 else { return }
             navigationPath = NavigationPath()
+            isPresentingPullToAddSheet = false
             isStorePullToAddSearchPresented = false
             storePullToAddSearchText = ""
             storePullToAddPinnedSearchQuery = ""
@@ -365,7 +556,12 @@ struct ContentView: View {
         storePullToAddSearchText = ""
         storePullToAddPinnedSearchQuery = ""
         isStorePullToAddSearchPresented = false
-        endStorePullToAddSearch()
+        isPresentingNewCatalogItem = false
+        if useTabsExperiment {
+            endStoreTabPullToAdd()
+        } else {
+            endStorePullToAddSearch()
+        }
     }
 
     private func openHomeForBrowse() {
@@ -458,6 +654,7 @@ struct ContentView: View {
 
     private func scheduleFirstShoppingItemExplainerIfNeeded() {
         guard !hasSeenFirstShoppingItemExplainer else { return }
+        if useTabsExperiment, isPresentingPullToAddSheet { return }
         dismissKeyboardForFirstItemExplainer()
         firstShoppingItemExplainerTask?.cancel()
         firstShoppingItemExplainerTask = Task { @MainActor in
@@ -465,6 +662,7 @@ struct ContentView: View {
             guard !Task.isCancelled else { return }
             guard !hasSeenFirstShoppingItemExplainer else { return }
             guard !store.shopping.isEmpty else { return }
+            if useTabsExperiment, isPresentingPullToAddSheet { return }
             guard fullWindowOverlay.kind == nil else { return }
             fullWindowOverlay.presentFirstShoppingItemExplainer()
         }
@@ -476,6 +674,7 @@ struct ContentView: View {
         guard !isHomeCatalogPresented else { return }
         guard !isPresentingSettings else { return }
         guard !isStorePullToAddSearchPresented else { return }
+        if useTabsExperiment, isPresentingPullToAddSheet { return }
         storeGesturesExplainerTask?.cancel()
         storeGesturesExplainerTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.5))
@@ -485,6 +684,7 @@ struct ContentView: View {
             guard !isHomeCatalogPresented else { return }
             guard !isPresentingSettings else { return }
             guard !isStorePullToAddSearchPresented else { return }
+            if useTabsExperiment, isPresentingPullToAddSheet { return }
             guard fullWindowOverlay.kind == nil else { return }
             fullWindowOverlay.presentStoreGesturesExplainer()
         }

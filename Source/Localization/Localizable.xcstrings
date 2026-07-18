@@ -1394,6 +1394,17 @@
         }
       }
     },
+    "Library" : {
+      "comment" : "Root tab bar label for the item library",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ספרייה"
+          }
+        }
+      }
+    },
     "Library language" : {
       "comment" : "Library language picker label",
       "localizations" : {
@@ -1511,6 +1522,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "שם הרשימה"
+          }
+        }
+      }
+    },
+    "List" : {
+      "comment" : "Root tab bar label for the shopping list",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "רשימה"
           }
         }
       }

@@ -717,6 +717,16 @@ enum LocalizedCopy {
 
     // MARK: - Home (library)
 
+    /// EXPERIMENT (tabs): short tab-bar label for the shopping list tab.
+    static var tabList: String {
+        String(localized: "List", comment: "Root tab bar label for the shopping list")
+    }
+
+    /// EXPERIMENT (tabs): short tab-bar label for the item library tab.
+    static var tabLibrary: String {
+        String(localized: "Library", comment: "Root tab bar label for the item library")
+    }
+
     static var homeLibrary: String {
         String(localized: "Item library", comment: "Home catalog navigation principal title")
     }

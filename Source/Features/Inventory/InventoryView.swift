@@ -38,6 +38,10 @@ struct InventoryView: View {
     var toolbarSearchPrompt: String = LocalizedCopy.searchOrCreateItem
     /// Home: Return-key submit, exact match, new item sheet.
     var toolbarSearchUsesSubmitBehavior: Bool = true
+    /// EXPERIMENT (tabs): collapse the bottom toolbar search field into a compact trailing button.
+    var minimizesToolbarSearch: Bool = false
+    /// EXPERIMENT (tabs): Saved lists button in the top bar (leading) instead of next to bottom search.
+    var showsRecipesInTopBarLeading: Bool = false
     var bottomReservedHeight: CGFloat = InventoryView.bottomFloatingBarClearance
     var hidesNavigationBar: Bool = true
     var ignoresSafeArea: Bool = true
@@ -98,6 +102,8 @@ struct InventoryView: View {
         homeSearchText: Binding<String> = .constant(""),
         toolbarSearchPrompt: String = LocalizedCopy.searchOrCreateItem,
         toolbarSearchUsesSubmitBehavior: Bool = true,
+        minimizesToolbarSearch: Bool = false,
+        showsRecipesInTopBarLeading: Bool = false,
         bottomReservedHeight: CGFloat = InventoryView.bottomFloatingBarClearance,
         hidesNavigationBar: Bool = true,
         ignoresSafeArea: Bool = true,
@@ -116,6 +122,8 @@ struct InventoryView: View {
         _homeSearchText = homeSearchText
         self.toolbarSearchPrompt = toolbarSearchPrompt
         self.toolbarSearchUsesSubmitBehavior = toolbarSearchUsesSubmitBehavior
+        self.minimizesToolbarSearch = minimizesToolbarSearch
+        self.showsRecipesInTopBarLeading = showsRecipesInTopBarLeading
         self.bottomReservedHeight = bottomReservedHeight
         self.hidesNavigationBar = hidesNavigationBar
         self.ignoresSafeArea = ignoresSafeArea
@@ -259,6 +267,8 @@ struct InventoryView: View {
     /// Drives `HomeToolbarSearchModifier` / return-submit (defers bottom-bar search until push settles).
     private var isHomeToolbarSearchChromeActive: Bool {
         guard usesHomeToolbarSearch else { return false }
+        // EXPERIMENT (tabs): rooted tab — no push settle delay; keep top/bottom chrome in sync.
+        if minimizesToolbarSearch { return true }
         return attachLiquidGlassToolbarSearch
     }
 
@@ -917,7 +927,12 @@ struct InventoryView: View {
                     enabled: isHomeToolbarSearchChromeActive,
                     text: $homeSearchText,
                     isHomeToolbarSearchPresented: $isHomeToolbarSearchPresented,
-                    prompt: showsHomeEditToolbarChrome ? LocalizedCopy.search : toolbarSearchPrompt
+                    // Keep prompt stable across browse/edit in the tabs experiment so searchable
+                    // chrome doesn't remount and jump the bottom bar.
+                    prompt: (minimizesToolbarSearch || !showsHomeEditToolbarChrome)
+                        ? toolbarSearchPrompt
+                        : LocalizedCopy.search,
+                    minimizes: minimizesToolbarSearch
                 )
             )
             .modifier(
@@ -1022,45 +1037,97 @@ struct InventoryView: View {
                     .accessibilityLabel(LocalizedCopy.backToShoppingList)
                 }
             }
+            // EXPERIMENT (tabs): no back chevron — Edit menu takes the top leading slot,
+            // Saved lists sits top trailing.
+            if showsRecipesInTopBarLeading, !showsHomeEditToolbarChrome {
+                if showsHomeEditToolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        if let onToolbarSelectGroupsKind {
+                            HomeCatalogEditToolbarMenu(
+                                onEditItems: enterHomeCatalogReorderMode,
+                                onSelectGroupsKind: onToolbarSelectGroupsKind
+                            )
+                        } else {
+                            HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
+                        }
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    HomeCatalogRecipesToolbarButton {
+                        isPresentingRecipes = true
+                    }
+                }
+            }
+            // EXPERIMENT (tabs): edit-mode Move/Delete live top leading; bottom bar is add — spacer — search.
+            if minimizesToolbarSearch, showsHomeEditToolbarChrome {
+                ToolbarItem(placement: .topBarLeading) {
+                    homeCatalogMoveMenuControl
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    homeCatalogDeleteControl
+                }
+            }
             if showsHomeEditToolbar {
-                ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
-                    if showsHomeEditToolbarChrome {
+                if showsHomeEditToolbarChrome {
+                    ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
                         HomeCatalogDoneToolbarButton(action: exitHomeCatalogReorderMode)
-                    } else if let onToolbarSelectGroupsKind {
-                        HomeCatalogEditToolbarMenu(
-                            onEditItems: enterHomeCatalogReorderMode,
-                            onSelectGroupsKind: onToolbarSelectGroupsKind
-                        )
-                    } else {
-                        HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
+                    }
+                } else if !showsRecipesInTopBarLeading {
+                    ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
+                        if let onToolbarSelectGroupsKind {
+                            HomeCatalogEditToolbarMenu(
+                                onEditItems: enterHomeCatalogReorderMode,
+                                onSelectGroupsKind: onToolbarSelectGroupsKind
+                            )
+                        } else {
+                            HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
+                        }
                     }
                 }
             }
         }
     }
 
+    private var homeCatalogMoveMenuControl: some View {
+        HomeCatalogMoveMenu(
+            inventoryTags: store.inventoryTags.filter { $0.kind == .inventory },
+            shoppingTags: store.shoppingTags.filter { $0.kind == .shopping },
+            catalogLanguage: catalogLanguage,
+            isDisabled: selectedItemIDs.isEmpty,
+            onMoveToInventoryTag: moveSelectedItems(toInventoryTagID:),
+            onMoveToShoppingTag: moveSelectedItems(toShoppingTagID:),
+            onCreateInventorySectionAndMove: createInventorySectionAndMoveSelected(named:),
+            onCreateShoppingSectionAndMove: createShoppingSectionAndMoveSelected(named:)
+        )
+        .fixedSize()
+    }
+
+    private var homeCatalogDeleteControl: some View {
+        HomeCatalogDeleteButton(
+            selectionCount: selectedItemIDs.count,
+            isDisabled: selectedItemIDs.isEmpty,
+            onDeleteConfirmed: deleteSelectedItems
+        )
+    }
+
     @ToolbarContentBuilder
     private var homeCatalogBottomToolbarContent: some ToolbarContent {
-        if showsHomeBottomEditToolbarChrome {
+        // EXPERIMENT (tabs): browse and edit share one bottom-bar branch (+ — spacer — search)
+        // so Edit/Done doesn't tear down / rebuild the bar (visible jump).
+        if minimizesToolbarSearch, usesHomeToolbarSearch, isHomeToolbarSearchChromeActive {
+            if let onToolbarAddItem {
+                ToolbarItem(id: "homeCatalogAdd", placement: .bottomBar) {
+                    ToolbarCatalogAddButton(action: onToolbarAddItem)
+                }
+            }
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            DefaultToolbarItem(kind: .search, placement: .bottomBar)
+        } else if showsHomeBottomEditToolbarChrome {
             ToolbarItem(placement: .bottomBar) {
-                HomeCatalogMoveMenu(
-                    inventoryTags: store.inventoryTags.filter { $0.kind == .inventory },
-                    shoppingTags: store.shoppingTags.filter { $0.kind == .shopping },
-                    catalogLanguage: catalogLanguage,
-                    isDisabled: selectedItemIDs.isEmpty,
-                    onMoveToInventoryTag: moveSelectedItems(toInventoryTagID:),
-                    onMoveToShoppingTag: moveSelectedItems(toShoppingTagID:),
-                    onCreateInventorySectionAndMove: createInventorySectionAndMoveSelected(named:),
-                    onCreateShoppingSectionAndMove: createShoppingSectionAndMoveSelected(named:)
-                )
-                .fixedSize()
+                homeCatalogMoveMenuControl
             }
             ToolbarItem(placement: .bottomBar) {
-                HomeCatalogDeleteButton(
-                    selectionCount: selectedItemIDs.count,
-                    isDisabled: selectedItemIDs.isEmpty,
-                    onDeleteConfirmed: deleteSelectedItems
-                )
+                homeCatalogDeleteControl
             }
             ToolbarSpacer(.flexible, placement: .bottomBar)
             DefaultToolbarItem(kind: .search, placement: .bottomBar)
@@ -1092,6 +1159,12 @@ struct InventoryView: View {
             attachLiquidGlassToolbarSearch = true
             return
         }
+        // EXPERIMENT (tabs): Home is a rooted tab, not a push — attach immediately so top/bottom
+        // toolbars appear together. Push-model Home still defers until the transition settles.
+        if minimizesToolbarSearch {
+            attachLiquidGlassToolbarSearch = true
+            return
+        }
         // Defer every Store → Home visit so bottom-bar search mounts after the push settles.
         attachLiquidGlassToolbarSearch = false
         liquidGlassToolbarSearchAttachTask = Task { @MainActor in
@@ -1104,7 +1177,9 @@ struct InventoryView: View {
 
     private func scheduleHomeToolbarSearchPlaceholderPin() {
         homeToolbarSearchPlaceholderPinTask?.cancel()
-        let prompt = showsHomeEditToolbarChrome ? LocalizedCopy.search : toolbarSearchPrompt
+        let prompt = (minimizesToolbarSearch || !showsHomeEditToolbarChrome)
+            ? toolbarSearchPrompt
+            : LocalizedCopy.search
         homeToolbarSearchPlaceholderPinTask = Task { @MainActor in
             for _ in 0..<3 {
                 await Task.yield()
@@ -1152,6 +1227,47 @@ enum HomeToolbarSearchCacheCleaner {
             field.becomeFirstResponder()
             return
         }
+    }
+
+    /// Focuses search inside the topmost presented sheet so the keyboard can rise with presentation
+    /// instead of waiting for the sheet animation to finish (and without grabbing a tab-root search field).
+    static func focusToolbarSearchFieldInPresentedHost() {
+        guard let window = keyWindow,
+              let root = window.rootViewController else { return }
+        var top = root
+        while let presented = top.presentedViewController {
+            top = presented
+        }
+        guard top !== root else {
+            focusToolbarSearchField()
+            return
+        }
+        if let navigationItem = navigationItem(in: top),
+           let searchController = navigationItem.searchController {
+            searchController.isActive = true
+            let field = searchController.searchBar.searchTextField
+            if field.window != nil {
+                field.becomeFirstResponder()
+                return
+            }
+        }
+        for searchBar in allDescendants(ofType: UISearchBar.self, in: top.view) {
+            let field = searchBar.searchTextField
+            guard field.window != nil else { continue }
+            field.becomeFirstResponder()
+            return
+        }
+    }
+
+    private static func navigationItem(in viewController: UIViewController) -> UINavigationItem? {
+        if let navigationController = viewController as? UINavigationController {
+            return navigationController.topViewController?.navigationItem
+        }
+        if let navigationController = viewController.navigationController {
+            return navigationController.topViewController?.navigationItem
+                ?? viewController.navigationItem
+        }
+        return viewController.navigationItem
     }
 
     private static var keyWindow: UIWindow? {
@@ -1262,6 +1378,8 @@ private struct HomeToolbarSearchModifier: ViewModifier {
     @Binding var text: String
     @Binding var isHomeToolbarSearchPresented: Bool
     var prompt: String
+    /// EXPERIMENT (tabs): collapse the field into a compact trailing button until tapped.
+    var minimizes: Bool = false
 
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -1273,6 +1391,7 @@ private struct HomeToolbarSearchModifier: ViewModifier {
                     placement: .toolbar,
                     prompt: prompt
                 )
+                .searchToolbarBehavior(minimizes ? .minimize : .automatic)
                 .searchPresentationToolbarBehavior(.avoidHidingContent)
                 .dynamicTypeSize(AppTextSize.defaultSize.dynamicTypeSize)
         } else {

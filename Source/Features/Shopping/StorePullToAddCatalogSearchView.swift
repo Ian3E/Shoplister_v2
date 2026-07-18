@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Store pull-to-add: catalog search and add without leaving the shopping list.
 struct StorePullToAddCatalogSearchView: View {
@@ -25,8 +26,13 @@ struct StorePullToAddCatalogSearchView: View {
     var onPresentNewItem: (String) -> Void
     /// Pops pull-to-add back to Store (Cancel + return/search submit).
     var onEndSearch: () -> Void
+    /// Sheet presentation: focused glass `TextField` so the keyboard rises with the sheet.
+    /// Uses a sticky UIKit field that refuses to resign on row taps (unlike SwiftUI `TextField`).
+    var usesFocusedSearchField: Bool = false
 
     @State private var expandedPullToAddQuantityPillItemID: UUID?
+    @State private var stickySearchFieldFocused = false
+    @State private var allowsSearchFieldResign = false
 
     private var trimmedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -117,19 +123,12 @@ struct StorePullToAddCatalogSearchView: View {
                 }
             }
             .id(searchChromeID)
-            .searchable(
-                text: $searchText,
-                isPresented: $isSearchPresented,
-                placement: .toolbar,
-                prompt: LocalizedCopy.searchOrCreateItem
-            )
-            .searchPresentationToolbarBehavior(.avoidHidingContent)
-            .modifier(StorePullToAddSearchSubmitModifier(onSubmit: handleSearchSubmit))
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                Color.clear
-                    .frame(height: Self.bottomFloatingBarClearance)
-                    .allowsHitTesting(false)
-            }
+            .modifier(StorePullToAddNativeSearchableModifier(
+                enabled: !usesFocusedSearchField,
+                searchText: $searchText,
+                isSearchPresented: $isSearchPresented,
+                onSubmit: handleSearchSubmit
+            ))
 
             if toolbarSearchNoMatches {
                 noMatchesPlaceholder
@@ -138,6 +137,16 @@ struct StorePullToAddCatalogSearchView: View {
         }
         .frame(maxWidth: horizontalSizeClass == .regular ? Self.regularWidthClassListMaxWidth : .infinity)
         .frame(maxWidth: .infinity)
+        // Search field on the ZStack (not the results Group) so it stays visible with an empty query.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if usesFocusedSearchField {
+                focusedSearchFieldBar
+            } else {
+                Color.clear
+                    .frame(height: Self.bottomFloatingBarClearance)
+                    .allowsHitTesting(false)
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 2) {
@@ -152,6 +161,28 @@ struct StorePullToAddCatalogSearchView: View {
                 .accessibilityLabel(principalAccessibilityLabel)
                 .accessibilityAddTraits(.isHeader)
             }
+            if usesFocusedSearchField {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(LocalizedCopy.done) {
+                        dismissStorePullToAddSearch()
+                    }
+                    .font(.body.weight(.semibold))
+                }
+            }
+        }
+        .onAppear {
+            guard usesFocusedSearchField else { return }
+            isSearchPresented = true
+            allowsSearchFieldResign = false
+            Task { @MainActor in
+                await Task.yield()
+                stickySearchFieldFocused = true
+            }
+        }
+        .onDisappear {
+            guard usesFocusedSearchField else { return }
+            allowsSearchFieldResign = true
+            stickySearchFieldFocused = false
         }
         .onChange(of: searchText) { _, newValue in
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -159,6 +190,38 @@ struct StorePullToAddCatalogSearchView: View {
                 pinnedSearchQuery = ""
             }
         }
+    }
+
+    private var focusedSearchFieldBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            StickyKeyboardSearchField(
+                text: $searchText,
+                placeholder: LocalizedCopy.searchOrCreateItem,
+                isFocused: $stickySearchFieldFocused,
+                allowsResign: $allowsSearchFieldResign,
+                onSubmit: handleSearchSubmit
+            )
+            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
+            if !trimmedSearchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(LocalizedCopy.search)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: Capsule(style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+        .accessibilityElement(children: .contain)
     }
 
     private var catalogResultsList: some View {
@@ -180,6 +243,7 @@ struct StorePullToAddCatalogSearchView: View {
         .listSectionSpacing(ShoppingListMetrics.interSectionSpacing)
         .scrollEdgeSoftTopIfAvailable(when: showsCatalogListRows)
         .catalogListLayoutDirection()
+        .scrollDismissesKeyboard(.never)
         .environment(\.expandedQuantityPillItemID, expandedPullToAddQuantityPillItemID)
     }
 
@@ -217,13 +281,17 @@ struct StorePullToAddCatalogSearchView: View {
             }
             return
         }
-        onPresentNewItem(trimmed)
+        presentNewItemAllowingKeyboardHandoff(trimmed)
     }
 
     private func dismissStorePullToAddSearch() {
         searchText = ""
         pinnedSearchQuery = ""
         isSearchPresented = false
+        if usesFocusedSearchField {
+            allowsSearchFieldResign = true
+            stickySearchFieldFocused = false
+        }
         // Pop now (Cancel/`onChange` may also fire) and again next turn as a safety net —
         // search `onSubmit` + binding writes can drop a same-turn `NavigationPath` update.
         onEndSearch()
@@ -234,6 +302,15 @@ struct StorePullToAddCatalogSearchView: View {
             await Task.yield()
             dismissSearch()
         }
+    }
+
+    private func presentNewItemAllowingKeyboardHandoff(_ name: String) {
+        if usesFocusedSearchField {
+            // Let New Item's name field take first responder.
+            allowsSearchFieldResign = true
+            stickySearchFieldFocused = false
+        }
+        onPresentNewItem(name)
     }
 
     @ViewBuilder
@@ -257,13 +334,178 @@ struct StorePullToAddCatalogSearchView: View {
     }
 }
 
-private struct StorePullToAddSearchSubmitModifier: ViewModifier {
+/// Applies `.searchable` only for the pushed destination path (not the sheet focused field).
+private struct StorePullToAddNativeSearchableModifier: ViewModifier {
+    let enabled: Bool
+    @Binding var searchText: String
+    @Binding var isSearchPresented: Bool
     let onSubmit: () -> Void
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content.onSubmit(of: .search) {
-            onSubmit()
+        if enabled {
+            content
+                .searchable(
+                    text: $searchText,
+                    isPresented: $isSearchPresented,
+                    placement: .toolbar,
+                    prompt: LocalizedCopy.searchOrCreateItem
+                )
+                .searchPresentationToolbarBehavior(.avoidHidingContent)
+                .onSubmit(of: .search) {
+                    onSubmit()
+                }
+        } else {
+            content
         }
+    }
+}
+
+/// UIKit search field that refuses to resign on list row taps so the keyboard stays up while adding.
+private struct StickyKeyboardSearchField: UIViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+    @Binding var isFocused: Bool
+    @Binding var allowsResign: Bool
+    var onSubmit: () -> Void
+
+    func makeUIView(context: Context) -> StickyKeyboardUITextField {
+        let field = StickyKeyboardUITextField(frame: .zero)
+        field.delegate = context.coordinator
+        field.borderStyle = .none
+        field.backgroundColor = .clear
+        field.font = .preferredFont(forTextStyle: .body)
+        field.returnKeyType = .search
+        field.clearButtonMode = .never
+        field.autocapitalizationType = .sentences
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return field
+    }
+
+    func updateUIView(_ uiView: StickyKeyboardUITextField, context: Context) {
+        context.coordinator.parent = self
+        uiView.allowsResign = allowsResign
+        if uiView.placeholder != placeholder {
+            uiView.placeholder = placeholder
+        }
+        if uiView.text != text {
+            uiView.text = text
+        }
+        if isFocused {
+            if !uiView.isFirstResponder {
+                DispatchQueue.main.async {
+                    _ = uiView.becomeFirstResponder()
+                }
+            }
+        } else if uiView.isFirstResponder, allowsResign {
+            _ = uiView.resignFirstResponder()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    // Single-line field: take the proposed width but never more than the intrinsic text height,
+    // otherwise the glass capsule inflates to fill the sheet.
+    func sizeThatFits(
+        _ proposal: ProposedViewSize,
+        uiView: StickyKeyboardUITextField,
+        context: Context
+    ) -> CGSize? {
+        CGSize(
+            width: proposal.width ?? uiView.intrinsicContentSize.width,
+            height: uiView.intrinsicContentSize.height
+        )
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        var parent: StickyKeyboardSearchField
+
+        init(parent: StickyKeyboardSearchField) {
+            self.parent = parent
+        }
+
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            let newText = textField.text ?? ""
+            if parent.text != newText {
+                parent.text = newText
+            }
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            parent.onSubmit()
+            return false
+        }
+
+        func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+            if parent.allowsResign { return true }
+            // Swipe-down dismiss: allow resign while the sheet is being dismissed.
+            var responder: UIResponder? = textField
+            while let current = responder {
+                if let viewController = current as? UIViewController, viewController.isBeingDismissed {
+                    return true
+                }
+                responder = current.next
+            }
+            return false
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            if !parent.isFocused {
+                parent.isFocused = true
+            }
+        }
+
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            if parent.allowsResign, parent.isFocused {
+                parent.isFocused = false
+            }
+        }
+    }
+}
+
+private final class StickyKeyboardUITextField: UITextField {
+    var allowsResign = false
+
+    override func resignFirstResponder() -> Bool {
+        guard allowsResign || isHostBeingDismissed else { return false }
+        return super.resignFirstResponder()
+    }
+
+    override func willMove(toWindow newWindow: UIWindow?) {
+        // Swipe-dismiss / sheet teardown: system resign is refused while still attached,
+        // so force resign here once the field is leaving the hierarchy.
+        if newWindow == nil {
+            forceResignForTeardown()
+        }
+        super.willMove(toWindow: newWindow)
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil {
+            forceResignForTeardown()
+        }
+    }
+
+    private func forceResignForTeardown() {
+        allowsResign = true
+        guard isFirstResponder else { return }
+        _ = super.resignFirstResponder()
+    }
+
+    /// True while the sheet (or any ancestor VC) is interactively or programmatically dismissing.
+    private var isHostBeingDismissed: Bool {
+        var responder: UIResponder? = self
+        while let current = responder {
+            if let viewController = current as? UIViewController, viewController.isBeingDismissed {
+                return true
+            }
+            responder = current.next
+        }
+        return false
     }
 }
 
