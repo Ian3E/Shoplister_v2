@@ -229,6 +229,7 @@ struct ExpandableQuantityPill: View {
     }
 
     private func expandPill() {
+        AppHaptics.impact(.light, intensity: 0.85)
         withAnimation(ExpandableQuantityPillTiming.animation) {
             isExpanded = true
         }

@@ -232,7 +232,9 @@ struct StorePullToAddCatalogSearchView: View {
                     expandedQuantityPillItemID: $expandedPullToAddQuantityPillItemID,
                     onAddedToShopping: pinSearchAndClearField
                 )
-                .homeCatalogListItemRowStyle()
+                // Vertical padding lives inside the row (under its tap overlay) so the
+                // full cell height stays tappable, matching Store/Home row feel.
+                .homeCatalogListItemRowStyle(appliesVerticalContentPadding: false)
             }
         }
         .listStyle(.plain)
@@ -554,6 +556,8 @@ private struct StorePullToAddCatalogItemRow: View {
                     layoutDirection: layoutDirection
                 )
             )
+            // Padding sits inside the tap overlay so the overlay spans the full cell height.
+            .padding(ShoppingListMetrics.homeCatalogItemRowVerticalContentPadding(scale: spacingScale))
             .overlay {
                 CatalogListRowTapTouchOverlay(
                     item: item,

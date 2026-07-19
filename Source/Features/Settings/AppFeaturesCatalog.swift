@@ -176,7 +176,7 @@ struct AppFeatureCatalogEntry: Identifiable {
                 id: "libraryLanguage",
                 section: .dataSharing,
                 systemImage: "globe",
-                title: LocalizedCopy.language,
+                title: LocalizedCopy.libraryLanguage,
                 description: LocalizedCopy.appFeatureLibraryLanguageDescription
             ),
             AppFeatureCatalogEntry(

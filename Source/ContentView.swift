@@ -76,7 +76,7 @@ struct ContentView: View {
                             canShareShoppingList: canShareShoppingList,
                             isStorePullToAddSearchPresented: $isStorePullToAddSearchPresented,
                             onBeginPullToAddSearch: beginStoreTabPullToAdd,
-                            showsAddItemButton: !isPresentingPullToAddSheet,
+                            showsAddItemButton: true,
                             onShare: presentShoppingListShare,
                             onSettings: { isPresentingSettings = true },
                             onManageStoreSections: { editGroupsSheetKind = .shopping },
@@ -118,8 +118,8 @@ struct ContentView: View {
         }
     }
 
-    /// Home tab: same catalog UI, but rooted (no back chevron) and returning to Store via tab switch.
-    /// Saved lists moves to the freed top leading slot; search collapses to a bottom trailing button.
+    /// Home tab: rooted catalog (no back chevron). Edit enters reorder directly; ⋯ hosts
+    /// manage sections / create / saved lists; search is a minimized bottom-trailing control.
     private var homeCatalogTabScreen: some View {
         InventoryView(
             isReorderMode: $isInventoryReorderMode,
@@ -226,9 +226,12 @@ struct ContentView: View {
 
     var body: some View {
         tabChrome
-        .onChange(of: selectedTab) { _, current in
+        .onChange(of: selectedTab) { previous, current in
             if current == .home {
                 hasVisitedHomeCatalog = true
+            }
+            if previous == .home, isInventoryReorderMode {
+                isInventoryReorderMode = false
             }
         }
         .onAppear {

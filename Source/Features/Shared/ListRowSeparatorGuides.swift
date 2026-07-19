@@ -462,9 +462,17 @@ private struct CatalogGroupHeaderRowStyleModifier: ViewModifier {
 private struct HomeCatalogListItemRowStyleModifier: ViewModifier {
     @Environment(\.shoppingListSpacingScale) private var spacingScale
 
+    /// Off when the row applies the vertical band itself (e.g. pull-to-add keeps its
+    /// UIKit tap overlay outside the padding so the full cell height is tappable).
+    var appliesVerticalContentPadding = true
+
     func body(content: Content) -> some View {
         content
-            .padding(ShoppingListMetrics.homeCatalogItemRowVerticalContentPadding(scale: spacingScale))
+            .padding(
+                appliesVerticalContentPadding
+                    ? ShoppingListMetrics.homeCatalogItemRowVerticalContentPadding(scale: spacingScale)
+                    : EdgeInsets()
+            )
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .contentShape(Rectangle())
             .listRowInsets(ShoppingListMetrics.homeCatalogItemRowHorizontalListInsets(scale: spacingScale))
@@ -519,8 +527,12 @@ extension View {
         shoppingListItemRowStyle(hebrew: hebrew)
     }
 
-    func homeCatalogListItemRowStyle() -> some View {
-        modifier(HomeCatalogListItemRowStyleModifier())
+    func homeCatalogListItemRowStyle(appliesVerticalContentPadding: Bool = true) -> some View {
+        modifier(
+            HomeCatalogListItemRowStyleModifier(
+                appliesVerticalContentPadding: appliesVerticalContentPadding
+            )
+        )
     }
 
     func catalogToolbarCircularTapTarget() -> some View {

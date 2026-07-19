@@ -267,7 +267,8 @@ struct InventoryView: View {
     /// Drives `HomeToolbarSearchModifier` / return-submit (defers bottom-bar search until push settles).
     private var isHomeToolbarSearchChromeActive: Bool {
         guard usesHomeToolbarSearch else { return false }
-        // EXPERIMENT (tabs): rooted tab — no push settle delay; keep top/bottom chrome in sync.
+        // EXPERIMENT (tabs): keep searchable mounted across Edit/Done so List reorder/select
+        // handle animations aren't torn down. Bottom bar always hosts minimized search.
         if minimizesToolbarSearch { return true }
         return attachLiquidGlassToolbarSearch
     }
@@ -855,7 +856,11 @@ struct InventoryView: View {
         inventoryScreen
             .environment(\.editMode, homeCatalogListEditMode)
             .onAppear {
-                homeToolbarSearchChromeID = UUID()
+                // Tabs: keep list identity stable across Store ↔ Home so scroll position survives.
+                // Push-model Home still remounts searchable chrome on each visit.
+                if !minimizesToolbarSearch {
+                    homeToolbarSearchChromeID = UUID()
+                }
                 scheduleLiquidGlassToolbarSearchAttachmentIfNeeded()
                 if activeSectionID == nil {
                     activeSectionID = displayedGroupedCatalog.first?.0.id
@@ -872,8 +877,10 @@ struct InventoryView: View {
                 liquidGlassToolbarSearchAttachTask = nil
                 homeToolbarSearchPlaceholderPinTask?.cancel()
                 homeToolbarSearchPlaceholderPinTask = nil
+                // Tabs: leave searchable + list mounted; tearing them down remounts the List
+                // and resets scroll when returning from Store.
+                guard usesHomeToolbarSearch, !minimizesToolbarSearch else { return }
                 attachLiquidGlassToolbarSearch = false
-                guard usesHomeToolbarSearch else { return }
                 HomeToolbarSearchCacheCleaner.clearCachedToolbarSearchField()
                 Task { @MainActor in
                     dismissSearch()
@@ -921,6 +928,8 @@ struct InventoryView: View {
                     homeCatalogResultsList
                 }
             }
+            // Bumped only for push-model Home visits (`onAppear`). Tabs keep this stable so
+            // Store ↔ Home does not remount the List and wipe scroll position.
             .id(homeToolbarSearchChromeID)
             .modifier(
                 HomeToolbarSearchModifier(
@@ -1037,25 +1046,22 @@ struct InventoryView: View {
                     .accessibilityLabel(LocalizedCopy.backToShoppingList)
                 }
             }
-            // EXPERIMENT (tabs): no back chevron — Edit menu takes the top leading slot,
-            // Saved lists sits top trailing.
+            // EXPERIMENT (tabs): no back chevron — Edit takes the top leading slot,
+            // ⋯ menu (manage sections, create item, saved lists) sits top trailing.
             if showsRecipesInTopBarLeading, !showsHomeEditToolbarChrome {
                 if showsHomeEditToolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        if let onToolbarSelectGroupsKind {
-                            HomeCatalogEditToolbarMenu(
-                                onEditItems: enterHomeCatalogReorderMode,
-                                onSelectGroupsKind: onToolbarSelectGroupsKind
-                            )
-                        } else {
-                            HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
-                        }
+                        HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    HomeCatalogRecipesToolbarButton {
-                        isPresentingRecipes = true
-                    }
+                    HomeCatalogEllipsisMenu(
+                        onManageSections: onToolbarSelectGroupsKind.map { select in
+                            { select(.inventory) }
+                        },
+                        onAddItem: onToolbarAddItem,
+                        onSavedLists: { isPresentingRecipes = true }
+                    )
                 }
             }
             // EXPERIMENT (tabs): edit-mode Move/Delete live top leading; bottom bar is add — spacer — search.
@@ -1074,14 +1080,7 @@ struct InventoryView: View {
                     }
                 } else if !showsRecipesInTopBarLeading {
                     ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
-                        if let onToolbarSelectGroupsKind {
-                            HomeCatalogEditToolbarMenu(
-                                onEditItems: enterHomeCatalogReorderMode,
-                                onSelectGroupsKind: onToolbarSelectGroupsKind
-                            )
-                        } else {
-                            HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
-                        }
+                        HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
                     }
                 }
             }
@@ -1112,10 +1111,10 @@ struct InventoryView: View {
 
     @ToolbarContentBuilder
     private var homeCatalogBottomToolbarContent: some ToolbarContent {
-        // EXPERIMENT (tabs): browse and edit share one bottom-bar branch (+ — spacer — search)
-        // so Edit/Done doesn't tear down / rebuild the bar (visible jump).
+        // EXPERIMENT (tabs): browse and edit share spacer — minimized search so Edit/Done
+        // doesn't tear down the search control. Edit adds leading + after handle animation.
         if minimizesToolbarSearch, usesHomeToolbarSearch, isHomeToolbarSearchChromeActive {
-            if let onToolbarAddItem {
+            if showsHomeEditRowChrome, let onToolbarAddItem {
                 ToolbarItem(id: "homeCatalogAdd", placement: .bottomBar) {
                     ToolbarCatalogAddButton(action: onToolbarAddItem)
                 }
@@ -1414,49 +1413,20 @@ private struct HomeCatalogEditToolbarLabel: View {
     }
 }
 
-/// Home catalog **Edit** (browse mode, toolbar trailing).
+/// Home catalog **Edit** (browse mode) — enters reorder/select directly.
+/// Use a titled toolbar `Button` (not a custom plain label) so Liquid Glass keeps capsule
+/// chrome; extra capsule padding was collapsing this control into the nav-bar overflow `…`.
 private struct HomeCatalogEditToolbarButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HomeCatalogEditToolbarLabel()
-        }
-        .buttonStyle(.plain)
+        Button(LocalizedCopy.edit, action: action)
+            .font(.body.weight(.semibold))
+            .accessibilityLabel(LocalizedCopy.editHomeLibrary)
     }
 }
 
-/// Home catalog **Edit** menu — items reorder, Home sections, Store sections.
-private struct HomeCatalogEditToolbarMenu: View {
-    let onEditItems: () -> Void
-    let onSelectGroupsKind: (Tag.Kind) -> Void
-
-    var body: some View {
-        Menu {
-            Button(action: onEditItems) {
-                Label(LocalizedCopy.editMenuItems, systemImage: "square.and.pencil")
-            }
-            Button {
-                onSelectGroupsKind(.inventory)
-            } label: {
-                Label(LocalizedCopy.homeSections, systemImage: "house")
-            }
-            .accessibilityLabel(LocalizedCopy.homeSectionsAccessibility)
-            Button {
-                onSelectGroupsKind(.shopping)
-            } label: {
-                Label(LocalizedCopy.storeSections, systemImage: "cart")
-            }
-            .accessibilityLabel(LocalizedCopy.storeSectionsAccessibility)
-        } label: {
-            HomeCatalogEditToolbarLabel()
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(LocalizedCopy.editHomeLibrary)
-    }
-}
-
-/// Home catalog **Done** (edit mode, toolbar trailing) — matches Edit menu label chrome.
+/// Home catalog **Done** (edit mode, toolbar trailing) — matches Edit label chrome.
 private struct HomeCatalogDoneToolbarButton: View {
     @Environment(\.appTheme) private var appTheme
     let action: () -> Void
@@ -1486,6 +1456,45 @@ private struct ToolbarCatalogAddButton: View {
         .buttonStyle(.borderless)
         .controlSize(.small)
         .accessibilityLabel(LocalizedCopy.addItem)
+    }
+}
+
+/// Home catalog browse-mode ⋯ menu (top trailing): manage sections, create item, saved lists.
+private struct HomeCatalogEllipsisMenu: View {
+    let onManageSections: (() -> Void)?
+    let onAddItem: (() -> Void)?
+    let onSavedLists: () -> Void
+
+    var body: some View {
+        Menu {
+            if let onManageSections {
+                Section {
+                    Button(action: onManageSections) {
+                        Label(LocalizedCopy.manageSections, systemImage: "arrow.up.arrow.down")
+                    }
+                }
+            }
+
+            Section {
+                if let onAddItem {
+                    Button(action: onAddItem) {
+                        Label(LocalizedCopy.createItem, systemImage: "plus")
+                    }
+                }
+                Button(action: onSavedLists) {
+                    Label(LocalizedCopy.savedLists, systemImage: "book.pages")
+                }
+            }
+        } label: {
+            Label(LocalizedCopy.menu, systemImage: "ellipsis")
+                .labelStyle(.iconOnly)
+                .font(InventoryToolbarGlyph.font)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .buttonStyle(.borderless)
+        .controlSize(.small)
+        .catalogToolbarCircularTapTarget()
+        .accessibilityLabel(LocalizedCopy.menu)
     }
 }
 

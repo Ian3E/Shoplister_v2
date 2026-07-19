@@ -368,13 +368,13 @@
     "and add items to your shopping list" : {
       "comment" : "Empty shopping add hint, second part of library line"
     },
-    "App features" : {
-      "comment" : "App features row and screen title on About screen",
+    "Tips & features" : {
+      "comment" : "Tips and feature guide row and screen title on About screen",
       "localizations" : {
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "יכולות האפליקציה"
+            "value" : "טיפים ויכולות"
           }
         }
       }
@@ -489,13 +489,13 @@
         }
       }
     },
-    "Changing library language restores the default item library and sections, and clears your shopping list." : {
+    "App menus follow your phone language. Changing the library language replaces your library and sections with the defaults and clears your shopping list." : {
       "comment" : "Footer under library language picker",
       "localizations" : {
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "שינוי שפת הספרייה משחזר את ספריית הפריטים והקבוצות כברירת מחדל ומנקה את רשימת הקניות."
+            "value" : "תפריטי האפליקציה תואמים לשפת הטלפון. שינוי שפת הספרייה מחליף את הספרייה ואת הקבוצות בברירות המחדל ומנקה את רשימת הקניות."
           }
         }
       }
@@ -757,7 +757,7 @@
       }
     },
     "Create Item" : {
-      "comment" : "Create item button from search",
+      "comment" : "Create item action and screen title",
       "localizations" : {
         "he" : {
           "stringUnit" : {
@@ -914,13 +914,13 @@
         }
       }
     },
-    "Device" : {
-      "comment" : "Device settings section header",
+    "Device settings" : {
+      "comment" : "Device behavior settings row and navigation title",
       "localizations" : {
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "מכשיר"
+            "value" : "הגדרות מכשיר"
           }
         }
       }
@@ -1372,17 +1372,6 @@
         }
       }
     },
-    "Language" : {
-      "comment" : "Language picker label in item library settings",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "שפה"
-          }
-        }
-      }
-    },
     "Large" : {
       "comment" : "Large text size option",
       "localizations" : {
@@ -1605,7 +1594,7 @@
       }
     },
     "Manage sections" : {
-      "comment" : "Manage store sections menu item",
+      "comment" : "Manage library or store sections menu item",
       "localizations" : {
         "he" : {
           "stringUnit" : {
@@ -1710,17 +1699,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "שם"
-          }
-        }
-      }
-    },
-    "New Item" : {
-      "comment" : "New item screen title",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "פריט חדש"
           }
         }
       }
@@ -2160,13 +2138,13 @@
         }
       }
     },
-    "Reset library" : {
-      "comment" : "Destructive button to reset library on language change",
+    "Change language" : {
+      "comment" : "Destructive confirmation button for changing library language",
       "localizations" : {
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "איפוס ספרייה"
+            "value" : "שינוי שפה"
           }
         }
       }
@@ -2726,13 +2704,13 @@
         }
       }
     },
-    "This restores the default item library and sections, and clears your shopping list. Any items you added or edited will be removed." : {
+    "This replaces your item library and sections with the defaults for the new language and clears your shopping list. Items you added or edited will be deleted. This cannot be undone." : {
       "comment" : "Alert message when changing library language",
       "localizations" : {
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "פעולה זו משחזרת את ספריית הפריטים והקבוצות כברירת מחדל ומנקה את רשימת הקניות. כל פריט שהוספתם או ערכתם יוסר."
+            "value" : "פעולה זו מחליפה את ספריית הפריטים ואת הקבוצות בברירות המחדל של השפה החדשה ומנקה את רשימת הקניות. פריטים שהוספתם או ערכתם יימחקו. לא ניתן לבטל פעולה זו."
           }
         }
       }

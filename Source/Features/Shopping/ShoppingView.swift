@@ -105,6 +105,8 @@ struct ShoppingView: View {
     private static let pullRevealFullSizeDrag: CGFloat = 150
     /// Wait for layout + preference before locking edge eligibility when pull started.
     private static let pullRevealLatchMovementThreshold: CGFloat = 20
+    /// Let `UIScrollView` finish its rubber-band spring before pull-to-clear content mutations.
+    private static let pullToClearRubberBandSettleMs: Int = 300
     /// Fade/scale progress runs from latch through full size (chrome appears at latch with `t == 0`).
     private static var pullRevealDragSpan: CGFloat {
         pullRevealFullSizeDrag - pullRevealLatchMovementThreshold
@@ -408,6 +410,9 @@ struct ShoppingView: View {
         .simultaneousGesture(pullRevealDragGesture)
         .overlay(alignment: .top) { pullToAddChromeOverlay }
         .overlay(alignment: .bottom) { pullToClearChromeOverlay }
+        // Hide list + pull chrome under the rising sheet so rubber-band cancel isn't visible.
+        .opacity(isStorePullToAddSearchPresented ? 0 : 1)
+        .animation(nil, value: isStorePullToAddSearchPresented)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear
                 .frame(height: Self.bottomFloatingBarClearance)
@@ -556,7 +561,7 @@ struct ShoppingView: View {
         if pullToClearReachedThreshold {
             Task { @MainActor in
                 // Let the scroll view's rubber-band spring complete before shrinking the content.
-                try? await Task.sleep(for: .milliseconds(300))
+                try? await Task.sleep(for: .milliseconds(Self.pullToClearRubberBandSettleMs))
                 clearCheckedAndShowToast()
             }
         }

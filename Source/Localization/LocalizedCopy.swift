@@ -103,7 +103,7 @@ enum LocalizedCopy {
     }
 
     static var appFeatures: String {
-        String(localized: "App features", comment: "App features row and screen title on About screen")
+        String(localized: "Tips & features", comment: "Tips and feature guide row and screen title on About screen")
     }
 
     static var appFeaturesShoppingListSection: String {
@@ -376,17 +376,13 @@ enum LocalizedCopy {
         )
     }
 
-    static var language: String {
-        String(localized: "Language", comment: "Language picker label in item library settings")
-    }
-
     static var libraryLanguage: String {
         String(localized: "Library language", comment: "Library language picker label")
     }
 
     static var libraryLanguageFooter: String {
         String(
-            localized: "Changing library language restores the default item library and sections, and clears your shopping list.",
+            localized: "App menus follow your phone language. Changing the library language replaces your library and sections with the defaults and clears your shopping list.",
             comment: "Footer under library language picker"
         )
     }
@@ -470,7 +466,7 @@ enum LocalizedCopy {
     }
 
     static var device: String {
-        String(localized: "Device", comment: "Device settings section header")
+        String(localized: "Device settings", comment: "Device behavior settings row and navigation title")
     }
 
     static var lockPortrait: String {
@@ -489,13 +485,13 @@ enum LocalizedCopy {
         String(localized: "Change library language?", comment: "Alert title when changing library language")
     }
 
-    static var resetLibrary: String {
-        String(localized: "Reset library", comment: "Destructive button to reset library on language change")
+    static var changeLanguage: String {
+        String(localized: "Change language", comment: "Destructive confirmation button for changing library language")
     }
 
     static var changeLibraryLanguageMessage: String {
         String(
-            localized: "This restores the default item library and sections, and clears your shopping list. Any items you added or edited will be removed.",
+            localized: "This replaces your item library and sections with the defaults for the new language and clears your shopping list. Items you added or edited will be deleted. This cannot be undone.",
             comment: "Alert message when changing library language"
         )
     }
@@ -658,7 +654,7 @@ enum LocalizedCopy {
     }
 
     static var manageSections: String {
-        String(localized: "Manage sections", comment: "Manage store sections menu item")
+        String(localized: "Manage sections", comment: "Manage library or store sections menu item")
     }
 
     static var clearChecked: String {
@@ -756,7 +752,7 @@ enum LocalizedCopy {
     }
 
     static var createItem: String {
-        String(localized: "Create Item", comment: "Create item button from search")
+        String(localized: "Create Item", comment: "Create item action and screen title")
     }
 
     static var sections: String {
@@ -919,7 +915,7 @@ enum LocalizedCopy {
     // MARK: - Items
 
     static var newItem: String {
-        String(localized: "New Item", comment: "New item screen title")
+        createItem
     }
 
     static var editItem: String {

@@ -70,7 +70,7 @@ struct SettingsItemLibraryView: View {
     var body: some View {
         List {
             Section {
-                Picker(LocalizedCopy.language, selection: $catalogLanguagePickerValue) {
+                Picker(LocalizedCopy.libraryLanguage, selection: $catalogLanguagePickerValue) {
                     ForEach(AppContentLanguage.allCases) { option in
                         Text(option.title)
                             .tag(option.rawValue)
@@ -584,7 +584,7 @@ private struct SettingsItemLibraryAlertsModifier: ViewModifier {
                     pendingCatalogLanguageRaw = nil
                     catalogLanguagePickerValue = catalogLanguageRaw
                 }
-                Button(LocalizedCopy.resetLibrary, role: .destructive) {
+                Button(LocalizedCopy.changeLanguage, role: .destructive) {
                     guard let pending = pendingCatalogLanguageRaw else { return }
                     store.resetLibraryToInitialSeed()
                     catalogLanguageRaw = pending
@@ -613,14 +613,14 @@ private struct SettingsItemLibraryAlertsModifier: ViewModifier {
                 Text(LocalizedCopy.clearLibraryAlertMessage)
             }
             .alert(LocalizedCopy.backup, isPresented: backupErrorPresented) {
-                Button(LocalizedCopy.ok, role: .cancel) { backupErrorMessage = nil }
+                Button(LocalizedCopy.done, role: .cancel) { backupErrorMessage = nil }
             } message: {
                 if let backupErrorMessage {
                     Text(backupErrorMessage)
                 }
             }
             .alert(LocalizedCopy.importComplete, isPresented: backupSuccessPresented) {
-                Button(LocalizedCopy.ok, role: .cancel) { backupSuccessMessage = nil }
+                Button(LocalizedCopy.done, role: .cancel) { backupSuccessMessage = nil }
             } message: {
                 if let backupSuccessMessage {
                     Text(backupSuccessMessage)
