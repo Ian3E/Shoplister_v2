@@ -79,7 +79,7 @@ enum LocalizedCopy {
     // MARK: - Settings
 
     static var settingsItemLibrary: String {
-        String(localized: "Item library", comment: "Item library settings section title")
+        tabLibrary
     }
 
     static var settingsAbout: String {
@@ -387,8 +387,19 @@ enum LocalizedCopy {
         )
     }
 
+    static var autoExpandQuantityPicker: String {
+        String(localized: "Auto-expand quantity picker", comment: "Auto-expand quantity picker toggle")
+    }
+
+    static var autoExpandQuantityPickerFooter: String {
+        String(
+            localized: "When you add an item, expand the quantity controls. Turn off to expand only when you tap the quantity pill.",
+            comment: "Footer under auto-expand quantity picker toggle"
+        )
+    }
+
     static var shoppingListSectionTitle: String {
-        String(localized: "Shopping list", comment: "Shopping list settings section header")
+        tabList
     }
 
     static var sortCheckedItems: String {

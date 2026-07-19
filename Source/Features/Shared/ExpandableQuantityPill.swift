@@ -15,6 +15,7 @@ enum QuantityPillChromeTiming {
         guardInShopping: @MainActor () -> Bool,
         setExpandedItemID: @MainActor (UUID) -> Void
     ) {
+        guard AppLibraryAutoExpandQuantityPicker.isEnabled else { return }
         guard guardInShopping() else { return }
         withAnimation(expandCollapse) {
             setExpandedItemID(itemID)

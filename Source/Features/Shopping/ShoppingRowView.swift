@@ -5,7 +5,8 @@ struct ShoppingRowView: View {
     private static let rowContentSpacing: CGFloat = 12
     private static let quantityEdgeInset: CGFloat = ShoppingRowQuantityMetrics.quantityEdgeInset
     private static let uncheckedSymbolName = "app"
-    private static let checkedSymbolName = "checkmark.app.fill"
+    private static let checkedFillSymbolName = "app.fill"
+    private static let checkedStrokeSymbolName = "checkmark"
 
     @Environment(\.appContentLanguage) private var catalogLanguage
     @Environment(\.appTheme) private var appTheme
@@ -17,6 +18,12 @@ struct ShoppingRowView: View {
     private var checkmarkFont: Font {
         let pointSize = UIFont.preferredFont(forTextStyle: .body).pointSize * 1.25
         return .system(size: pointSize)
+    }
+
+    /// Sized to sit inside the filled square like `checkmark.app.fill`'s knocked-out check.
+    private var checkStrokeFont: Font {
+        let pointSize = UIFont.preferredFont(forTextStyle: .body).pointSize * 1.25 * 0.5
+        return .system(size: pointSize, weight: .bold)
     }
 
     private var showsQuantity: Bool {
@@ -109,10 +116,35 @@ struct ShoppingRowView: View {
         }
     }
 
+    /// Recomposes `checkmark.app.fill` so only the check strokes: `drawOn` on the whole
+    /// filled symbol renders its square fill layer as a fade that hides the check draw.
+    /// Here the square fills via a quick opacity swap and the check draws on top of it.
+    /// `drawOn` semantics: active = undrawn, so unchecked holds the check hidden and
+    /// checking deactivates the effect to play the draw.
     private var checkmarkImage: some View {
-        Image(systemName: entry.isChecked ? Self.checkedSymbolName : Self.uncheckedSymbolName)
-            .font(checkmarkFont)
-            .foregroundStyle(appTheme.color)
+        ZStack {
+            Image(systemName: Self.uncheckedSymbolName)
+                .font(checkmarkFont)
+                .foregroundStyle(appTheme.color)
+            Image(systemName: Self.checkedFillSymbolName)
+                .font(checkmarkFont)
+                .foregroundStyle(appTheme.color)
+                .opacity(entry.isChecked ? 1 : 0)
+                // Checking snaps the fill in instantly (like native edit-mode selection);
+                // unchecking keeps the row's `withAnimation(.snappy)` fade-out.
+                .transaction { transaction in
+                    if entry.isChecked {
+                        transaction.animation = nil
+                    }
+                }
+            Image(systemName: Self.checkedStrokeSymbolName)
+                .font(checkStrokeFont)
+                .foregroundStyle(.background)
+                .symbolEffect(.drawOn, isActive: !entry.isChecked)
+                // The tap handler toggles inside `withAnimation(.snappy)`; keep that
+                // transaction off the draw so the effect owns its timing.
+                .transaction { $0.animation = nil }
+        }
     }
 
     private func quantityLabel(_ quantity: Int) -> some View {

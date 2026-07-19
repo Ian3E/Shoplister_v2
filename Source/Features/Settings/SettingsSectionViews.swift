@@ -10,6 +10,7 @@ struct SettingsGeneralView: View {
     @AppStorage(AppShoppingCollapseCompletedSections.storageKey) private var collapseCompletedSections: Bool = false
     @AppStorage(AppShoppingHideStoreGroupNames.storageKey) private var hideStoreGroupNames: Bool = false
     @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked: Bool = true
+    @AppStorage(AppLibraryAutoExpandQuantityPicker.storageKey) private var autoExpandQuantityPicker: Bool = true
     @AppStorage(AppShoppingBadgeUnchecked.storageKey) private var showUncheckedCountAppBadge: Bool = false
 
     var body: some View {
@@ -36,6 +37,12 @@ struct SettingsGeneralView: View {
                 Toggle(LocalizedCopy.confirmBeforeClearingList, isOn: $confirmClearWhenAllChecked)
             } footer: {
                 Text(LocalizedCopy.confirmBeforeClearingListFooter)
+            }
+
+            Section {
+                Toggle(LocalizedCopy.autoExpandQuantityPicker, isOn: $autoExpandQuantityPicker)
+            } footer: {
+                Text(LocalizedCopy.autoExpandQuantityPickerFooter)
             }
 
             Section {

@@ -97,6 +97,8 @@ struct ShoppingView: View {
     @State private var emptyShoppingFadeSession: UInt = 0
     /// Snapshot so the add hint stays visible on the trip that increments the counter to the hide threshold.
     @State private var showsEmptyAddHint = true
+    /// One-shot: set when the list empties after complete/clear so the checkmark draws once.
+    @State private var pendingEmptyCheckmarkDraw = false
     /// Mirrors the last `entriesWithItems.isEmpty` we applied (`nil` until first `syncEmptyShoppingFadeFromResolvedRows`).
     @State private var lastResolvedShoppingListWasEmpty: Bool?
 
@@ -578,11 +580,6 @@ struct ShoppingView: View {
         pullToClearBeganWithListAtBottom = false
     }
 
-    /// Hidden during pull-to-add search; list reveal opacity otherwise.
-    private var emptyShoppingOverlayOpacity: CGFloat {
-        isStorePullToAddSearchPresented ? 0 : emptyShoppingRevealOpacity
-    }
-
     var body: some View {
         ZStack {
             Color.shoppingListBackground
@@ -598,7 +595,7 @@ struct ShoppingView: View {
 
             if entriesWithItems.isEmpty {
                 shoppingEmptyStateOverlay
-                    .opacity(emptyShoppingOverlayOpacity)
+                    .opacity(isStorePullToAddSearchPresented ? 0 : 1)
                     .animation(nil, value: isStorePullToAddSearchPresented)
                     .allowsHitTesting(false)
                     .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -850,6 +847,8 @@ struct ShoppingView: View {
     private func beginEmptyShoppingReveal() {
         guard entriesWithItems.isEmpty else { return }
 
+        pendingEmptyCheckmarkDraw = true
+
         if accessibilityReduceMotion {
             emptyShoppingRevealOpacity = 1
             lastResolvedShoppingListWasEmpty = true
@@ -884,6 +883,7 @@ struct ShoppingView: View {
                     completedListCount: emptyAddHintCompletedListCount
                 )
                 emptyShoppingRevealOpacity = 1
+                pendingEmptyCheckmarkDraw = false
             }
             return
         }
@@ -899,6 +899,7 @@ struct ShoppingView: View {
         } else if !nowEmpty, wasEmpty {
             emptyShoppingFadeSession &+= 1
             emptyShoppingRevealOpacity = 1
+            pendingEmptyCheckmarkDraw = false
         }
 
         lastResolvedShoppingListWasEmpty = nowEmpty
@@ -906,7 +907,11 @@ struct ShoppingView: View {
 
     @ViewBuilder
     private var shoppingEmptyStateOverlay: some View {
-        ShoppingEmptyStateView(showsAddHint: showsEmptyAddHint)
+        ShoppingEmptyStateView(
+            showsAddHint: showsEmptyAddHint,
+            textOpacity: emptyShoppingRevealOpacity,
+            pendingCheckmarkDraw: $pendingEmptyCheckmarkDraw
+        )
     }
 
     @ViewBuilder

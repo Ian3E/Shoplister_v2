@@ -7,6 +7,9 @@ private enum SettingsRoute: Hashable {
     case appearance
     case device
     case about
+    #if DEBUG
+    case debug
+    #endif
 }
 
 struct SettingsView: View {
@@ -31,6 +34,12 @@ struct SettingsView: View {
                     settingsLink(.device, title: LocalizedCopy.device, systemImage: "iphone")
                     settingsLink(.about, title: LocalizedCopy.settingsAbout, systemImage: "info.circle.fill")
                 }
+
+                #if DEBUG
+                Section {
+                    settingsLink(.debug, title: "Debug", systemImage: "ladybug.fill")
+                }
+                #endif
             }
             .navigationTitle(LocalizedCopy.settings)
             .navigationBarTitleDisplayMode(.inline)
@@ -72,6 +81,10 @@ struct SettingsView: View {
             SettingsDeviceView()
         case .about:
             SettingsAboutView()
+        #if DEBUG
+        case .debug:
+            SettingsDebugView()
+        #endif
         }
     }
 
@@ -116,6 +129,13 @@ private extension SettingsRoute {
                 Color(red: 0.68, green: 0.68, blue: 0.70),
                 Color(red: 0.48, green: 0.48, blue: 0.50)
             )
+        #if DEBUG
+        case .debug:
+            (
+                Color(red: 1.00, green: 0.45, blue: 0.40),
+                Color(red: 0.85, green: 0.15, blue: 0.12)
+            )
+        #endif
         }
         return LinearGradient(
             colors: [colors.top, colors.bottom],

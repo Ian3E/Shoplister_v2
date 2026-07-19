@@ -97,6 +97,7 @@
 		AA00006A000000000000006A /* AppWelcomeExplainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001020000000000000109 /* AppWelcomeExplainer.swift */; };
 		AA00006B000000000000006B /* WelcomeExplainerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010A /* WelcomeExplainerOverlay.swift */; };
 		AA00006C000000000000006C /* SettingsSectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010B /* SettingsSectionViews.swift */; };
+		AA00006C000000000000006D /* SettingsDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010E /* SettingsDebugView.swift */; };
 		AA00006D000000000000006D /* SettingsAppFeaturesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010C /* SettingsAppFeaturesView.swift */; };
 		AA00006E000000000000006E /* AppFeaturesCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000102000000000000010D /* AppFeaturesCatalog.swift */; };
 /* End PBXBuildFile section */
@@ -198,6 +199,7 @@
 		AA0001020000000000000109 /* AppWelcomeExplainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWelcomeExplainer.swift; sourceTree = "<group>"; };
 		AA000102000000000000010A /* WelcomeExplainerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeExplainerOverlay.swift; sourceTree = "<group>"; };
 		AA000102000000000000010B /* SettingsSectionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSectionViews.swift; sourceTree = "<group>"; };
+		AA000102000000000000010E /* SettingsDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDebugView.swift; sourceTree = "<group>"; };
 		AA000102000000000000010C /* SettingsAppFeaturesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAppFeaturesView.swift; sourceTree = "<group>"; };
 		AA000102000000000000010D /* AppFeaturesCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeaturesCatalog.swift; sourceTree = "<group>"; };
 		AA0002010000000000000000 /* Shoplister_v2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shoplister_v2.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -365,6 +367,7 @@
 			children = (
 				AA000101000000000000000F /* SettingsView.swift */,
 				AA000102000000000000010B /* SettingsSectionViews.swift */,
+				AA000102000000000000010E /* SettingsDebugView.swift */,
 				AA000102000000000000010C /* SettingsAppFeaturesView.swift */,
 				AA000102000000000000010D /* AppFeaturesCatalog.swift */,
 				AA0001010000000000000046 /* TextSizeSettingsView.swift */,
@@ -614,6 +617,7 @@
 				AA00007B000000000000007B /* StoreGesturesExplainerOverlay.swift in Sources */,
 				AA00007C000000000000007C /* AppHomeCatalogVisit.swift in Sources */,
 				AA00006C000000000000006C /* SettingsSectionViews.swift in Sources */,
+				AA00006C000000000000006D /* SettingsDebugView.swift in Sources */,
 				AA00006D000000000000006D /* SettingsAppFeaturesView.swift in Sources */,
 				AA00006E000000000000006E /* AppFeaturesCatalog.swift in Sources */,
 				AA00000C000000000000000C /* ShoppingView.swift in Sources */,
@@ -773,6 +777,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

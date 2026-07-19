@@ -368,17 +368,6 @@
     "and add items to your shopping list" : {
       "comment" : "Empty shopping add hint, second part of library line"
     },
-    "Tips & features" : {
-      "comment" : "Tips and feature guide row and screen title on About screen",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "טיפים ויכולות"
-          }
-        }
-      }
-    },
     "App icon badge" : {
       "comment" : "App icon badge toggle",
       "localizations" : {
@@ -386,6 +375,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "תג על סמל האפליקציה"
+          }
+        }
+      }
+    },
+    "App menus follow your phone language. Changing the library language replaces your library and sections with the defaults and clears your shopping list." : {
+      "comment" : "Footer under library language picker",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "תפריטי האפליקציה תואמים לשפת הטלפון. שינוי שפת הספרייה מחליף את הספרייה ואת הקבוצות בברירות המחדל ומנקה את רשימת הקניות."
           }
         }
       }
@@ -419,6 +419,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "שואל אם להשאיר או לנקות את רשימת הקניות לאחר שכל הפריטים מסומנים."
+          }
+        }
+      }
+    },
+    "Auto-expand quantity picker" : {
+      "comment" : "Auto-expand quantity picker toggle",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "פתיחה אוטומטית של בורר הכמות"
           }
         }
       }
@@ -478,6 +489,17 @@
         }
       }
     },
+    "Change language" : {
+      "comment" : "Destructive confirmation button for changing library language",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "שינוי שפה"
+          }
+        }
+      }
+    },
     "Change library language?" : {
       "comment" : "Alert title when changing library language",
       "localizations" : {
@@ -485,17 +507,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "לשנות את שפת הספרייה?"
-          }
-        }
-      }
-    },
-    "App menus follow your phone language. Changing the library language replaces your library and sections with the defaults and clears your shopping list." : {
-      "comment" : "Footer under library language picker",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "תפריטי האפליקציה תואמים לשפת הטלפון. שינוי שפת הספרייה מחליף את הספרייה ואת הקבוצות בברירות המחדל ומנקה את רשימת הקניות."
           }
         }
       }
@@ -914,17 +925,6 @@
         }
       }
     },
-    "Device settings" : {
-      "comment" : "Device behavior settings row and navigation title",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "הגדרות מכשיר"
-          }
-        }
-      }
-    },
     "Device options" : {
       "comment" : "App feature title: device options",
       "localizations" : {
@@ -932,6 +932,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "אפשרויות מכשיר"
+          }
+        }
+      }
+    },
+    "Device settings" : {
+      "comment" : "Device behavior settings row and navigation title",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הגדרות מכשיר"
           }
         }
       }
@@ -1214,6 +1225,17 @@
         }
       }
     },
+    "Home is where you keep it. Store is where you buy it." : {
+      "comment" : "Form footer explaining Home vs Store section pickers",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "בית זה איפה ששומרים. סופר זה איפה שקונים."
+          }
+        }
+      }
+    },
     "Home library" : {
       "comment" : "Home library navigation principal title",
       "extractionState" : "stale",
@@ -1304,7 +1326,7 @@
       }
     },
     "Item library" : {
-      "comment" : "App features section header for item library features\nHome catalog navigation principal title\nItem library settings section title",
+      "comment" : "App features section header for item library features\nHome catalog navigation principal title",
       "localizations" : {
         "he" : {
           "stringUnit" : {
@@ -1504,17 +1526,6 @@
         }
       }
     },
-    "List name" : {
-      "comment" : "Saved list name text field placeholder when saving from Store",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "שם הרשימה"
-          }
-        }
-      }
-    },
     "List" : {
       "comment" : "Root tab bar label for the shopping list",
       "localizations" : {
@@ -1522,6 +1533,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "רשימה"
+          }
+        }
+      }
+    },
+    "List name" : {
+      "comment" : "Saved list name text field placeholder when saving from Store",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "שם הרשימה"
           }
         }
       }
@@ -2138,17 +2160,6 @@
         }
       }
     },
-    "Change language" : {
-      "comment" : "Destructive confirmation button for changing library language",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "שינוי שפה"
-          }
-        }
-      }
-    },
     "Save" : {
       "comment" : "Save button",
       "localizations" : {
@@ -2397,7 +2408,7 @@
       }
     },
     "Shopping list" : {
-      "comment" : "App features section header for shopping list features\nShopping list navigation principal title\nShopping list settings section header",
+      "comment" : "App features section header for shopping list features\nShopping list navigation principal title",
       "localizations" : {
         "he" : {
           "stringUnit" : {
@@ -2754,6 +2765,17 @@
     "This will restore your shopping list to how it was before you cleared it." : {
       "comment" : "Shake undo clear list alert message"
     },
+    "Tips & features" : {
+      "comment" : "Tips and feature guide row and screen title on About screen",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "טיפים ויכולות"
+          }
+        }
+      }
+    },
     "to adjust quantity." : {
       "comment" : "First shopping item explainer suffix after quantity pill",
       "localizations" : {
@@ -2849,6 +2871,17 @@
         }
       }
     },
+    "When you add an item, expand the quantity controls. Turn off to expand only when you tap the quantity pill." : {
+      "comment" : "Footer under auto-expand quantity picker toggle",
+      "localizations" : {
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "בעת הוספת פריט, בורר הכמות נפתח אוטומטית. כבוי — נפתח רק בלחיצה על כדורית הכמות."
+          }
+        }
+      }
+    },
     "You have added your first item to your shopping list." : {
       "comment" : "First shopping item explainer line after title",
       "localizations" : {
@@ -2913,17 +2946,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "רשימת הקניות מסודרת לפי קבוצות סופר."
-          }
-        }
-      }
-    },
-    "Home is where you keep it. Store is where you buy it." : {
-      "comment" : "Form footer explaining Home vs Store section pickers",
-      "localizations" : {
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "בית זה איפה ששומרים. סופר זה איפה שקונים."
           }
         }
       }
