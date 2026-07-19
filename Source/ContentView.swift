@@ -42,6 +42,8 @@ struct ContentView: View {
     @State private var selectedTab: TabSelection = .store
     /// Pull-to-add presented as a modal sheet (Settings-style) from the List tab.
     @State private var isPresentingPullToAddSheet = false
+    /// Drops the sticky pull-to-add search keyboard (e.g. while the first-item explainer is up).
+    @State private var suppressPullToAddSearchKeyboard = false
     @AppStorage(AppTextSize.storageKey) private var textSizeRaw: String = AppTextSize.defaultSize.rawValue
     @AppStorage(AppTheme.storageKey) private var themeRaw: String = AppTheme.blue.rawValue
     @AppStorage(AppTheme.customColorStorageKey) private var customColorHex: String = AppTheme.defaultCustomColorHex
@@ -106,6 +108,7 @@ struct ContentView: View {
         }
         .onChange(of: isPresentingPullToAddSheet) { _, presented in
             if !presented {
+                suppressPullToAddSearchKeyboard = false
                 isStorePullToAddSearchPresented = false
                 storePullToAddSearchText = ""
                 storePullToAddPinnedSearchQuery = ""
@@ -174,12 +177,21 @@ struct ContentView: View {
                     isPresentingNewCatalogItem = true
                 },
                 onEndSearch: endStoreTabPullToAdd,
-                usesFocusedSearchField: true
+                usesFocusedSearchField: true,
+                searchKeyboardSuppressed: $suppressPullToAddSearchKeyboard
             )
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
         }
         .environmentObject(store)
+        // Sheets sit above ContentView's root overlay, so the first-item explainer is hosted
+        // here when pull-to-add is open (keyboard is suppressed for the duration).
+        .overlay {
+            if fullWindowOverlay.kind == .firstShoppingItemExplainer {
+                HomeFirstVisitExplainerOverlay(onDone: completeFirstShoppingItemExplainer)
+                    .ignoresSafeArea()
+            }
+        }
         .sheet(isPresented: Binding(
             get: { isPresentingNewCatalogItem && isPresentingPullToAddSheet },
             set: { isPresentingNewCatalogItem = $0 }
@@ -230,6 +242,9 @@ struct ContentView: View {
             if current == .home {
                 hasVisitedHomeCatalog = true
             }
+            if current == .store {
+                scheduleStoreGesturesExplainerIfNeeded()
+            }
             if previous == .home, isInventoryReorderMode {
                 isInventoryReorderMode = false
             }
@@ -237,6 +252,7 @@ struct ContentView: View {
         .onAppear {
             markFirstShoppingItemExplainerSeenIfShoppingListAlreadyPopulated()
             scheduleWelcomeExplainerIfNeeded()
+            scheduleStoreGesturesExplainerIfNeeded()
         }
         .onChange(of: isInventoryReorderMode) { _, active in
             if !active {
@@ -263,6 +279,7 @@ struct ContentView: View {
         .onChange(of: store.shopping.count) { oldCount, newCount in
             guard oldCount == 0, newCount > 0 else { return }
             scheduleFirstShoppingItemExplainerIfNeeded()
+            scheduleStoreGesturesExplainerIfNeeded()
         }
         .onChange(of: hasSeenFirstShoppingItemExplainer) { _, seen in
             guard !seen else { return }
@@ -413,12 +430,12 @@ struct ContentView: View {
                 hasSeenWelcomeExplainer = true
                 fullWindowOverlay.dismiss(animated: false)
                 scheduleFirstShoppingItemExplainerIfNeeded()
+                scheduleStoreGesturesExplainerIfNeeded()
             }
         case .firstShoppingItemExplainer:
-            HomeFirstVisitExplainerOverlay {
-                hasSeenFirstShoppingItemExplainer = true
-                fullWindowOverlay.dismiss(animated: false)
-            }
+            // When pull-to-add is open the interactive copy lives on the sheet overlay;
+            // this root copy covers the non–pull-to-add path.
+            HomeFirstVisitExplainerOverlay(onDone: completeFirstShoppingItemExplainer)
         case .storeGesturesExplainer:
             StoreGesturesExplainerOverlay {
                 hasSeenStoreGesturesExplainer = true
@@ -458,7 +475,6 @@ struct ContentView: View {
 
     private func scheduleFirstShoppingItemExplainerIfNeeded() {
         guard !hasSeenFirstShoppingItemExplainer else { return }
-        if isPresentingPullToAddSheet { return }
         dismissKeyboardForFirstItemExplainer()
         firstShoppingItemExplainerTask?.cancel()
         firstShoppingItemExplainerTask = Task { @MainActor in
@@ -466,15 +482,35 @@ struct ContentView: View {
             guard !Task.isCancelled else { return }
             guard !hasSeenFirstShoppingItemExplainer else { return }
             guard !store.shopping.isEmpty else { return }
-            if isPresentingPullToAddSheet { return }
             guard fullWindowOverlay.kind == nil else { return }
             fullWindowOverlay.presentFirstShoppingItemExplainer()
         }
     }
 
+    private func completeFirstShoppingItemExplainer() {
+        hasSeenFirstShoppingItemExplainer = true
+        fullWindowOverlay.dismiss(animated: false)
+        restorePullToAddKeyboardAfterFirstItemExplainerIfNeeded()
+        scheduleStoreGesturesExplainerIfNeeded()
+    }
+
+    private func restorePullToAddKeyboardAfterFirstItemExplainerIfNeeded() {
+        guard isPresentingPullToAddSheet else {
+            suppressPullToAddSearchKeyboard = false
+            return
+        }
+        Task { @MainActor in
+            await Task.yield()
+            suppressPullToAddSearchKeyboard = false
+        }
+    }
+
+    /// First visit to a non-empty List (Store tab). Waits for the first-item explainer
+    /// when both are pending so they don't race.
     private func scheduleStoreGesturesExplainerIfNeeded() {
         guard !hasSeenStoreGesturesExplainer else { return }
-        guard hasVisitedHomeCatalog else { return }
+        guard hasSeenFirstShoppingItemExplainer else { return }
+        guard !store.shopping.isEmpty else { return }
         guard selectedTab == .store else { return }
         guard !isPresentingSettings else { return }
         guard !isStorePullToAddSearchPresented else { return }
@@ -484,7 +520,8 @@ struct ContentView: View {
             try? await Task.sleep(for: .seconds(0.5))
             guard !Task.isCancelled else { return }
             guard !hasSeenStoreGesturesExplainer else { return }
-            guard hasVisitedHomeCatalog else { return }
+            guard hasSeenFirstShoppingItemExplainer else { return }
+            guard !store.shopping.isEmpty else { return }
             guard selectedTab == .store else { return }
             guard !isPresentingSettings else { return }
             guard !isStorePullToAddSearchPresented else { return }
@@ -494,8 +531,12 @@ struct ContentView: View {
         }
     }
 
-    /// Resigns first responder before the first-item explainer overlay (e.g. pull-to-add search field).
+    /// Resigns first responder before the first-item explainer overlay.
+    /// Pull-to-add's sticky search field refuses resign unless suppression is set first.
     private func dismissKeyboardForFirstItemExplainer() {
+        if isPresentingPullToAddSheet {
+            suppressPullToAddSearchKeyboard = true
+        }
         Task { @MainActor in
             await Task.yield()
             UIApplication.shared.sendAction(

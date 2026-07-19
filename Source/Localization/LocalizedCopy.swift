@@ -577,8 +577,8 @@ enum LocalizedCopy {
 
     static var shoppingListEmptyAddHintLibraryPrefix: String {
         String(
-            localized: "to view your complete item library",
-            comment: "Empty shopping add hint after plus symbol, wraps before next line"
+            localized: "to view your complete library",
+            comment: "Empty shopping add hint after library symbol, wraps before next line"
         )
     }
 
@@ -589,16 +589,30 @@ enum LocalizedCopy {
         )
     }
 
-    static var shoppingListEmptyAddHintPullDownLine: String {
+    static var shoppingListEmptyAddHintPullDownPrefix: String {
         String(
-            localized: "Pull down to quickly search and add items",
-            comment: "Empty shopping add hint, second line"
+            localized: "Pull down or tap",
+            comment: "Empty shopping add hint before plus symbol"
+        )
+    }
+
+    static var shoppingListEmptyAddHintPullDownInfix: String {
+        String(
+            localized: "to quickly",
+            comment: "Empty shopping add hint between plus symbol and second line"
+        )
+    }
+
+    static var shoppingListEmptyAddHintPullDownSuffix: String {
+        String(
+            localized: "search and add items",
+            comment: "Empty shopping add hint, second part of pull-down line"
         )
     }
 
     static var shoppingListEmptyAddHintAccessibility: String {
         String(
-            localized: "Tap plus to view your complete item library and add items to your shopping list. Pull down to quickly search and add items.",
+            localized: "Tap the library tab to view your complete library and add items to your shopping list. Pull down or tap plus to quickly search and add items.",
             comment: "Accessibility label for empty shopping add hint"
         )
     }

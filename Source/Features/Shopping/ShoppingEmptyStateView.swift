@@ -78,9 +78,9 @@ struct ShoppingEmptyStateView: View {
     }
 
     private var addHintFooter: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 24) {
             libraryAddHintBlock
-            Text(LocalizedCopy.shoppingListEmptyAddHintPullDownLine)
+            pullDownAddHintBlock
         }
         .font(.subheadline)
         .foregroundStyle(.secondary)
@@ -89,11 +89,25 @@ struct ShoppingEmptyStateView: View {
 
     private var libraryAddHintBlock: some View {
         VStack(spacing: 6) {
-            Text("\(LocalizedCopy.shoppingListEmptyAddHintTapPrefix) \(plusIconHintText) \(LocalizedCopy.shoppingListEmptyAddHintLibraryPrefix)")
+            Text("\(LocalizedCopy.shoppingListEmptyAddHintTapPrefix) \(libraryIconHintText) \(LocalizedCopy.shoppingListEmptyAddHintLibraryPrefix)")
                 .multilineTextAlignment(.center)
             Text(LocalizedCopy.shoppingListEmptyAddHintLibrarySuffix)
                 .multilineTextAlignment(.center)
         }
+    }
+
+    private var pullDownAddHintBlock: some View {
+        VStack(spacing: 6) {
+            Text("\(LocalizedCopy.shoppingListEmptyAddHintPullDownPrefix) \(plusIconHintText) \(LocalizedCopy.shoppingListEmptyAddHintPullDownInfix)")
+                .multilineTextAlignment(.center)
+            Text(LocalizedCopy.shoppingListEmptyAddHintPullDownSuffix)
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    private var libraryIconHintText: Text {
+        Text(Image(systemName: "books.vertical.fill"))
+            .foregroundStyle(.primary)
     }
 
     private var plusIconHintText: Text {

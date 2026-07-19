@@ -29,6 +29,9 @@ struct StorePullToAddCatalogSearchView: View {
     /// Sheet presentation: focused glass `TextField` so the keyboard rises with the sheet.
     /// Uses a sticky UIKit field that refuses to resign on row taps (unlike SwiftUI `TextField`).
     var usesFocusedSearchField: Bool = false
+    /// When true, allows resign and drops focus (e.g. first-item explainer over pull-to-add).
+    /// Clearing it while the sheet is still up restores the keyboard.
+    var searchKeyboardSuppressed: Binding<Bool> = .constant(false)
 
     @State private var expandedPullToAddQuantityPillItemID: UUID?
     @State private var stickySearchFieldFocused = false
@@ -173,21 +176,34 @@ struct StorePullToAddCatalogSearchView: View {
         .onAppear {
             guard usesFocusedSearchField else { return }
             isSearchPresented = true
-            allowsSearchFieldResign = false
-            Task { @MainActor in
-                await Task.yield()
-                stickySearchFieldFocused = true
-            }
+            applySearchKeyboardSuppression(searchKeyboardSuppressed.wrappedValue)
         }
         .onDisappear {
             guard usesFocusedSearchField else { return }
             allowsSearchFieldResign = true
             stickySearchFieldFocused = false
         }
+        .onChange(of: searchKeyboardSuppressed.wrappedValue) { _, suppressed in
+            guard usesFocusedSearchField else { return }
+            applySearchKeyboardSuppression(suppressed)
+        }
         .onChange(of: searchText) { _, newValue in
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty {
                 pinnedSearchQuery = ""
+            }
+        }
+    }
+
+    private func applySearchKeyboardSuppression(_ suppressed: Bool) {
+        if suppressed {
+            allowsSearchFieldResign = true
+            stickySearchFieldFocused = false
+        } else {
+            allowsSearchFieldResign = false
+            Task { @MainActor in
+                await Task.yield()
+                stickySearchFieldFocused = true
             }
         }
     }
