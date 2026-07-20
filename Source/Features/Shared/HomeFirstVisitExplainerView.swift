@@ -12,9 +12,8 @@ struct HomeFirstVisitExplainerOverlay: View {
     private let cardMaxWidth: CGFloat = 340
     private let cardTextVerticalInset: CGFloat = 15
     private let cardCornerRadius: CGFloat = 34
-    private static let slideInAnimation = Animation.spring(response: 0.38, dampingFraction: 0.86)
-    private static let slideOutAnimation = Animation.spring(response: 0.82, dampingFraction: 0.88)
-    private static let slideOutDuration: Duration = .milliseconds(450)
+    private static let fadeAnimation = Animation.easeInOut(duration: 0.25)
+    private static let fadeOutDuration: Duration = .milliseconds(250)
 
     var body: some View {
         ZStack {
@@ -26,14 +25,13 @@ struct HomeFirstVisitExplainerOverlay: View {
                 Spacer()
 
                 cardContent
-                    .offset(y: isVisible ? 0 : 320)
                     .opacity(isVisible ? 1 : 0)
             }
             .padding(.horizontal, 28)
             .padding(.bottom, 28)
         }
         .onAppear {
-            withAnimation(Self.slideInAnimation) {
+            withAnimation(Self.fadeAnimation) {
                 isVisible = true
             }
         }
@@ -108,11 +106,11 @@ struct HomeFirstVisitExplainerOverlay: View {
 
     private func dismissAnimated() {
         dismissTask?.cancel()
-        withAnimation(Self.slideOutAnimation) {
+        withAnimation(Self.fadeAnimation) {
             isVisible = false
         }
         dismissTask = Task { @MainActor in
-            try? await Task.sleep(for: Self.slideOutDuration)
+            try? await Task.sleep(for: Self.fadeOutDuration)
             guard !Task.isCancelled else { return }
             onDone()
         }

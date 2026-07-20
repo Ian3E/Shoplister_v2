@@ -34,6 +34,11 @@ struct InventoryView: View {
     var usesHomeToolbarSearch: Bool = false
     /// Drives `searchable(isPresented:)` for toolbar search on Home.
     @Binding var isHomeToolbarSearchPresented: Bool
+    @Binding var homeSearchText: String
+    /// Only one Home quantity pill stepper is expanded at a time (owned by tab root so leave-Library can collapse immediately).
+    @Binding var expandedHomeQuantityPillItemID: UUID?
+    /// Identity token remounting Home pills after leave-Library collapse (avoids deferred animation).
+    var homeQuantityPillChromeID: UUID = UUID()
     /// Toolbar `searchable` prompt.
     var toolbarSearchPrompt: String = LocalizedCopy.searchOrCreateItem
     /// Home: Return-key submit, exact match, new item sheet.
@@ -60,10 +65,12 @@ struct InventoryView: View {
     var onBackToStore: (() -> Void)? = nil
     /// After adding a recipe to the shopping list, pop back to Store.
     var onReturnToStoreAfterRecipeApply: (() -> Void)? = nil
-
-    @Binding var homeSearchText: String
+    /// First empty→non-empty Home add: item name + global title frame for the List-tab dive.
+    var onFirstHomeAddDive: ((String, CGRect) -> Void)? = nil
 
     @State private var rowAnchors: [HomeCatalogRowAnchor] = []
+    /// Latest global frames for Home row titles (drive first-add dive source).
+    @State private var homeItemNameGlobalFrames: [UUID: CGRect] = [:]
     @State private var listScrollSnapshot = HomeCatalogListScrollSnapshot(
         viewportHeight: 0,
         contentTopInset: 0
@@ -88,8 +95,6 @@ struct InventoryView: View {
     @State private var homeToolbarSearchPlaceholderPinTask: Task<Void, Never>?
     /// IDs of items currently selected in edit mode.
     @State private var selectedItemIDs: Set<UUID> = []
-    /// Only one Home quantity pill stepper is expanded at a time.
-    @State private var expandedHomeQuantityPillItemID: UUID?
     /// Pinned query after adding an item in Home search — keeps matched results
     /// visible even after homeSearchText is cleared, mirroring pull-to-add behaviour.
     @State private var homeSearchPinnedQuery: String = ""
@@ -108,11 +113,14 @@ struct InventoryView: View {
         hidesNavigationBar: Bool = true,
         ignoresSafeArea: Bool = true,
         showsShoppingStatus: Bool = true,
+        expandedHomeQuantityPillItemID: Binding<UUID?> = .constant(nil),
+        homeQuantityPillChromeID: UUID = UUID(),
         onPresentNewItemFromSearch: @escaping (String) -> Void = { _ in },
         onToolbarAddItem: (() -> Void)? = nil,
         onToolbarSelectGroupsKind: ((Tag.Kind) -> Void)? = nil,
         onBackToStore: (() -> Void)? = nil,
         onReturnToStoreAfterRecipeApply: (() -> Void)? = nil,
+        onFirstHomeAddDive: ((String, CGRect) -> Void)? = nil,
         onEditItem: @escaping (GroceryItem) -> Void = { _ in },
         onDeleteItem: @escaping (GroceryItem) -> Void = { _ in }
     ) {
@@ -120,6 +128,8 @@ struct InventoryView: View {
         self.usesHomeToolbarSearch = usesHomeToolbarSearch
         _isHomeToolbarSearchPresented = isHomeToolbarSearchPresented
         _homeSearchText = homeSearchText
+        _expandedHomeQuantityPillItemID = expandedHomeQuantityPillItemID
+        self.homeQuantityPillChromeID = homeQuantityPillChromeID
         self.toolbarSearchPrompt = toolbarSearchPrompt
         self.toolbarSearchUsesSubmitBehavior = toolbarSearchUsesSubmitBehavior
         self.minimizesToolbarSearch = minimizesToolbarSearch
@@ -133,6 +143,7 @@ struct InventoryView: View {
         self.onToolbarSelectGroupsKind = onToolbarSelectGroupsKind
         self.onBackToStore = onBackToStore
         self.onReturnToStoreAfterRecipeApply = onReturnToStoreAfterRecipeApply
+        self.onFirstHomeAddDive = onFirstHomeAddDive
         self.onEditItem = onEditItem
         self.onDeleteItem = onDeleteItem
     }
@@ -427,12 +438,26 @@ struct InventoryView: View {
         if expandedHomeQuantityPillItemID == itemID {
             return
         }
-        expandedHomeQuantityPillItemID = nil
+        // Match auto-collapse: animate the previous pill closed in the same spring transaction.
+        // A bare `= nil` still triggers implicit text/gutter animations and flashes on LTR.
+        withAnimation(QuantityPillChromeTiming.expandCollapse) {
+            expandedHomeQuantityPillItemID = nil
+        }
         if store.shopping.contains(where: { $0.itemID == itemID }) {
             store.removeFromShopping(itemID: itemID)
         } else {
+            let wasShoppingEmpty = store.shopping.isEmpty
             store.addToShopping(itemID: itemID, quantity: 1)
             onAddedToShopping?()
+            if wasShoppingEmpty,
+               let onFirstHomeAddDive,
+               let frame = homeItemNameGlobalFrames[itemID],
+               let item = store.item(for: itemID) {
+                onFirstHomeAddDive(
+                    item.displayName(appContentLanguage: catalogLanguage),
+                    frame
+                )
+            }
             QuantityPillChromeTiming.expandAfterAdd(
                 itemID: itemID,
                 guardInShopping: { [store] in
@@ -607,6 +632,7 @@ struct InventoryView: View {
                             isReorderMode: isReorderMode,
                             showsShoppingStatus: showsShoppingStatus,
                             expandedQuantityPillItemID: $expandedHomeQuantityPillItemID,
+                            quantityPillChromeID: homeQuantityPillChromeID,
                             enablesLongPressToEdit: true,
                             onSelectToggleShopping: {},
                             onAddedToShopping: onAddedToShopping,
@@ -696,6 +722,9 @@ struct InventoryView: View {
                 .onPreferenceChange(HomeCatalogRowAnchorKey.self) { anchors in
                     rowAnchors = anchors
                     updateHomeCatalogActiveSection(anchors: anchors)
+                }
+                .onPreferenceChange(HomeItemNameGlobalFrameKey.self) { frames in
+                    homeItemNameGlobalFrames = frames
                 }
                 .onScrollGeometryChange(for: HomeCatalogListScrollSnapshot.self) { geometry in
                     HomeCatalogListScrollSnapshot(
@@ -799,6 +828,7 @@ struct InventoryView: View {
             usesHomePlainListChrome: true,
             usesUIKitContextMenu: false,
             expandedQuantityPillItemID: $expandedHomeQuantityPillItemID,
+            quantityPillChromeID: homeQuantityPillChromeID,
             enablesLongPressToEdit: false,
             onSelectToggleShopping: {},
             onAddedToShopping: onAddedToShopping,
@@ -1828,12 +1858,16 @@ private struct InventoryCatalogRow: View {
     var usesHomePlainListChrome: Bool = false
     var usesUIKitContextMenu: Bool = false
     var expandedQuantityPillItemID: Binding<UUID?>? = nil
+    /// Remount token: bumped when Library becomes active after an expanded pill so row `@State` resets.
+    var quantityPillChromeID: UUID = UUID()
     var enablesLongPressToEdit: Bool = false
     let onSelectToggleShopping: () -> Void
     /// Called after the row adds this item to the shopping list (not when removing or in reorder mode).
     let onAddedToShopping: (() -> Void)?
     let onEdit: () -> Void
 
+    /// Visual expansion — starts collapsed so row-add can animate open after the pill mounts.
+    /// Shared list ID coordinates which row is expanded; `quantityPillChromeID` remounts to clear stale expansion.
     @State private var isQuantityPillExpanded = false
 
     private var isInShopping: Bool {
@@ -1858,31 +1892,36 @@ private struct InventoryCatalogRow: View {
             )
             .catalogListRowSeparatorFullWidth(!usesHomePlainListChrome)
             .contentShape(Rectangle())
+            .onChange(of: expandedQuantityPillItemID?.wrappedValue) { _, expandedID in
+                syncQuantityPillExpansion(with: expandedID)
+            }
+            .onChange(of: isInShopping) { _, inShopping in
+                guard !inShopping else { return }
+                quantityPillExpandedBinding.wrappedValue = false
+            }
 
-        if isReorderMode {
-            row
-        } else if usesUIKitContextMenu {
-            row
-        } else {
-            row
-                .onTapGesture { handleTap() }
-                .onLongPressGesture(minimumDuration: 0.35) {
-                    guard enablesLongPressToEdit else { return }
-                    AppHaptics.impact(.medium)
-                    onEdit()
-                }
-                .accessibilityAction(named: LocalizedCopy.edit) {
-                    guard enablesLongPressToEdit else { return }
-                    onEdit()
-                }
-                .onChange(of: expandedQuantityPillItemID?.wrappedValue) { _, expandedID in
-                    syncQuantityPillExpansion(with: expandedID)
-                }
-                .onChange(of: isInShopping) { _, inShopping in
-                    guard !inShopping else { return }
-                    quantityPillExpandedBinding.wrappedValue = false
-                }
+        // Key by item + chrome token so `@State` expansion resets on Library become-active remount.
+        // Chrome ID alone isn't unique across sibling rows.
+        Group {
+            if isReorderMode {
+                row
+            } else if usesUIKitContextMenu {
+                row
+            } else {
+                row
+                    .onTapGesture { handleTap() }
+                    .onLongPressGesture(minimumDuration: 0.35) {
+                        guard enablesLongPressToEdit else { return }
+                        AppHaptics.impact(.medium)
+                        onEdit()
+                    }
+                    .accessibilityAction(named: LocalizedCopy.edit) {
+                        guard enablesLongPressToEdit else { return }
+                        onEdit()
+                    }
+            }
         }
+        .id("\(item.id.uuidString)-\(quantityPillChromeID.uuidString)")
     }
 
     private func syncQuantityPillExpansion(with expandedID: UUID?) {
@@ -1913,7 +1952,9 @@ private struct InventoryCatalogRow: View {
     private func collapseExpandedQuantityPillIfNeeded() {
         guard let expandedQuantityPillItemID,
               expandedQuantityPillItemID.wrappedValue != nil else { return }
-        expandedQuantityPillItemID.wrappedValue = nil
+        withAnimation(QuantityPillChromeTiming.expandCollapse) {
+            expandedQuantityPillItemID.wrappedValue = nil
+        }
     }
 
     private func scheduleExpandQuantityPillAfterAdd() {
@@ -1953,72 +1994,69 @@ private struct InventoryCatalogRow: View {
         }
     }
 
-    private var quantityPillTextGutter: CGFloat {
-        guard showsShoppingStatus, showsRowShoppingStatus else { return 0 }
-        if isInShopping {
-            let usesGlassChrome = usesHomePlainListChrome
-            if isQuantityPillExpanded {
-                return CatalogListRowDensity.quantityPillExpandedReservedWidth(
-                    forQuantity: qty,
-                    usesGlassChrome: usesGlassChrome,
-                    scale: spacingScale
-                )
-            }
-            return CatalogListRowDensity.quantityPillCollapsedRenderedWidth(
-                forQuantity: qty,
-                usesGlassChrome: usesGlassChrome,
-                scale: spacingScale
-            )
-        }
-        return CatalogListRowDensity.quantityPillSlotMinWidth
-    }
-
     private var rowItemNameFont: Font {
         showsInShopping && isQuantityPillExpanded ? Font.body.weight(.bold) : .body
     }
 
+    /// Pill is in the HStack (avoids LTR title-padding flicker) but reports `height: 0` so expand
+    /// chrome can overflow without changing list row height — same as the old overlay behavior.
     private var hebrewRow: some View {
-        Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(rowItemNameFont)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
-            .multilineTextAlignment(.trailing)
-            .foregroundStyle(showsInShopping ? appTheme.color : .primary)
-            .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: showsRowShoppingStatus)
-            .lineLimit(1)
-            .padding(.leading, quantityPillTextGutter)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .overlay(alignment: .leading) {
-                if showsShoppingStatus {
-                    quantityPillColumn
-                }
+        HStack(spacing: 0) {
+            if showsShoppingStatus {
+                quantityPillColumn
             }
+            Text(item.displayName(appContentLanguage: catalogLanguage))
+                .font(rowItemNameFont)
+                .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(showsInShopping ? appTheme.color : .primary)
+                .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: showsRowShoppingStatus)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .overlay(alignment: .trailing) {
+                    itemNameDiveSourceProbe
+                }
+        }
     }
 
     private var englishRow: some View {
-        Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(rowItemNameFont)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
-            .multilineTextAlignment(.leading)
-            .foregroundStyle(showsInShopping ? appTheme.color : .primary)
-            .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: showsRowShoppingStatus)
-            .lineLimit(1)
-            .padding(.trailing, quantityPillTextGutter)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .trailing) {
-                if showsShoppingStatus {
-                    quantityPillColumn
+        HStack(spacing: 0) {
+            Text(item.displayName(appContentLanguage: catalogLanguage))
+                .font(rowItemNameFont)
+                .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
+                .multilineTextAlignment(.leading)
+                .foregroundStyle(showsInShopping ? appTheme.color : .primary)
+                .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: showsRowShoppingStatus)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(alignment: .leading) {
+                    itemNameDiveSourceProbe
                 }
+            if showsShoppingStatus {
+                quantityPillColumn
             }
+        }
     }
 
-    /// Trailing/leading pill anchored to the row edge; width reserved via `quantityPillTextGutter` on the title.
+    /// Intrinsic name bounds for the first-add dive (does not affect truncation layout).
+    /// Uses bold to match the diving label so midX lines up after the row turns bold.
+    private var itemNameDiveSourceProbe: some View {
+        Text(item.displayName(appContentLanguage: catalogLanguage))
+            .font(.body.weight(.bold))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .hidden()
+            .reportHomeItemNameGlobalFrame(itemID: item.id)
+            .accessibilityHidden(true)
+    }
+
     private var quantityPillColumn: some View {
         Group {
             if showsInShopping {
                 quantityPill(qty: qty, itemID: item.id)
-                    .fixedSize(horizontal: true, vertical: false)
+                    .fixedSize(horizontal: true, vertical: true)
+                    // Keep width in the HStack; contribute no height so rows stay text-sized.
+                    .frame(height: 0, alignment: .center)
                     .opacity(showsRowShoppingStatus ? 1 : 0)
                     .animation(.easeIn(duration: HomeCatalogEditModeTiming.statusFadeDuration), value: showsRowShoppingStatus)
             }

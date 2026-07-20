@@ -766,6 +766,11 @@ struct ShoppingView: View {
                 }
                 syncEmptyShoppingFadeFromResolvedRows()
             }
+            .onChange(of: emptyAddHintCompletedListCount) { _, count in
+                // Debug reset (and any external clear) while already empty should restore the hint.
+                guard entriesWithItems.isEmpty else { return }
+                showsEmptyAddHint = AppShoppingEmptyAddHint.shouldShow(completedListCount: count)
+            }
             .onChange(of: store.catalog) { _, _ in
                 expandCollapsedShoppingGroupsThatGainedItems()
                 recomputeAutoCollapsedGroups()

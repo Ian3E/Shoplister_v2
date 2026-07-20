@@ -19,6 +19,14 @@ struct ContentView: View {
     @State private var newItemPrefillName: String? = nil
     /// Inventory row reorder mode: enables drag handles and changes row taps to "edit item".
     @State private var isInventoryReorderMode: Bool = false
+    /// Home quantity pill expansion — owned here so leaving Library can collapse it immediately
+    /// (TabView may defer InventoryView updates until the tab is visible again).
+    @State private var expandedHomeQuantityPillItemID: UUID?
+    /// Bumped when returning to Library after an expanded pill so rows remount collapsed
+    /// (TabView defers Home updates while off-screen; remount must happen on become-active).
+    @State private var homeQuantityPillChromeID = UUID()
+    /// Set when leaving Library with an expanded pill; consumed on the next Library activation.
+    @State private var homeQuantityPillNeedsChromeReset = false
     /// Catalog edit/delete from the full-window quick-actions overlay — presented here (root) so sheets
     /// aren’t attached under Home’s nested `InventoryView`, which can swallow presentation.
     @State private var inventoryCatalogEditorItem: GroceryItem?
@@ -38,8 +46,8 @@ struct ContentView: View {
     @State private var storePullToAddSearchChromeID = UUID()
     /// True only when presenting **New Item** after Store pull-to-add; add saved item to shopping list.
     @State private var newItemAddToShoppingAfterSave = false
-    /// Selected root tab (List / Library).
-    @State private var selectedTab: TabSelection = .store
+    /// Selected root tab (List / Library). Fresh launches open Library (Home).
+    @State private var selectedTab: TabSelection = .home
     /// Pull-to-add presented as a modal sheet (Settings-style) from the List tab.
     @State private var isPresentingPullToAddSheet = false
     /// Drops the sticky pull-to-add search keyboard (e.g. while the first-item explainer is up).
@@ -62,6 +70,15 @@ struct ContentView: View {
     @State private var firstShoppingItemExplainerTask: Task<Void, Never>?
     @State private var welcomeExplainerTask: Task<Void, Never>?
     @State private var storeGesturesExplainerTask: Task<Void, Never>?
+    @StateObject private var firstAddToListDive = FirstAddToListDiveController()
+    /// Live List-tab icon center (window coords); refreshed by `ListTabDiveTargetReader`.
+    @State private var listTabDiveTargetPoint: CGPoint = .zero
+    /// Snapshot taken when a dive starts so travel doesn’t drift with layout.
+    @State private var activeDiveTargetPoint: CGPoint = .zero
+    /// Hide the List tab badge until the first-add +1 bubble finishes.
+    @State private var suppressListTabBadgeForFirstAddDive = false
+    /// Blocks Home/List interaction from dive start until the first-item explainer appears.
+    @State private var blocksInteractionUntilFirstItemExplainer = false
 
     /// At least one unchecked line with a resolved catalog item (same as what share text would include).
     private var canShareShoppingList: Bool {
@@ -71,6 +88,7 @@ struct ContentView: View {
     /// List tab badge when the dedicated setting is on (0 hides the badge).
     private var listTabUncheckedBadge: Int {
         guard showListTabBadge else { return 0 }
+        guard !suppressListTabBadgeForFirstAddDive else { return 0 }
         return ShoppingIconBadge.uncheckedCount(store: store)
     }
 
@@ -125,8 +143,36 @@ struct ContentView: View {
                     selectedTab: selectedTab
                 )
             )
+            .background {
+                ListTabDiveTargetReader(point: $listTabDiveTargetPoint)
+                    .frame(width: 0, height: 0)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
             .catalogGroupedChromeBackdrop()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if blocksInteractionUntilFirstItemExplainer {
+                Color.clear
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .zIndex(140)
+                    .accessibilityHidden(true)
+            }
+
+            if let dive = firstAddToListDive.payload {
+                FirstAddToListDiveOverlay(
+                    itemName: dive.itemName,
+                    sourceFrame: dive.sourceFrame,
+                    targetPoint: activeDiveTargetPoint,
+                    onPlusOneFinished: {
+                        suppressListTabBadgeForFirstAddDive = false
+                    },
+                    onFinished: completeFirstAddToListDive
+                )
+                .allowsHitTesting(false)
+                .zIndex(150)
+            }
 
             if let kind = fullWindowOverlay.kind {
                 fullWindowOverlayContent(kind: kind)
@@ -153,6 +199,31 @@ struct ContentView: View {
         }
     }
 
+    private var settingsSheet: some View {
+        #if DEBUG
+        SettingsView(
+            draftTextSizeRaw: $settingsTextSizeDraft,
+            draftThemeRaw: $settingsThemeDraft,
+            draftCustomColorHex: $settingsThemeCustomDraft,
+            onClose: { isPresentingSettings = false },
+            onDebugResetExplainers: {
+                store.clearShoppingList()
+                selectedTab = .home
+                isPresentingSettings = false
+            }
+        )
+        .environmentObject(store)
+        #else
+        SettingsView(
+            draftTextSizeRaw: $settingsTextSizeDraft,
+            draftThemeRaw: $settingsThemeDraft,
+            draftCustomColorHex: $settingsThemeCustomDraft,
+            onClose: { isPresentingSettings = false }
+        )
+        .environmentObject(store)
+        #endif
+    }
+
     /// Home tab: rooted catalog (no back chevron). Edit enters reorder directly; ⋯ hosts
     /// home sections / create / saved lists; search is a minimized bottom-trailing control.
     private var homeCatalogTabScreen: some View {
@@ -166,6 +237,8 @@ struct ContentView: View {
             bottomReservedHeight: 0,
             ignoresSafeArea: false,
             showsShoppingStatus: true,
+            expandedHomeQuantityPillItemID: $expandedHomeQuantityPillItemID,
+            homeQuantityPillChromeID: homeQuantityPillChromeID,
             onPresentNewItemFromSearch: { name in
                 newItemAddToShoppingAfterSave = false
                 newItemPrefillName = name
@@ -181,6 +254,7 @@ struct ContentView: View {
             onToolbarSelectGroupsKind: { editGroupsSheetKind = $0 },
             onBackToStore: nil,
             onReturnToStoreAfterRecipeApply: { selectedTab = .store },
+            onFirstHomeAddDive: beginFirstAddToListDiveIfNeeded,
             onEditItem: { item in
                 inventoryCatalogEditorItem = item
             },
@@ -277,11 +351,34 @@ struct ContentView: View {
             if current == .store {
                 scheduleStoreGesturesExplainerIfNeeded()
             }
-            if previous == .home, isInventoryReorderMode {
-                isInventoryReorderMode = false
+            if previous == .home {
+                if isInventoryReorderMode {
+                    isInventoryReorderMode = false
+                }
+                // Clear shared expansion now; remount rows when Library becomes active again
+                // (off-screen Home won't apply local `@State` resets until then).
+                if expandedHomeQuantityPillItemID != nil {
+                    homeQuantityPillNeedsChromeReset = true
+                }
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    expandedHomeQuantityPillItemID = nil
+                }
+            }
+            if current == .home, homeQuantityPillNeedsChromeReset {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    homeQuantityPillChromeID = UUID()
+                    homeQuantityPillNeedsChromeReset = false
+                }
             }
         }
         .onAppear {
+            if selectedTab == .home {
+                hasVisitedHomeCatalog = true
+            }
             markFirstShoppingItemExplainerSeenIfShoppingListAlreadyPopulated()
             scheduleWelcomeExplainerIfNeeded()
             scheduleStoreGesturesExplainerIfNeeded()
@@ -323,13 +420,7 @@ struct ContentView: View {
             scheduleWelcomeExplainerIfNeeded()
         }
         .sheet(isPresented: $isPresentingSettings) {
-            SettingsView(
-                draftTextSizeRaw: $settingsTextSizeDraft,
-                draftThemeRaw: $settingsThemeDraft,
-                draftCustomColorHex: $settingsThemeCustomDraft,
-                onClose: { isPresentingSettings = false }
-            )
-                .environmentObject(store)
+            settingsSheet
         }
         .onChange(of: isPresentingSettings) { _, presented in
             if presented {
@@ -515,20 +606,86 @@ struct ContentView: View {
 
     private func scheduleFirstShoppingItemExplainerIfNeeded() {
         guard !hasSeenFirstShoppingItemExplainer else { return }
+        guard !firstAddToListDive.isActive else { return }
         dismissKeyboardForFirstItemExplainer()
         firstShoppingItemExplainerTask?.cancel()
         firstShoppingItemExplainerTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.5))
             guard !Task.isCancelled else { return }
             guard !hasSeenFirstShoppingItemExplainer else { return }
+            guard !firstAddToListDive.isActive else { return }
             guard !store.shopping.isEmpty else { return }
             guard fullWindowOverlay.kind == nil else { return }
             fullWindowOverlay.presentFirstShoppingItemExplainer()
         }
     }
 
+    private func beginFirstAddToListDiveIfNeeded(itemName: String, sourceFrame: CGRect) {
+        guard !hasSeenFirstShoppingItemExplainer else { return }
+        guard !firstAddToListDive.isActive else { return }
+        firstShoppingItemExplainerTask?.cancel()
+        let resolvedTarget =
+            listTabDiveTargetPoint == .zero
+            ? (ListTabIconFrameLocator.listTabIconCenterInWindow() ?? listTabDiveFallbackPoint)
+            : listTabDiveTargetPoint
+        activeDiveTargetPoint = resolvedTarget
+        suppressListTabBadgeForFirstAddDive = true
+        blocksInteractionUntilFirstItemExplainer = true
+        firstAddToListDive.begin(itemName: itemName, sourceFrame: sourceFrame)
+        // Invalid source frame: fall through to the normal explainer delay.
+        if !firstAddToListDive.isActive {
+            suppressListTabBadgeForFirstAddDive = false
+            blocksInteractionUntilFirstItemExplainer = false
+            scheduleFirstShoppingItemExplainerIfNeeded()
+        }
+    }
+
+    private func completeFirstAddToListDive() {
+        firstAddToListDive.complete()
+        // After the dive +1, wait briefly before the explainer.
+        guard !hasSeenFirstShoppingItemExplainer else {
+            blocksInteractionUntilFirstItemExplainer = false
+            return
+        }
+        dismissKeyboardForFirstItemExplainer()
+        firstShoppingItemExplainerTask?.cancel()
+        firstShoppingItemExplainerTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            guard !hasSeenFirstShoppingItemExplainer else {
+                blocksInteractionUntilFirstItemExplainer = false
+                return
+            }
+            guard !store.shopping.isEmpty else {
+                blocksInteractionUntilFirstItemExplainer = false
+                return
+            }
+            guard fullWindowOverlay.kind == nil else {
+                blocksInteractionUntilFirstItemExplainer = false
+                return
+            }
+            fullWindowOverlay.presentFirstShoppingItemExplainer()
+            blocksInteractionUntilFirstItemExplainer = false
+        }
+    }
+
+    /// Fallback when the live tab probe hasn’t published yet (2-tab centered bar).
+    private var listTabDiveFallbackPoint: CGPoint {
+        let bounds = keyWindowSceneBounds
+        return CGPoint(x: bounds.midX - bounds.width * 0.12, y: bounds.height - 40)
+    }
+
+    private var keyWindowSceneBounds: CGRect {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene =
+            scenes.first(where: { $0.activationState == .foregroundActive })
+            ?? scenes.first
+        return scene?.screen.bounds ?? CGRect(x: 0, y: 0, width: 390, height: 844)
+    }
+
     private func completeFirstShoppingItemExplainer() {
         hasSeenFirstShoppingItemExplainer = true
+        blocksInteractionUntilFirstItemExplainer = false
         fullWindowOverlay.dismiss(animated: false)
         restorePullToAddKeyboardAfterFirstItemExplainerIfNeeded()
         scheduleStoreGesturesExplainerIfNeeded()

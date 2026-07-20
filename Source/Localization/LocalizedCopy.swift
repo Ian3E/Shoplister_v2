@@ -86,6 +86,21 @@ enum LocalizedCopy {
         String(localized: "About", comment: "About settings section title")
     }
 
+    static var settingsDebug: String {
+        String(localized: "Debug", comment: "Debug settings section title")
+    }
+
+    static var resetExplainers: String {
+        String(localized: "Reset explainers", comment: "Debug button to reset onboarding explainers")
+    }
+
+    static var resetExplainersFooter: String {
+        String(
+            localized: "Resets List settings to defaults, clears welcome/first-item/store-gesture explainers and the empty-list add-hint count, empties the shopping list, and opens Library so you can retest the first-add dive.",
+            comment: "Footer under reset explainers debug button"
+        )
+    }
+
     static var appName: String {
         String(localized: "Shoplister", comment: "App name on About screen")
     }
@@ -844,7 +859,7 @@ enum LocalizedCopy {
 
     static var welcomeExplainerAccessibilityLabel: String {
         String(
-            localized: "Welcome to Shoplister! Each item in Shoplister has a Home section (where you keep it) Store section (where you buy it). Your shopping list is organized by Store sections. Your item library is organized by Home sections.",
+            localized: "Welcome to Shoplister! Each item in Shoplister has a Home section (where you keep it) Store section (where you buy it). Your item library is organized by Home sections. Your shopping list is organized by Store sections.",
             comment: "Fresh-install welcome explainer VoiceOver label"
         )
     }

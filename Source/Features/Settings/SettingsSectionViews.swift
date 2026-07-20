@@ -334,6 +334,54 @@ struct SettingsAboutView: View {
     }
 }
 
+#if DEBUG
+struct SettingsDebugView: View {
+    @AppStorage(AppWelcomeExplainer.storageKey) private var hasSeenWelcomeExplainer = false
+    @AppStorage(AppHomeFirstVisitExplainer.storageKey) private var hasSeenFirstShoppingItemExplainer = false
+    @AppStorage(AppStoreGesturesExplainer.storageKey) private var hasSeenStoreGesturesExplainer = false
+
+    @AppStorage(AppShoppingSortChecked.storageKey) private var sortCheckedShoppingItems = false
+    @AppStorage(AppShoppingCollapseCompletedSections.storageKey) private var collapseCompletedSections = false
+    @AppStorage(AppShoppingHideStoreGroupNames.storageKey) private var hideStoreGroupNames = false
+    @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked = true
+    @AppStorage(AppLibraryAutoExpandQuantityPicker.storageKey) private var autoExpandQuantityPicker = true
+    @AppStorage(AppListTabBadge.storageKey) private var showListTabBadge = true
+    @AppStorage(AppShoppingBadgeUnchecked.storageKey) private var showUncheckedCountAppBadge = false
+    @AppStorage(AppShoppingEmptyAddHint.storageKey) private var emptyAddHintCompletedListCount = 0
+
+    var onResetExplainers: () -> Void
+
+    var body: some View {
+        List {
+            Section {
+                Button(LocalizedCopy.resetExplainers) {
+                    hasSeenWelcomeExplainer = false
+                    hasSeenFirstShoppingItemExplainer = false
+                    hasSeenStoreGesturesExplainer = false
+                    emptyAddHintCompletedListCount = 0
+                    resetListSectionDefaults()
+                    onResetExplainers()
+                }
+            } footer: {
+                Text(LocalizedCopy.resetExplainersFooter)
+            }
+        }
+        .navigationTitle(LocalizedCopy.settingsDebug)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func resetListSectionDefaults() {
+        sortCheckedShoppingItems = false
+        collapseCompletedSections = false
+        hideStoreGroupNames = false
+        confirmClearWhenAllChecked = true
+        autoExpandQuantityPicker = true
+        showListTabBadge = true
+        showUncheckedCountAppBadge = false
+    }
+}
+#endif
+
 private enum SettingsAboutAppInfo {
     static var versionLabel: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"

@@ -48,10 +48,12 @@ private struct CatalogListLayoutDirectionModifier: ViewModifier {
     @Environment(\.appContentLanguage) private var catalogLanguage
 
     func body(content: Content) -> some View {
-        content.environment(
-            \.layoutDirection,
-            CatalogLayoutMirroring.catalogLayoutDirection(for: catalogLanguage)
-        )
+        let direction = CatalogLayoutMirroring.catalogLayoutDirection(for: catalogLanguage)
+        content
+            .environment(\.layoutDirection, direction)
+            // UITableView-backed List can keep a horizontal flip after RTL→LTR until remounted
+            // (force-quit clears it). Identity on direction forces a clean layout pass.
+            .id(direction)
     }
 }
 

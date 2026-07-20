@@ -646,7 +646,9 @@ private struct StorePullToAddCatalogItemRow: View {
         if expandedQuantityPillItemID == item.id {
             return
         }
-        expandedQuantityPillItemID = nil
+        withAnimation(QuantityPillChromeTiming.expandCollapse) {
+            expandedQuantityPillItemID = nil
+        }
         if isInShopping {
             store.removeFromShopping(itemID: item.id)
         } else {
@@ -671,70 +673,49 @@ private struct StorePullToAddCatalogItemRow: View {
         }
     }
 
-    private var quantityPillTextGutter: CGFloat {
-        if isInShopping {
-            if isQuantityPillExpanded {
-                return CatalogListRowDensity.quantityPillExpandedReservedWidth(
-                    forQuantity: qty,
-                    usesGlassChrome: true,
-                    scale: spacingScale
-                )
-            }
-            return CatalogListRowDensity.quantityPillCollapsedRenderedWidth(
-                forQuantity: qty,
-                usesGlassChrome: true,
-                scale: spacingScale
-            )
-        }
-        return CatalogListRowDensity.quantityPillSlotMinWidth
-    }
-
     private var rowItemNameFont: Font {
         isInShopping && isQuantityPillExpanded ? Font.body.weight(.bold) : .body
     }
 
     private var hebrewRow: some View {
-        Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(rowItemNameFont)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
-            .multilineTextAlignment(.trailing)
-            .foregroundStyle(isInShopping ? appTheme.color : .primary)
-            .lineLimit(1)
-            .padding(.leading, quantityPillTextGutter)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .overlay(alignment: .leading) {
-                if isInShopping {
-                    quantityPillColumn
-                }
-            }
+        HStack(spacing: 0) {
+            quantityPillColumn
+            Text(item.displayName(appContentLanguage: catalogLanguage))
+                .font(rowItemNameFont)
+                .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(isInShopping ? appTheme.color : .primary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
     }
 
     private var englishRow: some View {
-        Text(item.displayName(appContentLanguage: catalogLanguage))
-            .font(rowItemNameFont)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
-            .multilineTextAlignment(.leading)
-            .foregroundStyle(isInShopping ? appTheme.color : .primary)
-            .lineLimit(1)
-            .padding(.trailing, quantityPillTextGutter)
-            .animation(QuantityPillChromeTiming.expandCollapse, value: quantityPillTextGutter)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .trailing) {
-                if isInShopping {
-                    quantityPillColumn
-                }
-            }
+        HStack(spacing: 0) {
+            Text(item.displayName(appContentLanguage: catalogLanguage))
+                .font(rowItemNameFont)
+                .animation(QuantityPillChromeTiming.expandCollapse, value: isQuantityPillExpanded)
+                .multilineTextAlignment(.leading)
+                .foregroundStyle(isInShopping ? appTheme.color : .primary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            quantityPillColumn
+        }
     }
 
     private var quantityPillColumn: some View {
-        quantityPill(qty: qty, itemID: item.id)
-            .fixedSize(horizontal: true, vertical: false)
-            .frame(
-                minWidth: CatalogListRowDensity.quantityPillSlotMinWidth
-                    + CatalogListRowDensity.quantityPillHorizontalNudge,
-                alignment: usesManualMirror ? .leading : .trailing
-            )
+        Group {
+            if isInShopping {
+                quantityPill(qty: qty, itemID: item.id)
+                    .fixedSize(horizontal: true, vertical: true)
+                    .frame(height: 0, alignment: .center)
+            }
+        }
+        .frame(
+            minWidth: CatalogListRowDensity.quantityPillSlotMinWidth
+                + CatalogListRowDensity.quantityPillHorizontalNudge,
+            alignment: usesManualMirror ? .leading : .trailing
+        )
     }
 
     private func quantityPill(qty: Int, itemID: UUID) -> some View {

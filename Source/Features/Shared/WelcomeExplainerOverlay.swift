@@ -23,13 +23,13 @@ struct WelcomeExplainerOverlay: View {
                 true
             ),
             (
-                "storefront.fill",
-                LocalizedCopy.welcomeExplainerShoppingListGrouping,
+                "books.vertical.fill",
+                LocalizedCopy.welcomeExplainerHomeLibraryGrouping,
                 false
             ),
             (
-                "house.fill",
-                LocalizedCopy.welcomeExplainerHomeLibraryGrouping,
+                "checklist",
+                LocalizedCopy.welcomeExplainerShoppingListGrouping,
                 false
             ),
         ]
