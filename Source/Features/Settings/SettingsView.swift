@@ -7,9 +7,6 @@ private enum SettingsRoute: Hashable {
     case appearance
     case device
     case about
-    #if DEBUG
-    case debug
-    #endif
 }
 
 struct SettingsView: View {
@@ -20,10 +17,6 @@ struct SettingsView: View {
     @Binding var draftThemeRaw: String
     @Binding var draftCustomColorHex: String
     var onClose: (() -> Void)? = nil
-    #if DEBUG
-    /// Clears shopping list, switches to Library, and dismisses Settings after debug reset.
-    var onDebugResetExplainers: (() -> Void)? = nil
-    #endif
 
     @AppStorage(AppAppearance.storageKey) private var appearanceRaw: String = AppAppearance.system.rawValue
     @State private var navigationPath = NavigationPath()
@@ -38,11 +31,6 @@ struct SettingsView: View {
                     settingsLink(.device, title: LocalizedCopy.device, systemImage: "iphone")
                     settingsLink(.about, title: LocalizedCopy.settingsAbout, systemImage: "info.circle.fill")
                 }
-                #if DEBUG
-                Section {
-                    settingsLink(.debug, title: LocalizedCopy.settingsDebug, systemImage: "ladybug.fill")
-                }
-                #endif
             }
             .navigationTitle(LocalizedCopy.settings)
             .navigationBarTitleDisplayMode(.inline)
@@ -84,12 +72,6 @@ struct SettingsView: View {
             SettingsDeviceView()
         case .about:
             SettingsAboutView()
-        #if DEBUG
-        case .debug:
-            SettingsDebugView(onResetExplainers: {
-                onDebugResetExplainers?()
-            })
-        #endif
         }
     }
 
@@ -134,13 +116,6 @@ private extension SettingsRoute {
                 Color(red: 0.68, green: 0.68, blue: 0.70),
                 Color(red: 0.48, green: 0.48, blue: 0.50)
             )
-        #if DEBUG
-        case .debug:
-            (
-                Color(red: 1.00, green: 0.45, blue: 0.35),
-                Color(red: 0.85, green: 0.20, blue: 0.25)
-            )
-        #endif
         }
         return LinearGradient(
             colors: [colors.top, colors.bottom],

@@ -86,21 +86,6 @@ enum LocalizedCopy {
         String(localized: "About", comment: "About settings section title")
     }
 
-    static var settingsDebug: String {
-        String(localized: "Debug", comment: "Debug settings section title")
-    }
-
-    static var resetExplainers: String {
-        String(localized: "Reset explainers", comment: "Debug button to reset onboarding explainers")
-    }
-
-    static var resetExplainersFooter: String {
-        String(
-            localized: "Resets List settings to defaults, clears welcome/first-item/store-gesture explainers and the empty-list add-hint count, empties the shopping list, and opens Library so you can retest the first-add dive.",
-            comment: "Footer under reset explainers debug button"
-        )
-    }
-
     static var appName: String {
         String(localized: "Shoplister", comment: "App name on About screen")
     }

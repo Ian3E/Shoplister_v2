@@ -200,20 +200,6 @@ struct ContentView: View {
     }
 
     private var settingsSheet: some View {
-        #if DEBUG
-        SettingsView(
-            draftTextSizeRaw: $settingsTextSizeDraft,
-            draftThemeRaw: $settingsThemeDraft,
-            draftCustomColorHex: $settingsThemeCustomDraft,
-            onClose: { isPresentingSettings = false },
-            onDebugResetExplainers: {
-                store.clearShoppingList()
-                selectedTab = .home
-                isPresentingSettings = false
-            }
-        )
-        .environmentObject(store)
-        #else
         SettingsView(
             draftTextSizeRaw: $settingsTextSizeDraft,
             draftThemeRaw: $settingsThemeDraft,
@@ -221,7 +207,6 @@ struct ContentView: View {
             onClose: { isPresentingSettings = false }
         )
         .environmentObject(store)
-        #endif
     }
 
     /// Home tab: rooted catalog (no back chevron). Edit enters reorder directly; ⋯ hosts
