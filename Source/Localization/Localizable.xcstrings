@@ -1621,17 +1621,6 @@
         }
       }
     },
-    "Manage sections": {
-      "comment": "Manage library or store sections menu item",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ניהול קבוצות"
-          }
-        }
-      }
-    },
     "Medium": {
       "comment": "Medium text size option",
       "localizations": {
@@ -2464,17 +2453,6 @@
         }
       }
     },
-    "Show a badge on the app icon with the count of unchecked shopping list items.": {
-      "comment": "App feature description: app icon badge",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "הציגו תג על סמל האפליקציה עם מספר הפריטים הלא מסומנים ברשימת הקניות."
-          }
-        }
-      }
-    },
     "Shows plus and minus buttons to adjust quantity.": {
       "comment": "Accessibility hint when collapsed quantity pill can expand",
       "localizations": {
@@ -2894,17 +2872,6 @@
         }
       }
     },
-    "When on, the badge shows how many shopping list items are still unchecked. You may be asked to allow notifications so the badge can appear.": {
-      "comment": "Footer under app icon badge toggle",
-      "localizations": {
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "כשהאפשרות פעילה, התג מציג כמה פריטים ברשימת הקניות עדיין לא מסומנים. ייתכן שתתבקשו לאשר התראות כדי שהתג יופיע."
-          }
-        }
-      }
-    },
     "When you add an item, expand the quantity controls. Turn off to expand only when you tap the quantity pill.": {
       "comment": "Footer under auto-expand quantity picker toggle",
       "localizations": {
@@ -3002,6 +2969,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "ולהוסיף פריטים במהירות"
+          }
+        }
+      }
+    },
+    "Type to filter items": {
+      "comment": "Mid-screen hint when Home or pull-to-add search field is empty (no pinned results)",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הקלידו לסינון פריטים"
+          }
+        }
+      }
+    },
+    "List tab badge": {
+      "comment": "List tab badge toggle",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "תג לשונית הרשימה"
+          }
+        }
+      }
+    },
+    "When on, the List tab shows how many shopping list items are still unchecked.": {
+      "comment": "Footer under List tab badge toggle",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כשמופעל, לשונית הרשימה מציגה כמה פריטים ברשימת הקניות עדיין לא מסומנים."
+          }
+        }
+      }
+    },
+    "When on, the app icon shows how many shopping list items are still unchecked. You may be asked to allow notifications so the badge can appear.": {
+      "comment": "Footer under app icon badge toggle",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כשמופעל, סמל האפליקציה מציג כמה פריטים ברשימת הקניות עדיין לא מסומנים. ייתכן שתתבקשו לאשר התראות כדי שהתג יופיע."
+          }
+        }
+      }
+    },
+    "Show a badge on the app icon with the count of unchecked shopping list items.": {
+      "comment": "App feature description: app icon badge",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הציגו תג על סמל האפליקציה עם מספר הפריטים שלא סומנו ברשימת הקניות."
+          }
+        }
+      }
+    },
+    "Show a badge on the List tab with the count of unchecked shopping list items.": {
+      "comment": "App feature description: List tab badge",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הציגו תג על לשונית הרשימה עם מספר הפריטים שלא סומנו ברשימת הקניות."
           }
         }
       }

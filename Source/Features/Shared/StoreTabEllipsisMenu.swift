@@ -22,7 +22,7 @@ struct StoreSettingsToolbarButton: View {
     }
 }
 
-/// Store tab trailing ⋯ menu (manage sections, clear checked, clear list, share, save as recipe).
+/// Store tab trailing ⋯ menu (store sections, clear checked, clear list, share, save as recipe).
 struct StoreTabEllipsisMenu: View {
     @EnvironmentObject private var store: GroceryStore
 
@@ -44,7 +44,7 @@ struct StoreTabEllipsisMenu: View {
         Menu {
             Section {
                 Button(action: onManageStoreSections) {
-                    Label(LocalizedCopy.manageSections, systemImage: "arrow.up.arrow.down")
+                    Label(LocalizedCopy.storeSections, systemImage: "storefront.fill")
                 }
             }
 

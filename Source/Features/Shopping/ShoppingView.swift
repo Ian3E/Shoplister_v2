@@ -474,7 +474,7 @@ struct ShoppingView: View {
                 .opacity(progress)
                 .scaleEffect(pullToClearChromeScale)
                 .animation(accessibilityReduceMotion ? nil : .easeOut(duration: 0.12), value: pullToClearReachedThreshold)
-                .padding(.bottom, 6)
+                .padding(.bottom, 30)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
@@ -612,7 +612,7 @@ struct ShoppingView: View {
                         )
                         Spacer(minLength: 0)
                     }
-                    .offset(y: 60)
+                    .offset(y: -10)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .allowsHitTesting(false)
@@ -813,7 +813,7 @@ struct ShoppingView: View {
             showsStoreGlassToast = true
         }
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1.2))
+            try? await Task.sleep(for: .seconds(2.2))
             guard session == storeGlassToastSession else { return }
             withAnimation(.spring(response: 0.82, dampingFraction: 0.88)) {
                 showsStoreGlassToast = false

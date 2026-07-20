@@ -31,6 +31,29 @@ enum OrientationLock {
     }
 }
 
+/// Matches `LaunchScreen.storyboard` / App Icon blue so home-gesture minimize
+/// composites brand color instead of system white behind the shrinking snapshot.
+enum AppIconBackdrop {
+    static let uiColor = UIColor(
+        red: 0.16145926713943481,
+        green: 0.45925337076187134,
+        blue: 0.93589794635772705,
+        alpha: 1
+    )
+
+    static var color: Color { Color(uiColor: uiColor) }
+
+    static func applyToWindows() {
+        UIWindow.appearance().backgroundColor = uiColor
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                window.backgroundColor = uiColor
+            }
+        }
+    }
+}
+
 private final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
@@ -41,6 +64,8 @@ private final class AppDelegate: NSObject, UIApplicationDelegate {
             AppShoppingConfirmClearWhenAllChecked.storageKey: true,
             AppContentLanguage.storageKey: AppSystemLocale.firstLaunchCatalogLanguageDefault,
         ])
+        // Before the first window mounts so new windows inherit icon blue.
+        UIWindow.appearance().backgroundColor = AppIconBackdrop.uiColor
         return true
     }
 
@@ -72,6 +97,7 @@ struct GroceryListApp: App {
                 .environmentObject(fullWindowOverlay)
                 .environment(\.appContentLanguage, catalogLanguage)
                 .onAppear {
+                    AppIconBackdrop.applyToWindows()
                     AppAutoLock.applyFromUserDefaults()
                     AppTextSize.migrateStoredRawValueIfNeeded(&textSizeRaw)
                     store.mergeShareExtensionShoppingOpsIfNeeded()
@@ -124,5 +150,7 @@ struct GroceryListApp: App {
             .environment(\.shoppingListSpacingScale, size.listSpacingScale)
             .animation(AppTextSize.layoutCommitAnimation, value: textSizeRaw)
             .preferredColorScheme(appearance.colorSchemeOverride)
+            // Behind opaque list chrome; shows during home-gesture morph instead of system white.
+            .background(AppIconBackdrop.color.ignoresSafeArea())
     }
 }

@@ -323,6 +323,13 @@ enum LocalizedCopy {
         )
     }
 
+    static var appFeatureListTabBadgeDescription: String {
+        String(
+            localized: "Show a badge on the List tab with the count of unchecked shopping list items.",
+            comment: "App feature description: List tab badge"
+        )
+    }
+
     static var appFeatureDeviceOptionsTitle: String {
         String(localized: "Device options", comment: "App feature title: device options")
     }
@@ -453,13 +460,24 @@ enum LocalizedCopy {
         )
     }
 
+    static var listTabBadge: String {
+        String(localized: "List tab badge", comment: "List tab badge toggle")
+    }
+
+    static var listTabBadgeFooter: String {
+        String(
+            localized: "When on, the List tab shows how many shopping list items are still unchecked.",
+            comment: "Footer under List tab badge toggle"
+        )
+    }
+
     static var appIconBadge: String {
         String(localized: "App icon badge", comment: "App icon badge toggle")
     }
 
     static var appIconBadgeFooter: String {
         String(
-            localized: "When on, the badge shows how many shopping list items are still unchecked. You may be asked to allow notifications so the badge can appear.",
+            localized: "When on, the app icon shows how many shopping list items are still unchecked. You may be asked to allow notifications so the badge can appear.",
             comment: "Footer under app icon badge toggle"
         )
     }
@@ -678,10 +696,6 @@ enum LocalizedCopy {
         )
     }
 
-    static var manageSections: String {
-        String(localized: "Manage sections", comment: "Manage library or store sections menu item")
-    }
-
     static var clearChecked: String {
         String(localized: "Clear checked", comment: "Clear checked items menu item")
     }
@@ -774,6 +788,13 @@ enum LocalizedCopy {
 
     static var noMatchingItemsFound: String {
         String(localized: "No matching items found", comment: "Search with no results")
+    }
+
+    static var typeToFilterItems: String {
+        String(
+            localized: "Type to filter items",
+            comment: "Mid-screen hint when Home or pull-to-add search field is empty (no pinned results)"
+        )
     }
 
     static var createItem: String {

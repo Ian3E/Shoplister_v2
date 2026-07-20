@@ -159,6 +159,13 @@ struct AppFeatureCatalogEntry: Identifiable {
                 description: LocalizedCopy.appFeatureAppearanceTextSizeDescription
             ),
             AppFeatureCatalogEntry(
+                id: "listTabBadge",
+                section: .personalization,
+                systemImage: "checklist",
+                title: LocalizedCopy.listTabBadge,
+                description: LocalizedCopy.appFeatureListTabBadgeDescription
+            ),
+            AppFeatureCatalogEntry(
                 id: "appIconBadge",
                 section: .personalization,
                 systemImage: "app.badge.fill",

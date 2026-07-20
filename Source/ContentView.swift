@@ -52,6 +52,8 @@ struct ContentView: View {
     @AppStorage(AppStoreGesturesExplainer.storageKey) private var hasSeenStoreGesturesExplainer = false
     @AppStorage(AppHomeCatalogVisit.storageKey) private var hasVisitedHomeCatalog = false
     @AppStorage(AppShoppingSortChecked.storageKey) private var sortCheckedShoppingItems: Bool = false
+    @AppStorage(AppListTabBadge.storageKey) private var showListTabBadge: Bool = true
+    @AppStorage(AppShoppingBadgeUnchecked.storageKey) private var showUncheckedCountAppBadge: Bool = false
     /// Text size draft while Settings is open; committed in the sheet `onDismiss` handler only.
     @State private var settingsTextSizeDraft: String = AppTextSize.defaultSize.rawValue
     /// Theme draft while Settings is open; committed in the sheet `onDismiss` handler only.
@@ -64,6 +66,23 @@ struct ContentView: View {
     /// At least one unchecked line with a resolved catalog item (same as what share text would include).
     private var canShareShoppingList: Bool {
         ShoppingListShareText.hasUncheckedItemsToShare(store: store)
+    }
+
+    /// List tab badge when the dedicated setting is on (0 hides the badge).
+    private var listTabUncheckedBadge: Int {
+        guard showListTabBadge else { return 0 }
+        return ShoppingIconBadge.uncheckedCount(store: store)
+    }
+
+    /// Theme used for tab chrome; follows the Settings draft so picks apply under the sheet immediately.
+    private var tabBarTheme: AppThemeSelection {
+        if isPresentingSettings {
+            return AppThemeSelection(
+                presetRaw: settingsThemeDraft,
+                customColorHex: settingsThemeCustomDraft
+            )
+        }
+        return appTheme
     }
 
     // MARK: - TabView root
@@ -85,14 +104,27 @@ struct ContentView: View {
                             onAddItem: beginStoreTabPullToAdd
                         )
                     }
+                    // Keep nav/bottom toolbar controls label-colored; tab bar tint is UIKit-only.
+                    .tint(Color.primary)
                 }
+                .badge(listTabUncheckedBadge)
 
                 Tab(LocalizedCopy.tabLibrary, systemImage: "books.vertical", value: TabSelection.home) {
                     NavigationStack {
                         homeCatalogTabScreen
                     }
+                    .tint(Color.primary)
                 }
             }
+            // Tab selection/badge theming is applied via UIKit on the tab bar only —
+            // a SwiftUI `.tint` here would cascade into navigation toolbar buttons.
+            .modifier(
+                TabBarThemeModifier(
+                    theme: tabBarTheme,
+                    badgeCount: listTabUncheckedBadge,
+                    selectedTab: selectedTab
+                )
+            )
             .catalogGroupedChromeBackdrop()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -122,7 +154,7 @@ struct ContentView: View {
     }
 
     /// Home tab: rooted catalog (no back chevron). Edit enters reorder directly; ⋯ hosts
-    /// manage sections / create / saved lists; search is a minimized bottom-trailing control.
+    /// home sections / create / saved lists; search is a minimized bottom-trailing control.
     private var homeCatalogTabScreen: some View {
         InventoryView(
             isReorderMode: $isInventoryReorderMode,
@@ -314,6 +346,14 @@ struct ContentView: View {
                 commitSettingsThemeDraft()
                 scheduleExplainersAfterSettingsDismissed()
             }
+        }
+        .onChange(of: settingsThemeDraft) { _, newValue in
+            guard isPresentingSettings else { return }
+            themeRaw = newValue
+        }
+        .onChange(of: settingsThemeCustomDraft) { _, newValue in
+            guard isPresentingSettings else { return }
+            customColorHex = newValue
         }
         .sheet(isPresented: Binding(
             get: { isPresentingNewCatalogItem && !isPresentingPullToAddSheet },
@@ -681,5 +721,88 @@ private struct NavigationInteractivePopEnabler: UIViewControllerRepresentable {
 private extension View {
     func enablesNavigationInteractivePopGesture(isEnabled: Bool = true) -> some View {
         background(NavigationInteractivePopEnabler(isEnabled: isEnabled))
+    }
+}
+
+/// Themes selected tab symbols and List tab badge. Badge color must go through
+/// `UITabBarAppearance`; selected tint also needs live `UITabBar.tintColor`.
+private struct TabBarThemeModifier: ViewModifier {
+    var theme: AppThemeSelection
+    var badgeCount: Int
+    var selectedTab: TabSelection
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { Self.apply(theme.color) }
+            .onChange(of: theme) { _, newTheme in
+                Self.apply(newTheme.color)
+            }
+            .onChange(of: badgeCount) { _, _ in
+                // Badge remounts can fall back to system red; re-paint after the update.
+                Self.reapplyAfterLayout(theme.color)
+            }
+            .onChange(of: selectedTab) { _, _ in
+                // Selecting the badged List tab remounts the badge with system red for a
+                // frame on modern tab bars; re-paint after the selection settles.
+                Self.reapplyAfterLayout(theme.color)
+            }
+    }
+
+    private static func reapplyAfterLayout(_ color: Color) {
+        Task { @MainActor in
+            await Task.yield()
+            apply(color)
+        }
+    }
+
+    private static func apply(_ color: Color) {
+        let uiColor = UIColor(color)
+        let appearance = UITabBarAppearance()
+        appearance.configureWithTransparentBackground()
+        paintChrome(on: appearance, color: uiColor)
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+        UITabBar.appearance().tintColor = uiColor
+
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+                paintLiveTabBars(in: window, color: uiColor)
+            }
+        }
+    }
+
+    private static func paintChrome(on appearance: UITabBarAppearance, color: UIColor) {
+        for itemAppearance in [
+            appearance.stackedLayoutAppearance,
+            appearance.inlineLayoutAppearance,
+            appearance.compactInlineLayoutAppearance
+        ] {
+            itemAppearance.normal.badgeBackgroundColor = color
+            itemAppearance.selected.badgeBackgroundColor = color
+            itemAppearance.normal.badgeTextAttributes = [.foregroundColor: UIColor.white]
+            itemAppearance.selected.badgeTextAttributes = [.foregroundColor: UIColor.white]
+            itemAppearance.selected.iconColor = color
+            itemAppearance.selected.titleTextAttributes = [.foregroundColor: color]
+        }
+    }
+
+    private static func paintLiveTabBars(in view: UIView, color: UIColor) {
+        if let tabBar = view as? UITabBar {
+            let standard = tabBar.standardAppearance.copy() as UITabBarAppearance
+            paintChrome(on: standard, color: color)
+            tabBar.standardAppearance = standard
+
+            let scrollEdge = tabBar.scrollEdgeAppearance.map { $0.copy() as UITabBarAppearance }
+                ?? standard
+            paintChrome(on: scrollEdge, color: color)
+            tabBar.scrollEdgeAppearance = scrollEdge
+
+            tabBar.tintColor = color
+            tabBar.items?.forEach { $0.badgeColor = color }
+        }
+        for subview in view.subviews {
+            paintLiveTabBars(in: subview, color: color)
+        }
     }
 }

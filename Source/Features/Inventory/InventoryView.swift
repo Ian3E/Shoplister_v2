@@ -681,7 +681,7 @@ struct InventoryView: View {
                     .dynamicTypeSize(catalogTextDynamicTypeSize)
                     .animation(AppTextSize.layoutCommitAnimation, value: textSizeRaw)
                 }
-                .tint(homeListEditMode == .active ? appTheme.color : Color.accentColor)
+                .tint(homeListEditMode == .active ? appTheme.color : Color.primary)
                 .modifier(ListDragInteractionModifier(enabled: homeListEditMode == .active))
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
@@ -852,6 +852,24 @@ struct InventoryView: View {
         .accessibilityElement(children: .contain)
     }
 
+    /// Empty field with no pinned query — nudge to start typing (not shown after add-and-clear pin).
+    private var toolbarSearchEmptyQueryPlaceholder: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            Text(LocalizedCopy.typeToFilterItems)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 28)
+            Spacer(minLength: 0)
+        }
+        .padding(.bottom, usesHomeToolbarSearch ? Self.toolbarSearchFieldClearance : 0)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(LocalizedCopy.typeToFilterItems)
+    }
+
     var body: some View {
         inventoryScreen
             .environment(\.editMode, homeCatalogListEditMode)
@@ -958,6 +976,8 @@ struct InventoryView: View {
 
             if toolbarSearchNoMatches {
                 toolbarSearchNoMatchesPlaceholder
+            } else if toolbarSearchEmptyQueryActive {
+                toolbarSearchEmptyQueryPlaceholder
             }
         }
         // Home list scrolls under the bottom search bar (`bottomReservedHeight: 0`). Liquid Glass
@@ -1006,7 +1026,7 @@ struct InventoryView: View {
             if usesHomeToolbarSearch, hidesNavigationBar, showsHomeCatalogPrincipalToolbar {
                 ToolbarItem(placement: .principal) {
                     // Crossfade search ↔ browse chrome. searchable dismiss otherwise slides the
-                    // principal text; remapping that animation to a short ease keeps a clean fade.
+                    // principal text; keep that as an opacity fade only.
                     ZStack {
                         HomeCatalogPrincipalHeader(
                             title: LocalizedCopy.homeLibrary,
@@ -1022,15 +1042,17 @@ struct InventoryView: View {
                         )
                         .opacity(homeCatalogPrincipalIsSearchMode ? 1 : 0)
                     }
-                    .animation(.easeInOut(duration: 0.22), value: homeCatalogPrincipalIsSearchMode)
-                    .transaction { transaction in
-                        if transaction.animation != nil {
-                            transaction.animation = .easeInOut(duration: 0.22)
-                        }
-                    }
+                    // Stable identity so Edit/Done toolbar swaps don't remount this title view.
+                    .id("homeCatalogPrincipal")
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(homeCatalogPrincipalAccessibilityLabel)
                     .accessibilityAddTraits(.isHeader)
+                    // Isolate from Browse↔Edit `.snappy` so only toolbar/list animate; title stays put.
+                    .animation(nil, value: homeListEditMode)
+                    .transaction { $0.animation = nil }
+                    // Search↔browse crossfade (re-enabled after stripping inherited animations).
+                    .animation(.easeInOut(duration: 0.22), value: homeCatalogPrincipalIsSearchMode)
+                    .background(HomeCatalogPrincipalMotionSuppressor(editMode: homeListEditMode))
                 }
             }
             if showsHomeBackToolbar, !showsHomeEditToolbarChrome, let onBackToStore {
@@ -1064,19 +1086,25 @@ struct InventoryView: View {
                     )
                 }
             }
-            // EXPERIMENT (tabs): edit-mode Move/Delete live top leading; bottom bar is add — spacer — search.
+            // Tabs edit mode: Done leading; Move/Delete trailing. Bottom bar stays add — spacer — search.
             if minimizesToolbarSearch, showsHomeEditToolbarChrome {
                 ToolbarItem(placement: .topBarLeading) {
+                    HomeCatalogDoneToolbarButton(action: exitHomeCatalogReorderMode)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     homeCatalogMoveMenuControl
                 }
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     homeCatalogDeleteControl
                 }
             }
             if showsHomeEditToolbar {
                 if showsHomeEditToolbarChrome {
-                    ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
-                        HomeCatalogDoneToolbarButton(action: exitHomeCatalogReorderMode)
+                    // Push-model Home: Done stays trailing (Move/Delete live in the bottom bar).
+                    if !minimizesToolbarSearch {
+                        ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
+                            HomeCatalogDoneToolbarButton(action: exitHomeCatalogReorderMode)
+                        }
                     }
                 } else if !showsRecipesInTopBarLeading {
                     ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
@@ -1371,6 +1399,50 @@ private struct HomeCatalogPrincipalHeader: View {
     }
 }
 
+/// Cancels UIKit position animations on the nav-bar title view when EditMode toggles,
+/// without disabling toolbar button or list-handle animations.
+private struct HomeCatalogPrincipalMotionSuppressor: UIViewRepresentable {
+    var editMode: EditMode
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        guard context.coordinator.lastEditMode != editMode else { return }
+        context.coordinator.lastEditMode = editMode
+        // After toolbar chrome swaps under `.snappy`, kill only the titleView's slide.
+        DispatchQueue.main.async {
+            Self.suppressTitleViewMotion(from: uiView)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    final class Coordinator {
+        var lastEditMode: EditMode?
+    }
+
+    private static func suppressTitleViewMotion(from view: UIView) {
+        var walker: UIView? = view
+        while let current = walker {
+            if let navigationBar = current as? UINavigationBar {
+                UIView.performWithoutAnimation {
+                    navigationBar.topItem?.titleView?.layer.removeAllAnimations()
+                    navigationBar.layoutIfNeeded()
+                }
+                return
+            }
+            walker = current.superview
+        }
+    }
+}
+
 /// Home toolbar search (bottom bar, browse mode).
 private struct HomeToolbarSearchModifier: ViewModifier {
     let enabled: Bool
@@ -1426,20 +1498,17 @@ private struct HomeCatalogEditToolbarButton: View {
     }
 }
 
-/// Home catalog **Done** (edit mode, toolbar trailing) — matches Edit label chrome.
+/// Home catalog **Done** (edit mode) — titled toolbar `Button` like Edit so Liquid Glass
+/// keeps capsule chrome (custom plain + capsule padding collapses into nav-bar overflow `…`).
 private struct HomeCatalogDoneToolbarButton: View {
     @Environment(\.appTheme) private var appTheme
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HomeCatalogEditToolbarLabel(title: LocalizedCopy.done)
-                .foregroundStyle(appTheme.color)
-                .catalogToolbarCapsuleTapTarget()
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(LocalizedCopy.doneEditing)
+        Button(LocalizedCopy.done, action: action)
+            .font(.body.weight(.semibold))
+            .tint(appTheme.color)
+            .accessibilityLabel(LocalizedCopy.doneEditing)
     }
 }
 
@@ -1459,7 +1528,7 @@ private struct ToolbarCatalogAddButton: View {
     }
 }
 
-/// Home catalog browse-mode ⋯ menu (top trailing): manage sections, create item, saved lists.
+/// Home catalog browse-mode ⋯ menu (top trailing): home sections, create item, saved lists.
 private struct HomeCatalogEllipsisMenu: View {
     let onManageSections: (() -> Void)?
     let onAddItem: (() -> Void)?
@@ -1470,7 +1539,7 @@ private struct HomeCatalogEllipsisMenu: View {
             if let onManageSections {
                 Section {
                     Button(action: onManageSections) {
-                        Label(LocalizedCopy.manageSections, systemImage: "arrow.up.arrow.down")
+                        Label(LocalizedCopy.homeSections, systemImage: "house.fill")
                     }
                 }
             }

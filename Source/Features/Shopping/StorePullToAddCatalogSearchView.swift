@@ -136,6 +136,9 @@ struct StorePullToAddCatalogSearchView: View {
             if toolbarSearchNoMatches {
                 noMatchesPlaceholder
                     .transition(.identity)
+            } else if toolbarSearchEmptyQueryActive {
+                emptyQueryPlaceholder
+                    .transition(.identity)
             }
         }
         .frame(maxWidth: horizontalSizeClass == .regular ? Self.regularWidthClassListMaxWidth : .infinity)
@@ -349,6 +352,25 @@ struct StorePullToAddCatalogSearchView: View {
         .padding(.bottom, Self.toolbarSearchFieldClearance)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .contain)
+    }
+
+    /// Empty field with no pinned query — nudge to start typing (not shown after add-and-clear pin).
+    private var emptyQueryPlaceholder: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            Text(LocalizedCopy.typeToFilterItems)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 28)
+            Spacer(minLength: 0)
+        }
+        .padding(.top, Self.toolbarSearchCollapsedTopChromeClearance)
+        .padding(.bottom, Self.toolbarSearchFieldClearance)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(LocalizedCopy.typeToFilterItems)
     }
 }
 

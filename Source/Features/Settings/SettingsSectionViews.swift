@@ -11,6 +11,7 @@ struct SettingsGeneralView: View {
     @AppStorage(AppShoppingHideStoreGroupNames.storageKey) private var hideStoreGroupNames: Bool = false
     @AppStorage(AppShoppingConfirmClearWhenAllChecked.storageKey) private var confirmClearWhenAllChecked: Bool = true
     @AppStorage(AppLibraryAutoExpandQuantityPicker.storageKey) private var autoExpandQuantityPicker: Bool = true
+    @AppStorage(AppListTabBadge.storageKey) private var showListTabBadge: Bool = true
     @AppStorage(AppShoppingBadgeUnchecked.storageKey) private var showUncheckedCountAppBadge: Bool = false
 
     var body: some View {
@@ -43,6 +44,12 @@ struct SettingsGeneralView: View {
                 Toggle(LocalizedCopy.autoExpandQuantityPicker, isOn: $autoExpandQuantityPicker)
             } footer: {
                 Text(LocalizedCopy.autoExpandQuantityPickerFooter)
+            }
+
+            Section {
+                Toggle(LocalizedCopy.listTabBadge, isOn: $showListTabBadge)
+            } footer: {
+                Text(LocalizedCopy.listTabBadgeFooter)
             }
 
             Section {

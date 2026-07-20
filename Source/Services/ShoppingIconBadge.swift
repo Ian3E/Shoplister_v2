@@ -3,6 +3,16 @@ import UserNotifications
 
 /// Updates the home-screen icon badge from the current shopping list.
 enum ShoppingIconBadge {
+    /// Unchecked shopping lines with a resolved catalog item (same count as the icon badge).
+    @MainActor
+    static func uncheckedCount(store: GroceryStore) -> Int {
+        var count = 0
+        for entry in store.shopping where !entry.isChecked && store.item(for: entry.itemID) != nil {
+            count += 1
+        }
+        return count
+    }
+
     @MainActor
     static func sync(enabled: Bool, store: GroceryStore) {
         if !enabled {
@@ -15,15 +25,6 @@ enum ShoppingIconBadge {
         Task {
             await applyBadgeWhenEnabled(count)
         }
-    }
-
-    @MainActor
-    private static func uncheckedCount(store: GroceryStore) -> Int {
-        var count = 0
-        for entry in store.shopping where !entry.isChecked && store.item(for: entry.itemID) != nil {
-            count += 1
-        }
-        return count
     }
 
     /// Badge cleared / feature off: never prompt for notification permission.
