@@ -46,8 +46,8 @@ struct ContentView: View {
     @State private var storePullToAddSearchChromeID = UUID()
     /// True only when presenting **New Item** after Store pull-to-add; add saved item to shopping list.
     @State private var newItemAddToShoppingAfterSave = false
-    /// Selected root tab (List / Library). Fresh launches open Library (Home).
-    @State private var selectedTab: TabSelection = .home
+    /// Selected root tab (List / Library). Fresh launches open List.
+    @State private var selectedTab: TabSelection = .store
     /// Pull-to-add presented as a modal sheet (Settings-style) from the List tab.
     @State private var isPresentingPullToAddSheet = false
     /// Drops the sticky pull-to-add search keyboard (e.g. while the first-item explainer is up).

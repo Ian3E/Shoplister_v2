@@ -6,6 +6,17 @@ private enum HomeCatalogEditModeTiming {
     static let statusFadeDuration: TimeInterval = 0.2
 }
 
+/// Stable nav-bar `ToolbarItem` ids so browse↔edit morphs matching slots (not insert/remove).
+private enum HomeCatalogTopToolbarItemID {
+    static let principal = "homeCatalogPrincipal"
+    static let leadingEditDone = "homeCatalogLeadingEditDone"
+    /// Browse ⋯ and edit Move share this slot (content swap inside stable chrome).
+    static let trailingPrimary = "homeCatalogTrailingPrimary"
+    static let trailingDelete = "homeCatalogTrailingDelete"
+    /// Push-model Home: Edit/Done share one trailing identity.
+    static let pushEditDone = "homeCatalogEditDone"
+}
+
 struct InventoryView: View {
     private static let bottomFloatingBarClearance: CGFloat = 86
     /// Extra space below the no-match placeholder so it stays above the toolbar search field.
@@ -84,6 +95,8 @@ struct InventoryView: View {
     @State private var homeListEditMode: EditMode = .inactive
     /// Row layout/interaction chrome (reorder handles, selection tap) — deferred after shopping status hides.
     @State private var showsHomeEditRowChrome = false
+    /// Top/bottom edit toolbar content — animated on its own turn before list `EditMode` (see Saved Lists).
+    @State private var showsHomeEditToolbarChrome = false
     /// Shopping row status (theme tint + quantity pill) — hidden before edit handles, restored after.
     @State private var showsHomeRowShoppingStatus = true
     @State private var deactivateHomeEditRowChromeTask: Task<Void, Never>?
@@ -252,14 +265,9 @@ struct InventoryView: View {
         AppTextSize.resolved(from: textSizeRaw).dynamicTypeSize
     }
 
-    /// Top-bar edit chrome should swap immediately with `EditMode` (match Recipes).
-    private var showsHomeEditToolbarChrome: Bool {
-        homeListEditMode == .active
-    }
-
-    /// Bottom-bar edit chrome matches top-bar (no deferral).
+    /// Bottom-bar edit chrome follows top-bar chrome (not list `EditMode`).
     private var showsHomeBottomEditToolbarChrome: Bool {
-        homeListEditMode == .active
+        showsHomeEditToolbarChrome
     }
 
     private var homeCatalogListEditMode: Binding<EditMode> {
@@ -491,6 +499,7 @@ struct InventoryView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
+            showsHomeEditToolbarChrome = false
             showsHomeEditRowChrome = false
             isReorderMode = false
             selectedItemIDs = []
@@ -500,7 +509,7 @@ struct InventoryView: View {
     private func deactivateHomeCatalogEditMode(animated: Bool = true) {
         deactivateHomeEditRowChromeTask?.cancel()
 
-        guard homeListEditMode != .inactive else {
+        guard homeListEditMode != .inactive || showsHomeEditToolbarChrome else {
             showHomeRowShoppingStatusImmediately()
             finishHomeCatalogEditModeDeactivation()
             return
@@ -510,7 +519,13 @@ struct InventoryView: View {
             showHomeRowShoppingStatusImmediately()
             deactivateHomeEditRowChromeTask = Task { @MainActor in
                 await Task.yield()
-                guard !Task.isCancelled, homeListEditMode == .active else { return }
+                guard !Task.isCancelled, homeListEditMode == .active || showsHomeEditToolbarChrome else { return }
+                // Toolbar morph first — concurrent List EditMode animation settles the nav bar mid-morph.
+                withAnimation(.snappy) {
+                    showsHomeEditToolbarChrome = false
+                }
+                await Task.yield()
+                guard !Task.isCancelled else { return }
                 withAnimation(.snappy) {
                     homeListEditMode = .inactive
                 }
@@ -529,20 +544,27 @@ struct InventoryView: View {
         deactivateHomeEditRowChromeTask?.cancel()
         hideHomeRowShoppingStatusForEditEntry()
         showsHomeEditRowChrome = false
-        Task { @MainActor in
+        deactivateHomeEditRowChromeTask = Task { @MainActor in
             await Task.yield()
-            guard homeListEditMode == .inactive else { return }
+            guard !Task.isCancelled, homeListEditMode == .inactive, !showsHomeEditToolbarChrome else { return }
+            // Toolbar morph first (same sequencing as Saved Lists).
+            withAnimation(.snappy) {
+                showsHomeEditToolbarChrome = true
+            }
+            await Task.yield()
+            guard !Task.isCancelled else { return }
             withAnimation(.snappy) {
                 homeListEditMode = .active
             }
             try? await Task.sleep(for: .milliseconds(Self.homeEditModeChromeDelayMs))
-            guard homeListEditMode == .active else { return }
+            guard !Task.isCancelled, homeListEditMode == .active else { return }
             showsHomeEditRowChrome = true
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
                 isReorderMode = true
             }
+            deactivateHomeEditRowChromeTask = nil
         }
     }
 
@@ -915,6 +937,7 @@ struct InventoryView: View {
                         ?? allGroupedCatalog.first?.0.id
                 }
                 homeListEditMode = isReorderMode ? .active : .inactive
+                showsHomeEditToolbarChrome = isReorderMode
                 showsHomeEditRowChrome = isReorderMode
                 showsHomeRowShoppingStatus = !isReorderMode
             }
@@ -1038,23 +1061,13 @@ struct InventoryView: View {
                         onReturnToStoreAfterRecipeApply?()
                     }
                 )
-                .navigationTitle(LocalizedCopy.savedLists)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(LocalizedCopy.done) {
-                            isPresentingRecipes = false
-                        }
-                        .font(.body.weight(.semibold))
-                    }
-                }
             }
             .environmentObject(store)
         }
         .toolbar(inventoryNavigationBarVisibility, for: .navigationBar)
         .toolbar {
             if usesHomeToolbarSearch, hidesNavigationBar, showsHomeCatalogPrincipalToolbar {
-                ToolbarItem(placement: .principal) {
+                ToolbarItem(id: HomeCatalogTopToolbarItemID.principal, placement: .principal) {
                     // Crossfade search ↔ browse chrome. searchable dismiss otherwise slides the
                     // principal text; keep that as an opacity fade only.
                     ZStack {
@@ -1073,11 +1086,12 @@ struct InventoryView: View {
                         .opacity(homeCatalogPrincipalIsSearchMode ? 1 : 0)
                     }
                     // Stable identity so Edit/Done toolbar swaps don't remount this title view.
-                    .id("homeCatalogPrincipal")
+                    .id(HomeCatalogTopToolbarItemID.principal)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(homeCatalogPrincipalAccessibilityLabel)
                     .accessibilityAddTraits(.isHeader)
                     // Isolate from Browse↔Edit `.snappy` so only toolbar/list animate; title stays put.
+                    .animation(nil, value: showsHomeEditToolbarChrome)
                     .animation(nil, value: homeListEditMode)
                     .transaction { $0.animation = nil }
                     // Search↔browse crossfade (re-enabled after stripping inherited animations).
@@ -1098,46 +1112,42 @@ struct InventoryView: View {
                     .accessibilityLabel(LocalizedCopy.backToShoppingList)
                 }
             }
-            // EXPERIMENT (tabs): no back chevron — Edit takes the top leading slot,
-            // ⋯ menu (manage sections, create item, saved lists) sits top trailing.
-            if showsRecipesInTopBarLeading, !showsHomeEditToolbarChrome {
+            // Tabs Home: stable ToolbarItem ids with content swaps (not ZStack fades).
+            // Leading: Edit↔Done. Trailing primary: ⋯↔Move. Trailing delete: edit-only.
+            if showsRecipesInTopBarLeading {
                 if showsHomeEditToolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    HomeCatalogEllipsisMenu(
-                        onManageSections: onToolbarSelectGroupsKind.map { select in
-                            { select(.inventory) }
-                        },
-                        onAddItem: onToolbarAddItem,
-                        onSavedLists: { isPresentingRecipes = true }
-                    )
-                }
-            }
-            // Tabs edit mode: Done leading; Move/Delete trailing. Bottom bar stays add — spacer — search.
-            if minimizesToolbarSearch, showsHomeEditToolbarChrome {
-                ToolbarItem(placement: .topBarLeading) {
-                    HomeCatalogDoneToolbarButton(action: exitHomeCatalogReorderMode)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    homeCatalogMoveMenuControl
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    homeCatalogDeleteControl
-                }
-            }
-            if showsHomeEditToolbar {
-                if showsHomeEditToolbarChrome {
-                    // Push-model Home: Done stays trailing (Move/Delete live in the bottom bar).
-                    if !minimizesToolbarSearch {
-                        ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
+                    ToolbarItem(id: HomeCatalogTopToolbarItemID.leadingEditDone, placement: .topBarLeading) {
+                        if showsHomeEditToolbarChrome {
                             HomeCatalogDoneToolbarButton(action: exitHomeCatalogReorderMode)
+                        } else {
+                            HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
                         }
                     }
-                } else if !showsRecipesInTopBarLeading {
-                    ToolbarItem(id: "homeCatalogEditDone", placement: .topBarTrailing) {
+                }
+                ToolbarItem(id: HomeCatalogTopToolbarItemID.trailingPrimary, placement: .topBarTrailing) {
+                    if showsHomeEditToolbarChrome {
+                        homeCatalogMoveMenuControl
+                    } else {
+                        HomeCatalogEllipsisMenu(
+                            onManageSections: onToolbarSelectGroupsKind.map { select in
+                                { select(.inventory) }
+                            },
+                            onAddItem: onToolbarAddItem,
+                            onSavedLists: { isPresentingRecipes = true }
+                        )
+                    }
+                }
+                if showsHomeEditToolbarChrome {
+                    ToolbarItem(id: HomeCatalogTopToolbarItemID.trailingDelete, placement: .topBarTrailing) {
+                        homeCatalogDeleteControl
+                    }
+                }
+            } else if showsHomeEditToolbar {
+                // Push-model Home: Edit/Done share one trailing identity (Move/Delete live in bottom bar).
+                ToolbarItem(id: HomeCatalogTopToolbarItemID.pushEditDone, placement: .topBarTrailing) {
+                    if showsHomeEditToolbarChrome {
+                        HomeCatalogDoneToolbarButton(action: exitHomeCatalogReorderMode)
+                    } else {
                         HomeCatalogEditToolbarButton(action: enterHomeCatalogReorderMode)
                     }
                 }
@@ -1528,17 +1538,28 @@ private struct HomeCatalogEditToolbarButton: View {
     }
 }
 
-/// Home catalog **Done** (edit mode) — titled toolbar `Button` like Edit so Liquid Glass
-/// keeps capsule chrome (custom plain + capsule padding collapses into nav-bar overflow `…`).
+/// Home catalog **Done** (edit mode) — circular prominent checkmark, matching Recipes list edit exit.
 private struct HomeCatalogDoneToolbarButton: View {
-    @Environment(\.appTheme) private var appTheme
     let action: () -> Void
 
     var body: some View {
-        Button(LocalizedCopy.done, action: action)
-            .font(.body.weight(.semibold))
-            .tint(appTheme.color)
-            .accessibilityLabel(LocalizedCopy.doneEditing)
+        Button(action: action) {
+            ZStack {
+                Color.clear
+                Image(systemName: "checkmark")
+                    .font(.system(size: 15, weight: .bold))
+            }
+            .frame(width: 36, height: 36)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.glassProminent)
+        .buttonBorderShape(.circle)
+        .frame(width: 36, height: 36)
+        .clipShape(Circle())
+        .contentShape(Circle())
+        .appThemeTint()
+        .appThemeIdentity()
+        .accessibilityLabel(LocalizedCopy.doneEditing)
     }
 }
 
@@ -1820,10 +1841,13 @@ private struct HomeCatalogDeleteButton: View {
             showConfirmation = true
         } label: {
             Label(LocalizedCopy.deleteSelected, systemImage: "trash")
+                .labelStyle(.iconOnly)
                 .font(InventoryToolbarGlyph.font)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .buttonStyle(.borderless)
         .controlSize(.small)
+        .catalogToolbarCircularTapTarget()
         .disabled(isDisabled)
         .accessibilityLabel(LocalizedCopy.deleteSelected)
         .confirmationDialog(
