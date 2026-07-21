@@ -10,7 +10,7 @@ private enum HomeCatalogEditModeTiming {
 private enum HomeCatalogTopToolbarItemID {
     static let principal = "homeCatalogPrincipal"
     static let leadingEditDone = "homeCatalogLeadingEditDone"
-    /// Browse ⋯ and edit Move share this slot (content swap inside stable chrome).
+    /// Browse ⋯ and edit Move share this slot (1:1 morph).
     static let trailingPrimary = "homeCatalogTrailingPrimary"
     static let trailingDelete = "homeCatalogTrailingDelete"
     /// Push-model Home: Edit/Done share one trailing identity.
@@ -95,10 +95,11 @@ struct InventoryView: View {
     @State private var homeListEditMode: EditMode = .inactive
     /// Row layout/interaction chrome (reorder handles, selection tap) — deferred after shopping status hides.
     @State private var showsHomeEditRowChrome = false
-    /// Top/bottom edit toolbar content — animated on its own turn before list `EditMode` (see Saved Lists).
-    @State private var showsHomeEditToolbarChrome = false
     /// Shopping row status (theme tint + quantity pill) — hidden before edit handles, restored after.
     @State private var showsHomeRowShoppingStatus = true
+    /// Top-bar Move → “New section” name prompt (SwiftUI Menu can’t host UIKit alert anchors cleanly).
+    @State private var homeMoveNewSectionKind: Tag.Kind?
+    @State private var homeMoveNewSectionName = ""
     @State private var deactivateHomeEditRowChromeTask: Task<Void, Never>?
     /// Toolbar search: deferred each Home visit so bottom-bar search mounts after the push settles.
     @State private var attachLiquidGlassToolbarSearch = false
@@ -265,9 +266,14 @@ struct InventoryView: View {
         AppTextSize.resolved(from: textSizeRaw).dynamicTypeSize
     }
 
-    /// Bottom-bar edit chrome follows top-bar chrome (not list `EditMode`).
+    /// Top-bar edit chrome swaps with `EditMode`; native toolbar morphs via `.animation(.default, …)`.
+    private var showsHomeEditToolbarChrome: Bool {
+        homeListEditMode == .active
+    }
+
+    /// Bottom-bar edit chrome matches top-bar.
     private var showsHomeBottomEditToolbarChrome: Bool {
-        showsHomeEditToolbarChrome
+        homeListEditMode == .active
     }
 
     private var homeCatalogListEditMode: Binding<EditMode> {
@@ -499,7 +505,6 @@ struct InventoryView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            showsHomeEditToolbarChrome = false
             showsHomeEditRowChrome = false
             isReorderMode = false
             selectedItemIDs = []
@@ -509,7 +514,7 @@ struct InventoryView: View {
     private func deactivateHomeCatalogEditMode(animated: Bool = true) {
         deactivateHomeEditRowChromeTask?.cancel()
 
-        guard homeListEditMode != .inactive || showsHomeEditToolbarChrome else {
+        guard homeListEditMode != .inactive else {
             showHomeRowShoppingStatusImmediately()
             finishHomeCatalogEditModeDeactivation()
             return
@@ -517,21 +522,15 @@ struct InventoryView: View {
 
         if animated {
             showHomeRowShoppingStatusImmediately()
+            // Drop list/parent chrome before the toolbar morph — doing it after ~280ms
+            // reflows the bar at the end of ⋯↔Move/Delete.
+            finishHomeCatalogEditModeDeactivation()
             deactivateHomeEditRowChromeTask = Task { @MainActor in
                 await Task.yield()
-                guard !Task.isCancelled, homeListEditMode == .active || showsHomeEditToolbarChrome else { return }
-                // Toolbar morph first — concurrent List EditMode animation settles the nav bar mid-morph.
-                withAnimation(.snappy) {
-                    showsHomeEditToolbarChrome = false
-                }
-                await Task.yield()
                 guard !Task.isCancelled else { return }
-                withAnimation(.snappy) {
+                withAnimation(.default) {
                     homeListEditMode = .inactive
                 }
-                try? await Task.sleep(for: .milliseconds(Self.homeEditModeChromeDelayMs))
-                guard !Task.isCancelled, homeListEditMode == .inactive else { return }
-                finishHomeCatalogEditModeDeactivation()
             }
         } else {
             homeListEditMode = .inactive
@@ -543,25 +542,18 @@ struct InventoryView: View {
     private func enterHomeCatalogReorderMode() {
         deactivateHomeEditRowChromeTask?.cancel()
         hideHomeRowShoppingStatusForEditEntry()
-        showsHomeEditRowChrome = false
         deactivateHomeEditRowChromeTask = Task { @MainActor in
             await Task.yield()
-            guard !Task.isCancelled, homeListEditMode == .inactive, !showsHomeEditToolbarChrome else { return }
-            // Toolbar morph first (same sequencing as Saved Lists).
-            withAnimation(.snappy) {
-                showsHomeEditToolbarChrome = true
-            }
-            await Task.yield()
-            guard !Task.isCancelled else { return }
-            withAnimation(.snappy) {
+            guard !Task.isCancelled, homeListEditMode == .inactive else { return }
+            withAnimation(.default) {
                 homeListEditMode = .active
             }
-            try? await Task.sleep(for: .milliseconds(Self.homeEditModeChromeDelayMs))
-            guard !Task.isCancelled, homeListEditMode == .active else { return }
-            showsHomeEditRowChrome = true
+            // Mount list handles / parent binding immediately (unanimated). Delaying this to
+            // chromeDelayMs landed on the trailing morph's settle and caused a late jump.
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
+                showsHomeEditRowChrome = true
                 isReorderMode = true
             }
             deactivateHomeEditRowChromeTask = nil
@@ -937,7 +929,6 @@ struct InventoryView: View {
                         ?? allGroupedCatalog.first?.0.id
                 }
                 homeListEditMode = isReorderMode ? .active : .inactive
-                showsHomeEditToolbarChrome = isReorderMode
                 showsHomeEditRowChrome = isReorderMode
                 showsHomeRowShoppingStatus = !isReorderMode
             }
@@ -1090,8 +1081,7 @@ struct InventoryView: View {
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(homeCatalogPrincipalAccessibilityLabel)
                     .accessibilityAddTraits(.isHeader)
-                    // Isolate from Browse↔Edit `.snappy` so only toolbar/list animate; title stays put.
-                    .animation(nil, value: showsHomeEditToolbarChrome)
+                    // Isolate from Browse↔Edit so only toolbar/list animate; title stays put.
                     .animation(nil, value: homeListEditMode)
                     .transaction { $0.animation = nil }
                     // Search↔browse crossfade (re-enabled after stripping inherited animations).
@@ -1112,8 +1102,7 @@ struct InventoryView: View {
                     .accessibilityLabel(LocalizedCopy.backToShoppingList)
                 }
             }
-            // Tabs Home: stable ToolbarItem ids with content swaps (not ZStack fades).
-            // Leading: Edit↔Done. Trailing primary: ⋯↔Move. Trailing delete: edit-only.
+            // Leading: Edit↔Done. Trailing: stable ⋯↔Move slot + edit-only Delete (same animation turn).
             if showsRecipesInTopBarLeading {
                 if showsHomeEditToolbar {
                     ToolbarItem(id: HomeCatalogTopToolbarItemID.leadingEditDone, placement: .topBarLeading) {
@@ -1126,7 +1115,7 @@ struct InventoryView: View {
                 }
                 ToolbarItem(id: HomeCatalogTopToolbarItemID.trailingPrimary, placement: .topBarTrailing) {
                     if showsHomeEditToolbarChrome {
-                        homeCatalogMoveMenuControl
+                        homeCatalogTopBarMoveMenuControl
                     } else {
                         HomeCatalogEllipsisMenu(
                             onManageSections: onToolbarSelectGroupsKind.map { select in
@@ -1153,8 +1142,55 @@ struct InventoryView: View {
                 }
             }
         }
+        .alert(
+            LocalizedCopy.newSection,
+            isPresented: Binding(
+                get: { homeMoveNewSectionKind != nil },
+                set: { if !$0 { homeMoveNewSectionKind = nil } }
+            )
+        ) {
+            TextField(LocalizedCopy.sectionName, text: $homeMoveNewSectionName)
+            Button(LocalizedCopy.create) {
+                let trimmed = homeMoveNewSectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+                let kind = homeMoveNewSectionKind
+                homeMoveNewSectionKind = nil
+                homeMoveNewSectionName = ""
+                guard !trimmed.isEmpty, let kind else { return }
+                switch kind {
+                case .inventory:
+                    createInventorySectionAndMoveSelected(named: trimmed)
+                case .shopping:
+                    createShoppingSectionAndMoveSelected(named: trimmed)
+                }
+            }
+            Button(LocalizedCopy.cancel, role: .cancel) {
+                homeMoveNewSectionKind = nil
+                homeMoveNewSectionName = ""
+            }
+        }
     }
 
+    /// Top bar: SwiftUI `Menu` so ⋯↔Move morphs as native toolbar content (not UIKit representable).
+    private var homeCatalogTopBarMoveMenuControl: some View {
+        HomeCatalogMoveSwiftUIMenu(
+            inventoryTags: store.inventoryTags.filter { $0.kind == .inventory },
+            shoppingTags: store.shoppingTags.filter { $0.kind == .shopping },
+            catalogLanguage: catalogLanguage,
+            isDisabled: selectedItemIDs.isEmpty,
+            onMoveToInventoryTag: moveSelectedItems(toInventoryTagID:),
+            onMoveToShoppingTag: moveSelectedItems(toShoppingTagID:),
+            onCreateInventorySection: {
+                homeMoveNewSectionName = ""
+                homeMoveNewSectionKind = .inventory
+            },
+            onCreateShoppingSection: {
+                homeMoveNewSectionName = ""
+                homeMoveNewSectionKind = .shopping
+            }
+        )
+    }
+
+    /// Bottom bar: UIKit nested menu (avoids SwiftUI nested-`Menu` anchor bounce in `bottomBar`).
     private var homeCatalogMoveMenuControl: some View {
         HomeCatalogMoveMenu(
             inventoryTags: store.inventoryTags.filter { $0.kind == .inventory },
@@ -1180,9 +1216,10 @@ struct InventoryView: View {
     @ToolbarContentBuilder
     private var homeCatalogBottomToolbarContent: some ToolbarContent {
         // EXPERIMENT (tabs): browse and edit share spacer — minimized search so Edit/Done
-        // doesn't tear down the search control. Edit adds leading + after handle animation.
+        // doesn't tear down the search control. Show + with edit toolbar chrome (same turn as
+        // the top morph). Gating on deferred row chrome inserts + mid-morph and jumps the bar.
         if minimizesToolbarSearch, usesHomeToolbarSearch, isHomeToolbarSearchChromeActive {
-            if showsHomeEditRowChrome, let onToolbarAddItem {
+            if showsHomeEditToolbarChrome, let onToolbarAddItem {
                 ToolbarItem(id: "homeCatalogAdd", placement: .bottomBar) {
                     ToolbarCatalogAddButton(action: onToolbarAddItem)
                 }
@@ -1538,28 +1575,19 @@ private struct HomeCatalogEditToolbarButton: View {
     }
 }
 
-/// Home catalog **Done** (edit mode) — circular prominent checkmark, matching Recipes list edit exit.
+/// Home catalog **Done** (edit mode) — system checkmark + glass prominent (no fixed frames;
+/// forced sizing fights Liquid Glass morph and causes a late jump).
 private struct HomeCatalogDoneToolbarButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            ZStack {
-                Color.clear
-                Image(systemName: "checkmark")
-                    .font(.system(size: 15, weight: .bold))
-            }
-            .frame(width: 36, height: 36)
-            .contentShape(Circle())
-        }
-        .buttonStyle(.glassProminent)
-        .buttonBorderShape(.circle)
-        .frame(width: 36, height: 36)
-        .clipShape(Circle())
-        .contentShape(Circle())
-        .appThemeTint()
-        .appThemeIdentity()
-        .accessibilityLabel(LocalizedCopy.doneEditing)
+        Button(LocalizedCopy.doneEditing, systemImage: "checkmark", action: action)
+            .labelStyle(.iconOnly)
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.circle)
+            .appThemeTint()
+            .appThemeIdentity()
+            .accessibilityLabel(LocalizedCopy.doneEditing)
     }
 }
 
@@ -1615,6 +1643,58 @@ private struct HomeCatalogEllipsisMenu: View {
         .controlSize(.small)
         .catalogToolbarCircularTapTarget()
         .accessibilityLabel(LocalizedCopy.menu)
+    }
+}
+
+/// Top-bar edit **Move** menu — SwiftUI so it morphs with the trailing glass group (UIKit
+/// `UIViewRepresentable` settles after the morph and jumps the whole bar, including leading).
+private struct HomeCatalogMoveSwiftUIMenu: View {
+    let inventoryTags: [Tag]
+    let shoppingTags: [Tag]
+    let catalogLanguage: AppContentLanguage
+    let isDisabled: Bool
+    let onMoveToInventoryTag: (UUID) -> Void
+    let onMoveToShoppingTag: (UUID) -> Void
+    let onCreateInventorySection: () -> Void
+    let onCreateShoppingSection: () -> Void
+
+    var body: some View {
+        Menu {
+            Menu {
+                ForEach(inventoryTags) { tag in
+                    Button(tag.displayTitle(appContentLanguage: catalogLanguage)) {
+                        onMoveToInventoryTag(tag.id)
+                    }
+                }
+                Button(action: onCreateInventorySection) {
+                    Label(LocalizedCopy.newSection, systemImage: "folder.badge.plus")
+                }
+            } label: {
+                Label(LocalizedCopy.homeSectionLabel, systemImage: "house")
+            }
+            Menu {
+                ForEach(shoppingTags) { tag in
+                    Button(tag.displayTitle(appContentLanguage: catalogLanguage)) {
+                        onMoveToShoppingTag(tag.id)
+                    }
+                }
+                Button(action: onCreateShoppingSection) {
+                    Label(LocalizedCopy.newSection, systemImage: "folder.badge.plus")
+                }
+            } label: {
+                Label(LocalizedCopy.storeSectionLabel, systemImage: "cart")
+            }
+        } label: {
+            Label(LocalizedCopy.moveToSection, systemImage: "folder")
+                .labelStyle(.iconOnly)
+                .font(InventoryToolbarGlyph.font)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .buttonStyle(.borderless)
+        .controlSize(.small)
+        .catalogToolbarCircularTapTarget()
+        .disabled(isDisabled)
+        .accessibilityLabel(LocalizedCopy.moveToSection)
     }
 }
 
