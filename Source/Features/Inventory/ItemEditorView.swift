@@ -90,7 +90,8 @@ struct ItemEditorView: View {
                         pendingImage = nil
                         removeImageOnSave = true
                     } label: {
-                        Text(LocalizedCopy.removePhoto)
+                        Label(LocalizedCopy.removePhoto, systemImage: "trash")
+                            .foregroundStyle(.red)
                     }
                 }
             }

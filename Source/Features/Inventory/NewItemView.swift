@@ -111,7 +111,8 @@ struct NewItemView: View {
                     Button(role: .destructive) {
                         pendingImage = nil
                     } label: {
-                        Text(LocalizedCopy.removePhoto)
+                        Label(LocalizedCopy.removePhoto, systemImage: "trash")
+                            .foregroundStyle(.red)
                     }
                 }
             }
